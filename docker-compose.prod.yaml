@@ -1,12 +1,8 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: bentoluizv/projeto_aplicado:latest
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     healthcheck:
       test: curl --fail http://localhost:8000 || exit 1
       interval: 10s
@@ -14,18 +10,17 @@ services:
       start_period: 10s
       retries: 3
     env_file:
-      - .env.dev
+      - .env
     networks:
       - default_network
     depends_on:
       - postgres
       - redis
-    command: "fastapi dev projeto_aplicado/app.py --host 0.0.0.0"
 
   postgres:
     image: postgres:17.4
     env_file:
-      - .env.dev
+      - .env
     ports:
       - "5432:5432"
     volumes:
