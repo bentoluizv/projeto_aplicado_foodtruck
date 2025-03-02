@@ -1,6 +1,8 @@
 name: docker pull action
 on:
   push:
+  branches:
+    - main
 
 jobs:
   docker:
