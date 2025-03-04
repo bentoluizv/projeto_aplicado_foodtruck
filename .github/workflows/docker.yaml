@@ -26,11 +26,3 @@ jobs:
         with:
           push: true
           tags: bentoluizv/projeto_aplicado:latest
-          build-args: |
-            ENV=${{ vars.ENV }}
-            DEBUG=${{ vars.DEBUG }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            REDIS_URL=${{ secrets.REDIS_URL }}
-            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
