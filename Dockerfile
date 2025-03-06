@@ -20,11 +20,11 @@ WORKDIR /projeto_aplicado
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-COPY projeto_aplicado .
+COPY ./projeto_aplicado .
 
 RUN useradd -m appuser
 USER appuser
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "projeto_aplicado/app.py", "--host", "0.0.0.0"]
+CMD ["fastapi", "run", "app.py", "--host", "0.0.0.0"]
