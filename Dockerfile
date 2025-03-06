@@ -5,8 +5,6 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /projeto_aplicado
 
-RUN printenv > /app/build_env
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc
 
