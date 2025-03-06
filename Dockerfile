@@ -3,7 +3,7 @@ FROM python:3.13-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /app
+WORKDIR /projeto_aplicado
 
 RUN printenv > /app/build_env
 
@@ -17,7 +17,7 @@ RUN pip install --upgrade pip && \
 
 FROM python:3.13-slim
 
-WORKDIR /app
+WORKDIR /projeto_aplicado
 
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
