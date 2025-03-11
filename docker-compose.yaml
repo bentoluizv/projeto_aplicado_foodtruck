@@ -7,12 +7,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-    healthcheck:
-      test: curl --fail http://localhost:8000 || exit 1
-      interval: 10s
-      timeout: 10s
-      start_period: 10s
-      retries: 3
     env_file:
       - .env.dev
     networks:
@@ -20,7 +14,7 @@ services:
     depends_on:
       - postgres
       - redis
-    command: "fastapi dev projeto_aplicado/app.py --host 0.0.0.0"
+    command: "fastapi dev app.py --host 0.0.0.0"
 
   postgres:
     image: postgres:17.4
@@ -52,8 +46,47 @@ services:
     networks:
       - default_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - default_network
+    depends_on:
+      - backend
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    command: [ "--config=/etc/otel-collector-config.yml" ]
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    networks:
+      - default_network
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - default_network
+    depends_on:
+      - prometheus
+      - otel-collector
+      - backend
+
 volumes:
   postgres_data:
   redis_data:
+  grafana_data:
+
 networks:
   default_network:
