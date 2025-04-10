@@ -7,11 +7,23 @@ receivers:
 exporters:
   otlphttp:
     endpoint: http://prometheus:9090
-  logging:
+  debug:
     verbosity: detailed
+
+processors:
+  batch:
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      exporters: [debug, otlphttp]
+      exporters: [debug]
+      processors: [batch]
+    metrics:
+      receivers: [otlp]
+      exporters: [debug]
+      processors: [batch]
+    logs:
+      receivers: [otlp]
+      exporters: [debug]
+      processors: [batch]
