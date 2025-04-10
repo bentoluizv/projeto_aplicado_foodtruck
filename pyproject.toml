@@ -8,10 +8,6 @@ requires-python = ">=3.13, <4.0"
 dependencies = [
     "fastapi[standard] (>=0.115.9,<0.116.0)",
     "sqlmodel (>=0.0.22,<0.0.23)",
-    "prometheus-fastapi-instrumentator (>=7.0.2,<8.0.0)",
-    "opentelemetry-sdk (>=1.30.0,<2.0.0)",
-    "opentelemetry-exporter-otlp (>=1.30.0,<2.0.0)",
-    "opentelemetry-instrumentation-fastapi (>=0.51b0,<0.52)",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -42,9 +38,10 @@ addopts = '-p no:warnings'
 [tool.taskipy.tasks]
 lint = 'ruff check . && ruff check . --diff'
 format = 'ruff check . --fix && ruff format .'
-dev = 'fastapi dev projeto_aplicado/app.py'
+otel_start = 'opentelemetry-bootstrap -a install'
+dev = 'opentelemetry-instrument fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
-run = 'fastapi run projeto_aplicado/app.py'
+run = 'opentelemetry-instrument fastapi run projeto_aplicado/app.py'
 export = 'poetry export -f requirements.txt --output requirements.txt'
 
 [tool.poetry.requires-plugins]

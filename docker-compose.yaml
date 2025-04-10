@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/app
     env_file:
-      - .env.dev
+      - .env
     networks:
       - default_network
     depends_on:
@@ -19,7 +19,7 @@ services:
   postgres:
     image: postgres:17.4
     env_file:
-      - .env.dev
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -46,47 +46,9 @@ services:
     networks:
       - default_network
 
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - default_network
-    depends_on:
-      - backend
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    volumes:
-      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
-    command: [ "--config=/etc/otel-collector-config.yml" ]
-    ports:
-      - "4317:4317"  # OTLP gRPC
-      - "4318:4318"  # OTLP HTTP
-    networks:
-      - default_network
-    depends_on:
-      - backend
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - default_network
-    depends_on:
-      - prometheus
-      - otel-collector
-      - backend
-
 volumes:
   postgres_data:
   redis_data:
-  grafana_data:
 
 networks:
   default_network:
