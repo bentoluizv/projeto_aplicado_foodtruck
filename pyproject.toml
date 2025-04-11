@@ -38,10 +38,9 @@ addopts = '-p no:warnings'
 [tool.taskipy.tasks]
 lint = 'ruff check . && ruff check . --diff'
 format = 'ruff check . --fix && ruff format .'
-otel_start = 'opentelemetry-bootstrap -a install'
-dev = 'opentelemetry-instrument fastapi dev projeto_aplicado/app.py'
+dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
-run = 'opentelemetry-instrument fastapi run projeto_aplicado/app.py'
+run = 'fastapi run projeto_aplicado/app.py'
 export = 'poetry export -f requirements.txt --output requirements.txt'
 
 [tool.poetry.requires-plugins]
