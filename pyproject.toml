@@ -42,6 +42,7 @@ dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
 export = 'poetry export -f requirements.txt --output requirements.txt'
+css = 'npx @tailwindcss/cli -i ./static/main.css -o ./static/tailwind.css'
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
