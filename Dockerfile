@@ -5,8 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /projeto_aplicado
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc
+RUN apk update && apk upgrade
 
 COPY requirements.txt ./
 
@@ -22,7 +21,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY ./projeto_aplicado .
 
-RUN useradd -m appuser
+RUN adduser -D appuser
 USER appuser
 
 EXPOSE 8000
