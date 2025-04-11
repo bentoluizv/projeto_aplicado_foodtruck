@@ -19,7 +19,7 @@ WORKDIR /projeto_aplicado
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-COPY ./projeto_aplicado .
+COPY . .
 
 RUN adduser -D appuser
 USER appuser
