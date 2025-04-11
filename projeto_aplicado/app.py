@@ -37,7 +37,7 @@ async def home_page(request: Request):
 @app.get('/menu')
 async def menu_page(request: Request):
     """
-    Serve a página principal do projeto, retorna um HTML Response.
+    Serve a página de cardápio do projeto, retorna um HTML Response.
 
     """
     return templates.TemplateResponse('menu.html', {'request': request})
