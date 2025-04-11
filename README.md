@@ -43,6 +43,8 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
     ```powershell
     Invoke-WebRequest -UseBasicParsing https://pyenv-win.github.io/pyenv-win/install.ps1 | Invoke-Expression
+    Para atualizar o Pyenv elo pwoer Shell:
+    &"${env:PYENV_HOME}\install-pyenv-win.ps1"  
     pyenv install 3.13.0
     ```
 
@@ -63,6 +65,9 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     ```powershell
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
     Invoke-RestMethod -Uri <https://get.scoop.sh> | Invoke-Expression
+
+    Opcionalmente, se ocorrer erro, Instalar o Scoop no Modo Usuário:
+    irm get.scoop.sh | iex  
     ```
 
     - Instale o Pipx com o Scoop
