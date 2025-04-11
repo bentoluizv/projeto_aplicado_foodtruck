@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanctus Panis</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='main.css') }}">
+    <script src="{{ url_for('static', path='htmx.min.js') }}"></script>
+    <script src="{{ url_for('static', path='index.js') }}"></script>
+</head>
+
+<body class="max-h-screen min-h-screen bg-gray-100 text-gray-900 poppins-regular flex flex-col bg-orange-50">
+    <header class="flex justify-between shadow-md p-4 bg-orange-500 text-white">
+        <a href="/" class="poppings-bold text-xl">
+            <h1>Sanctus Panis</h1>
+        </a>
+        <div class="flex mr-[-23px] items-end">
+            <button
+                class="text-sm mr-4 cursor-pointer px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 z-50"
+                hx-on:click="tooggle()">☰
+            </button>
+        </div>
+    </header>
+    <aside class="hidden fixed pt-20 top-0 right-0 h-full w-32 text-sm bg-orange-500 text-white p-4 shadow-lg">
+        <nav class="flex flex-col items-end p-2">
+            <div id="nav-list">
+                <a href="/menu" class="mb-4">Cardárpio</a>
+            </div>
+        </nav>
+    </aside>
+    <main class="grow p-2 flex flex-col w-full items-center justify-center">
+        {% block main %}
+        {% endblock %}
+    </main>
+    <footer class="mt-auto ">
+        <div class="bg-orange-500 text-white text-center py-4">
+            <p>&copy; 2023 Sanctus Panis. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
