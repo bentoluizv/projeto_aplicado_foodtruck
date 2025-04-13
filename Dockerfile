@@ -1,4 +1,4 @@
-FROM python:3.13.3-alpine3.21 AS builder
+FROM python:3.13.3-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -10,7 +10,7 @@ COPY requirements.txt ./
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.13.3-alpine3.21
+FROM python:3.13.3-slim
 
 WORKDIR /projeto_aplicado
 
@@ -19,7 +19,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
-RUN adduser -D appuser
+RUN useradd appuser
 USER appuser
 
 EXPOSE 8000
