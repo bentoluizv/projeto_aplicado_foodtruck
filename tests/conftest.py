@@ -4,7 +4,7 @@ from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
 from projeto_aplicado.ext.database.db import create_all, drop_all, get_session
-from projeto_aplicado.models.entities import Category
+from projeto_aplicado.models.entities import Category, Item
 
 
 @pytest.fixture(scope='session')
@@ -52,3 +52,47 @@ def categories(session: Session):
     session.add_all(categories)
     session.commit()
     return categories
+
+
+@pytest.fixture
+def itens(session, categories):
+    itens = [
+        {
+            'name': 'X-Burguer',
+            'price': 25.0,
+            'category_id': categories[0].id,
+        },
+        {
+            'name': 'X-Salada',
+            'price': 20.0,
+            'category_id': categories[0].id,
+        },
+        {
+            'name': 'Cachorro-quente',
+            'price': 10.0,
+            'category_id': categories[1].id,
+        },
+        {
+            'name': 'Refrigerante',
+            'price': 5.0,
+            'category_id': categories[2].id,
+        },
+        {
+            'name': 'Batata frita',
+            'price': 8.0,
+            'category_id': categories[3].id,
+        },
+        {'name': 'Pudim', 'price': 12.0, 'category_id': categories[4].id},
+    ]
+
+    itens = [
+        Item(
+            name=item['name'],
+            price=item['price'],
+            category_id=item['category_id'],
+        )
+        for item in itens
+    ]
+    session.add_all(itens)
+    session.commit()
+    return itens
