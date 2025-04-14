@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from projeto_aplicado import api, pages
+from projeto_aplicado import controllers, pages
 from projeto_aplicado.ext.database.db import create_all
 from projeto_aplicado.settings import get_settings
 
@@ -24,4 +24,4 @@ app.mount(
 )
 
 app.include_router(pages.router)
-app.include_router(api.router)
+app.include_router(controllers.router)
