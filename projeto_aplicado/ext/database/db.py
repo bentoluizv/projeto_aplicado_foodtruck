@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 
+from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
 from projeto_aplicado.utils import get_db_url
@@ -18,6 +19,15 @@ config = {
 engine = create_engine(**config)
 
 
+def get_engine() -> Engine:
+    """
+    Retorna a instância do engine do banco de dados.
+
+    :return: Engine.
+    """
+    return engine
+
+
 @contextmanager
 def get_session():
     """
@@ -34,7 +44,11 @@ def get_session():
         session.close()
 
 
-def create_all():
+def create_all(engine: Engine):
     from projeto_aplicado.models import entities  # noqa: F401, PLC0415
 
     SQLModel.metadata.create_all(engine)
+
+
+def drop_all(engine: Engine):
+    SQLModel.metadata.drop_all(engine)
