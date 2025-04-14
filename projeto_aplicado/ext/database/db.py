@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, SQLModel, create_engine
 
 from projeto_aplicado.utils import get_db_url
 
@@ -18,15 +18,6 @@ config = {
 engine = create_engine(**config)
 
 
-def get_engine():
-    """
-    Retorna uma engine de banco de dados.
-
-    :return: engine.
-    """
-    return engine
-
-
 @contextmanager
 def get_session():
     """
@@ -41,3 +32,9 @@ def get_session():
 
     finally:
         session.close()
+
+
+def create_all():
+    from projeto_aplicado import models  # noqa: F401, PLC0415
+
+    SQLModel.metadata.create_all(engine)
