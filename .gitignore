@@ -180,3 +180,5 @@ pyrightconfig.json
 node_modules
 .secrets.toml
 .prod.env
+
+.vscode
