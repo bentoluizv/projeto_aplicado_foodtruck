@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     POSTGRES_HOSTNAME: str
     POSTGRES_PORT: str
     # Redis
-    REDIS_URL: str
+    REDIS_HOSTNAME: str
+    REDIS_PORT: int
     # Fastapi
     API_DEBUG: bool
     API_VERSION: str
