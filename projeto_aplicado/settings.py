@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Redis
     REDIS_HOSTNAME: str
     REDIS_PORT: int
+    REDIS_EXPIRE_IN_SECONDS: int
     # Fastapi
     API_DEBUG: bool
     API_VERSION: str
