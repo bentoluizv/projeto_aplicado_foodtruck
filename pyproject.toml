@@ -46,8 +46,6 @@ dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
 export = 'poetry export -f requirements.txt --output requirements.txt'
-db_migrate = 'alembic revision --autogenerate'
-db_upgrade = 'alembic upgrade head'
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
