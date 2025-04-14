@@ -35,6 +35,6 @@ def get_session():
 
 
 def create_all():
-    from projeto_aplicado import models  # noqa: F401, PLC0415
+    from projeto_aplicado.models import entities  # noqa: F401, PLC0415
 
     SQLModel.metadata.create_all(engine)
