@@ -11,21 +11,21 @@ redis = Redis(
 )
 
 
-def redis_set(key: str, value: dict):
+def set(key: str, value: dict):
     """
     Set a value in Redis with an expiration time.
     """
     redis.hset(key, mapping=value)
 
 
-def redis_get(key: str):
+def get(key: str):
     """
     Get a value from Redis.
     """
     return redis.hgetall(key)
 
 
-def redis_delete(key: str):
+def delete(key: str):
     """
     Delete a value from Redis.
     """
