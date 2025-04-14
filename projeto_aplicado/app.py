@@ -1,16 +1,21 @@
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+
+from projeto_aplicado import api, pages
+from projeto_aplicado.ext.database.db import create_all
+from projeto_aplicado.settings import get_settings
+
+settings = get_settings()
 
 app = FastAPI(
-    debug=True,
+    debug=settings.API_DEBUG,
     title='Projeto Aplicado SENAI 2025',
-    version='0.1.0',
+    version=settings.API_VERSION,
     description='API para o projeto aplicado do SENAI 2025',
+    lifespan=create_all(),
 )
-
 
 app.mount(
     '/static',
@@ -18,26 +23,5 @@ app.mount(
     name='static',
 )
 
-templates = Jinja2Templates(
-    directory='templates',
-    auto_reload=True,
-    cache_size=0,
-)
-
-
-@app.get('/')
-async def home_page(request: Request):
-    """
-    Serve a página principal do projeto, retorna um HTML Response.
-
-    """
-    return templates.TemplateResponse('index.html', {'request': request})
-
-
-@app.get('/menu')
-async def menu_page(request: Request):
-    """
-    Serve a página de cardápio do projeto, retorna um HTML Response.
-
-    """
-    return templates.TemplateResponse('menu.html', {'request': request})
+app.include_router(pages.router)
+app.include_router(api.router)
