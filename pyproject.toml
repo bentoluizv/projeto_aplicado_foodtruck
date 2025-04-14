@@ -9,7 +9,6 @@ dependencies = [
     "fastapi[standard] (>=0.115.9,<0.116.0)",
     "sqlmodel (>=0.0.22,<0.0.23)",
     "pydantic-settings (>=2.8.1,<3.0.0)",
-    "alembic (>=1.15.2,<2.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "python-ulid (>=3.0.0,<4.0.0)",
 
@@ -47,6 +46,8 @@ dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
 export = 'poetry export -f requirements.txt --output requirements.txt'
+db_migrate = 'alembic revision --autogenerate'
+db_upgrade = 'alembic upgrade head'
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
