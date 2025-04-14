@@ -29,16 +29,8 @@ def get_categories(
     Get all categories.
 
     """
-    try:
-        categories = repository.get_all(offset=offset, limit=limit)
-
-        return categories
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'Error retrieving categories: {str(e)}',
-        )
+    categories = repository.get_all(offset=offset, limit=limit)
+    return categories
 
 
 @router.get('/{category_id}', response_model=Category)
@@ -46,22 +38,15 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
     """
     Get a category by ID.
     """
-    try:
-        category = repository.get_by_id(category_id)
+    category = repository.get_by_id(category_id)
 
-        if not category:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail='Category not found',
-            )
-
-        return category
-
-    except Exception as e:
+    if not category:
         raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'Error retrieving category: {str(e)}',
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f'Category with {category_id} not found',
         )
+
+    return category
 
 
 @router.post('/', response_model=BaseResponse)
@@ -69,28 +54,22 @@ def create_category(data: CreateCategoryDTO, repository: CategoryRepo):
     """
     Create a new category.
     """
-    try:
-        existing_category = repository.get_by_name(data.name)
 
-        if existing_category:
-            raise HTTPException(
-                status_code=HTTPStatus.CONFLICT,
-                detail='Category already exists',
-            )
+    existing_category = repository.get_by_name(data.name)
 
-        new_category = Category(name=data.name)
-
-        repository.create(new_category)
-
-        return {
-            'id': new_category.id,
-            'action': 'created',
-        }
-    except Exception as e:
+    if existing_category:
         raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'Error creating category: {str(e)}',
+            status_code=HTTPStatus.CONFLICT,
+            detail='Category already exists',
         )
+
+    new_category = Category(name=data.name)
+    repository.create(new_category)
+
+    return {
+        'id': new_category.id,
+        'action': 'created',
+    }
 
 
 @router.patch('/{category_id}', response_model=BaseResponse)
@@ -100,27 +79,21 @@ def update_category(
     """
     Update a category by ID.
     """
-    try:
-        existing_category = repository.get_by_id(category_id)
 
-        if not existing_category:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail='Category not found',
-            )
+    existing_category = repository.get_by_id(category_id)
 
-        repository.update(existing_category, dto)
-
-        return {
-            'id': existing_category.id,
-            'action': 'updated',
-        }
-
-    except Exception as e:
+    if not existing_category:
         raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'Error updating category: {str(e)}',
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Category not found',
         )
+
+    repository.update(existing_category, dto)
+
+    return {
+        'id': existing_category.id,
+        'action': 'updated',
+    }
 
 
 @router.delete('/{category_id}', response_model=BaseResponse)
@@ -128,23 +101,18 @@ def delete_category(category_id: str, repository: CategoryRepo):
     """
     Delete a category by ID.
     """
-    try:
-        existing_category = repository.get_by_id(category_id)
 
-        if not existing_category:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
-                detail='Category not found',
-            )
-        repository.delete(existing_category)
+    existing_category = repository.get_by_id(category_id)
 
-        return {
-            'id': existing_category.id,
-            'action': 'deleted',
-        }
-
-    except Exception as e:
+    if not existing_category:
         raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail=f'Error deleting category: {str(e)}',
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Category not found',
         )
+
+    repository.delete(existing_category)
+
+    return {
+        'id': existing_category.id,
+        'action': 'deleted',
+    }
