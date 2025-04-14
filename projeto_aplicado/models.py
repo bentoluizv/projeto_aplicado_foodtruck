@@ -5,8 +5,7 @@ from projeto_aplicado.utils import get_ulid_as_str
 
 class Category(SQLModel, table=True):
     id: str = Field(default_factory=get_ulid_as_str, primary_key=True)
-    name: str
-    description: str | None = None
+    name: str = Field(max_length=20, index=True, unique=True)
     itens: list['Item'] = Relationship(back_populates='category')
 
 
