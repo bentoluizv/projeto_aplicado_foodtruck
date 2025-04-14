@@ -4,6 +4,7 @@ from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
 from projeto_aplicado.ext.database.db import create_all, drop_all, get_session
+from projeto_aplicado.models.entities import Category
 
 
 @pytest.fixture(scope='session')
@@ -36,3 +37,18 @@ def client(session):
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def categories(session: Session):
+    categories = [
+        {'name': 'Hambúrgueres'},
+        {'name': 'Cachorros-quentes'},
+        {'name': 'Bebidas'},
+        {'name': 'Acompanhamentos'},
+        {'name': 'Sobremesas'},
+    ]
+    categories = [Category(name=category['name']) for category in categories]
+    session.add_all(categories)
+    session.commit()
+    return categories
