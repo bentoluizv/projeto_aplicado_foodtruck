@@ -16,34 +16,42 @@
     <script src="{{ url_for('static', path='index.js') }}"></script>
 </head>
 
-<body class="max-h-screen min-h-screen bg-gray-100 text-gray-900 poppins-regular flex flex-col bg-orange-50">
-    <header class="flex justify-between shadow-md p-4 bg-orange-500 text-white">
-        <a href="/" class="poppings-bold text-xl">
-            <h1>Sanctus Panis</h1>
+<body
+    class="max-h-screen min-h-screen overflow-hidden bg-gray-100 text-gray-900 poppins-regular flex flex-col bg-orange-50">
+    <header id="header" class="flex items-center justify-between py-2 px-4 bg-orange-200 text-slate-800 shadow-md">
+        <a href="/" class="cursor-pointer hover:underline decoration-wavy self-start">
+            <h1 class="poppings-bold text-md font-semibold text-nowrap">Sanctus Panis</h1>
         </a>
-        <div class="flex mr-[-23px] items-end">
-            <button
-                class="text-sm mr-4 cursor-pointer px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 z-50"
-                hx-on:click="tooggle()">☰
-            </button>
-        </div>
+        <button id="toggleBtn"
+            class="self-end cursor-pointer z-90 text-xl text-zinc-800 p-1 hover:scale-130 transition-transform duration-300 ease-in-out"
+            hx-on:click="toggle()">☰
+        </button>
     </header>
-    <aside class="hidden fixed pt-20 top-0 right-0 h-full w-32 text-sm bg-orange-500 text-white p-4 shadow-lg">
-        <nav class="flex flex-col items-end p-2">
-            <div id="nav-list">
-                <a href="/menu" class="mb-4">Cardárpio</a>
+    <section
+        class="absolute top-12 grid grid-cols-2 h-[140px] w-full gap-4 bg-orange-200 py-2 px-4 text-md font-light transition-all duration-300 ease-in-out transform hidden shadow-md"
+        id="menu">
+        <div class="flex flex-col justify-end items-start text-sm font-light">
+            <h2 class="text-sm font-light text-gray-800">
+                Seja bem-vinde, <span
+                    class="font-bold text-orange-600 underline decoration-wavy decoration-zinc-400">usuário.</span>
+            </h2>
+        </div>
+        <nav class="flex flex-col items-end justify-between">
+            <div class="flex flex-col items-end">
+                <a href="/menu" class="cursor-pointer hover:font-semibold hover:text-orange-600">Cardápio</a>
+                <a href="/pedidos" class="cursor-pointer hover:font-semibold hover:text-orange-600">Pedidos</a>
             </div>
+            <a href="/logout" class="cursor-pointer hover:font-semibold text-orange-600">Sair</a>
         </nav>
-    </aside>
-    <main class="grow p-2 flex flex-col w-full items-center justify-center">
+    </section>
+    <main class="grow flex flex-col px-4 py-2">
         {% block main %}
         {% endblock %}
     </main>
-    <footer class="mt-auto ">
-        <div class="bg-orange-500 text-white text-center py-4">
-            <p>&copy; 2023 Sanctus Panis. Todos os direitos reservados.</p>
-        </div>
+    <footer class="bg-slate-800 text-orange-600 flex flex-col px-4 py-2 text-center text-xs font-semibold">
+        <p>&copy; 2025 Sanctus Panis. Todos os direitos reservados.</p>
     </footer>
+
 </body>
 
 </html>
