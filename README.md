@@ -96,13 +96,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     poetry install # Instala as dependências
     ```
 
-3. Execute a aplicação:
-
-    ```sh
-    task dev
-    ```
-
-4. Crie um arquivo requirements.txt a partir do Poetry:
+3. Crie um arquivo requirements.txt a partir do Poetry:
 
     ```sh
     task export
@@ -136,4 +130,17 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
     ```sh
     docker-compose up --build
-    ```
+    ``
+
+    Certifique-se de que o banco de dados foi inicializado corretamente antes de prosseguir.
+
+### Próximos Passos
+
+Após configurar o ambiente e inicializar o banco de dados, você pode explorar a documentação interativa da API fornecida pelo FastAPI. A aplicação disponibiliza duas rotas principaispara documentação:
+
+1. **Swagger UI**: Acesse a rota `/docs` para visualizar e testar os endpoints da API de forma interativa.
+    - URL: `http://localhost:8000/docs`
+2. **ReDoc**: Acesse a rota `/redoc` para uma documentação mais detalhada e estruturada.
+    - URL: `http://localhost:8000/redoc`
+
+Certifique-se de que a aplicação está em execução antes de acessar as rotas de documentação.
