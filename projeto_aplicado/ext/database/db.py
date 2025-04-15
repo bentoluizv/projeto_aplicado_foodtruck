@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -28,7 +26,6 @@ def get_engine() -> Engine:
     return engine
 
 
-@contextmanager
 def get_session():
     """
     Retorna uma sessão de banco de dados.
@@ -36,12 +33,9 @@ def get_session():
     :return: Session.
     """
     session = Session(engine)
+    yield session
 
-    try:
-        yield session
-
-    finally:
-        session.close()
+    session.close()
 
 
 def create_all(engine: Engine):
