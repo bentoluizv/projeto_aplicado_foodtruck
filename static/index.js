@@ -1,6 +1,10 @@
-const tooggle = () => {
-        const aside = document.querySelector('aside');
-        const menuButton = document.querySelector('button[hx-on\\:click="tooggle()"]');
-        menuButton.textContent = aside.classList.contains('hidden') ? '✕' : '☰';
-        aside.classList.toggle('hidden');
+const toggle = () => {
+    const toggleBtn = document.getElementById('toggleBtn');
+    const menu = document.getElementById('menu');
+    const isHidden = menu.classList.toggle('hidden');
+    if (isHidden) {
+        toggleBtn.innerHTML = '☰';
+    } else {
+        toggleBtn.innerHTML = '✖';
     }
+}
