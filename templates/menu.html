@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block main %}
-<h1>Welcome to the Menu Page</h1>
-<p>This is the content of the Menu page.</p>
+<div class="grow flex flex-col">
+    <section hx-get="/api/v1/categories" hx-target="this" hx-trigger="load">
+
+    </section>
+</div>
 {% endblock %}

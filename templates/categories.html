@@ -1,0 +1,12 @@
+<!-- templates/categories.html -->
+{% if not categories %}
+<p>No categories available.</p>
+{% else %}
+<ul>
+    {% for category in categories %}
+    <li>
+        {{category.id}} - {{category.name}}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
