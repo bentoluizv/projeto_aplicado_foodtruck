@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.templating import Jinja2Templates
 
 from projeto_aplicado.models.entities import Item
 from projeto_aplicado.models.schemas import (
@@ -13,6 +14,13 @@ from projeto_aplicado.repositories.item_repository import (
     ItemRepository,
     get_item_repository,
 )
+
+templates = Jinja2Templates(
+    directory='templates',
+    auto_reload=True,
+    cache_size=0,
+)
+
 
 router = APIRouter(tags=['Item'], prefix='/itens')
 
