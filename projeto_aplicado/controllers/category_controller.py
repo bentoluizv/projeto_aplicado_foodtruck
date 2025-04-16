@@ -73,7 +73,12 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
 
 
 @router.post('/', response_model=BaseResponse)
-def create_category(data: CreateCategoryDTO, repository: CategoryRepo):
+def create_category(
+    request: Request,
+    data: CreateCategoryDTO,
+    repository: CategoryRepo,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+):
     """
     Create a new category.
     """
@@ -86,7 +91,7 @@ def create_category(data: CreateCategoryDTO, repository: CategoryRepo):
             detail='Category already exists',
         )
 
-    new_category = Category(name=data.name)
+    new_category = Category(name=data.name, icon_url=data.icon_url)
     repository.create(new_category)
 
     return {
