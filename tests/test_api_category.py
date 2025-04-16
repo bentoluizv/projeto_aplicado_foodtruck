@@ -39,7 +39,7 @@ def test_get_category_by_id_not_found(client, categories):
 def test_create_category(client):
     data = {'name': 'New Category', 'icon_url': 'icon_url_value'}
     response = client.post(f'{API_PREFIX}/categories/', json=data)
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.CREATED
     assert response.json()['action'] == 'created'
 
 
