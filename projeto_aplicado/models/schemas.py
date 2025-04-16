@@ -3,6 +3,7 @@ from sqlmodel import SQLModel
 
 class CreateCategoryDTO(SQLModel):
     name: str
+    icon_url: str
 
 
 class UpdateCategoryDTO(SQLModel):
