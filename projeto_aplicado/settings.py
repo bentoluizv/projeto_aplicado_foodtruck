@@ -21,11 +21,15 @@ class Settings(BaseSettings):
     API_DEBUG: bool
     API_VERSION: str
     API_PREFIX: str
-    # S3
-    S3_ACCESS_KEY_ID: str
-    S3_ACCESS_KEY_SECRET: str
-    S3_ENDPOINT: str
-    S3_REGION: str
+    # Supabase
+    SUPABASE_S3_ACCESS_KEY_ID: str
+    SUPABASE_S3_ACCESS_KEY_SECRET: str
+    SUPABASE_S3_ENDPOINT: str
+    SUPABASE_S3_REGION: str
+    SUPABASE_URL: str
+    SUPABASE_ANON_PUB: str
+    SUPABASE_SERVICE_SECRET: str
+    SUPABASE_JWT_SECRET: str
 
 
 def get_settings() -> Settings:
