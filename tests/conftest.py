@@ -42,13 +42,16 @@ def client(session):
 @pytest.fixture
 def categories(session: Session):
     categories = [
-        {'name': 'Hambúrgueres'},
-        {'name': 'Cachorros-quentes'},
-        {'name': 'Bebidas'},
-        {'name': 'Acompanhamentos'},
-        {'name': 'Sobremesas'},
+        {'name': 'Hambúrgueres', 'icon_url': 'i'},
+        {'name': 'Cachorros-quentes', 'icon_url': 'i'},
+        {'name': 'Bebidas', 'icon_url': 'i'},
+        {'name': 'Acompanhamentos', 'icon_url': 'i'},
+        {'name': 'Sobremesas', 'icon_url': 'i'},
     ]
-    categories = [Category(name=category['name']) for category in categories]
+    categories = [
+        Category(name=category['name'], icon_url=category['icon_url'])
+        for category in categories
+    ]
     session.add_all(categories)
     session.commit()
     return categories
