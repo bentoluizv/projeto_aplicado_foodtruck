@@ -7,7 +7,7 @@ class Category(SQLModel, table=True):
     id: str = Field(default_factory=get_ulid_as_str, primary_key=True)
     name: str = Field(max_length=20, index=True, unique=True)
     itens: list['Item'] = Relationship(back_populates='category')
-    icon: bytes = Field(nullable=False)
+    icon_url: str = Field(nullable=False)
 
 
 class Item(SQLModel, table=True):
