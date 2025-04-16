@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.templating import Jinja2Templates
 
 # from projeto_aplicado.ext.cache.redis import get_many
-from projeto_aplicado.models.entities import Category
+from projeto_aplicado.models.entities import Category, Item
 from projeto_aplicado.models.schemas import (
     BaseResponse,
     CreateCategoryDTO,
@@ -70,6 +70,22 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
         )
 
     return category
+
+
+@router.get('/{category_id}/itens', response_model=list[Item])
+def get_(category_id: str, repository: CategoryRepo):
+    """
+    Get items by category ID.
+    """
+    category = repository.get_by_id(category_id)
+
+    if not category:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f'Category with {category_id} not found',
+        )
+
+    return category.itens
 
 
 @router.post(
