@@ -72,7 +72,11 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
     return category
 
 
-@router.post('/', response_model=BaseResponse)
+@router.post(
+    '/',
+    response_model=BaseResponse,
+    status_code=HTTPStatus.CREATED,
+)
 def create_category(
     request: Request,
     data: CreateCategoryDTO,
