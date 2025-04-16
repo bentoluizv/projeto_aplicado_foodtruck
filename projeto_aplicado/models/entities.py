@@ -1,3 +1,4 @@
+from sqlalchemy import Engine, MetaData
 from sqlmodel import Field, Relationship, SQLModel
 
 from projeto_aplicado.utils import get_ulid_as_str
@@ -18,3 +19,28 @@ class Item(SQLModel, table=True):
     image: bytes | None = Field(default=None)
     category_id: str = Field(foreign_key='category.id')
     category: Category = Relationship(back_populates='itens')
+
+
+def create_all(engine: Engine):
+    """
+    Cria todas as tabelas do banco de dados.
+    :param engine: Engine do banco de dados.
+    """
+    SQLModel.metadata.create_all(engine)
+
+
+def drop_all(engine: Engine):
+    """
+    Remove todas as tabelas do banco de dados.
+    :param engine: Engine do banco de dados.
+    """
+    SQLModel.metadata.drop_all(engine)
+
+
+def get_metadata() -> MetaData:
+    """
+    Retorna a instância do metadata do SQLModel.
+
+    :return: Metadata do SQLModel.
+    """
+    return SQLModel.metadata
