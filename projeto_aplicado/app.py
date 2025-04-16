@@ -4,10 +4,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from projeto_aplicado import controllers, pages
-from projeto_aplicado.ext.database.db import (  # noqa: F401
-    create_all,
+from projeto_aplicado.ext.database.db import (
     get_engine,
 )
+
+# from projeto_aplicado.models.entities import create_all
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
