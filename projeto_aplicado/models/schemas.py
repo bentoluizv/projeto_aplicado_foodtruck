@@ -27,3 +27,13 @@ class UpdateItemDTO(SQLModel):
 class BaseResponse(SQLModel):
     id: str
     action: str
+
+
+class Icon(SQLModel):
+    id: str
+    icon: str
+    url: str
+
+
+class IconsResponse(SQLModel):
+    icons: list[Icon]
