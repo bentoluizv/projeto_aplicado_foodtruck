@@ -33,16 +33,13 @@ def list_all_icons(
     """  # noqa: E501
 
     bucket_name = 'category-icons'
-
     files = supabase.storage.from_(bucket_name).list(
-        'folder',
-        {
+        options={
             'limit': limit,
             'offset': offset,
             'sortBy': sort_by,
         },
     )
-
     result = []
 
     for file in files:
@@ -51,7 +48,7 @@ def list_all_icons(
         public_url = supabase.storage.from_(bucket_name).get_public_url(
             file_name
         )
-        name, id = file_name.split('_')
+        name, id = file_name.replace('.png', '').split('_')
 
         result.append({'id': id, 'icon': name, 'url': public_url})
 
