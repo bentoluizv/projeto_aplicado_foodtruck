@@ -1,10 +1,58 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="pt-br">
 
-{% block main %}
-<div class="grow flex flex-col">
-    <section>
-        <h1>Welcome to the Index Page</h1>
-        <p>This is the content of the index page.</p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanctus Panis</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='main.css') }}">
+    <script src="{{ url_for('static', path='htmx.min.js') }}"></script>
+    <script src="{{ url_for('static', path='index.js') }}"></script>
+</head>
+
+<body
+    class="max-h-screen min-h-screen overflow-hidden bg-gray-100 text-gray-900 poppins-regular flex flex-col bg-orange-50">
+    <header id="header" class="flex items-center justify-between py-2 px-4 bg-orange-200 text-slate-800 shadow-md">
+        <a href="/" class="cursor-pointer hover:underline decoration-wavy self-start">
+            <h1 class="poppings-bold text-md font-semibold text-nowrap">Sanctus Panis</h1>
+        </a>
+        <button id="toggleBtn"
+            class="self-end cursor-pointer text-xl text-zinc-800 p-1 hover:scale-130 transition-transform duration-300 ease-in-out"
+            hx-on:click="toggleMenuDropdown()">☰
+        </button>
+    </header>
+    <section
+        class="absolute top-12 grid grid-cols-2 h-[140px] w-full gap-4 bg-orange-200 py-2 px-4 text-md font-light transition-all duration-300 ease-in-out transform hidden shadow-md"
+        id="menu">
+        <div class="flex flex-col justify-end items-start text-sm font-light">
+            <h2 class="text-sm font-light text-gray-800">
+                Seja bem-vinde, <span
+                    class="font-bold text-orange-600 underline decoration-wavy decoration-zinc-400">usuário.</span>
+            </h2>
+        </div>
+        <nav class="flex flex-col items-end justify-between">
+            <div class="flex flex-col items-end">
+                <a hx-get="/menu" hx-target="#content" hx-load="innerHTML"
+                    class="cursor-pointer hover:font-semibold hover:text-orange-600">Cardápio</a>
+                <a hx-get="/pedidos" hx-target="#content" hx-load="innerHTML"
+                    class="cursor-pointer hover:font-semibold hover:text-orange-600">Pedidos</a>
+            </div>
+            <a href="/logout" class="cursor-pointer hover:font-semibold text-orange-600">Sair</a>
+        </nav>
     </section>
-</div>
-{% endblock %}
+    <main id="content" class="grow flex flex-col px-4 py-2">
+
+    </main>
+    <footer class="bg-slate-800 text-orange-600 flex flex-col px-4 py-2 text-center text-xs font-semibold">
+        <p>&copy; 2025 Sanctus Panis. Todos os direitos reservados.</p>
+    </footer>
+
+</body>
+
+</html>
