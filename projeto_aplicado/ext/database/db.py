@@ -1,7 +1,7 @@
 from sqlalchemy import Engine
 from sqlmodel import Session, create_engine
 
-from projeto_aplicado.utils import get_db_url
+from projeto_aplicado.data.utils import get_db_url
 
 from ...settings import get_settings
 

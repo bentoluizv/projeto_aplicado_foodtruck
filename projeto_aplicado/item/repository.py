@@ -3,11 +3,11 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, select
 
-from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.models.entities import Item
-from projeto_aplicado.models.schemas import (
+from projeto_aplicado.data.schemas import (
     UpdateItemDTO,
 )
+from projeto_aplicado.ext.database.db import get_session
+from projeto_aplicado.item.model import Item
 
 
 class ItemRepository:

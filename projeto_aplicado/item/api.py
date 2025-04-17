@@ -4,27 +4,27 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 
-from projeto_aplicado.models.entities import Item
-from projeto_aplicado.models.schemas import (
+from projeto_aplicado.data.schemas import (
     BaseResponse,
     CreateItemDTO,
     UpdateItemDTO,
 )
-from projeto_aplicado.repositories.item_repository import (
+from projeto_aplicado.item.model import Item
+from projeto_aplicado.item.repository import (
     ItemRepository,
     get_item_repository,
 )
+from projeto_aplicado.settings import get_settings
 
 templates = Jinja2Templates(
     directory='templates',
     auto_reload=True,
     cache_size=0,
 )
-
-
-router = APIRouter(tags=['Item'], prefix='/itens')
-
+settings = get_settings()
 ItemRepo = Annotated[ItemRepository, Depends(get_item_repository)]
+
+router = APIRouter(tags=['Item'], prefix=f'{settings.API_PREFIX}/itens')
 
 
 @router.get('/', response_model=list[Item])

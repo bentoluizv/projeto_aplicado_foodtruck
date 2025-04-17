@@ -4,17 +4,19 @@ from typing import Annotated, Union
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.templating import Jinja2Templates
 
-# from projeto_aplicado.ext.cache.redis import get_many
-from projeto_aplicado.models.entities import Category, Item
-from projeto_aplicado.models.schemas import (
+from projeto_aplicado.data.schemas import (
     BaseResponse,
     CreateCategoryDTO,
     UpdateCategoryDTO,
 )
-from projeto_aplicado.repositories.category_repository import (
-    CategoryRepository,
+
+# from projeto_aplicado.ext.cache.redis import get_many
+from projeto_aplicado.item_category.model import ItemCategory
+from projeto_aplicado.item_category.repository import (
+    ItemCategoryRepository,
     get_category_repository,
 )
+from projeto_aplicado.settings import get_settings
 
 templates = Jinja2Templates(
     directory='templates',
@@ -22,16 +24,21 @@ templates = Jinja2Templates(
     cache_size=0,
 )
 
+settings = get_settings()
 
-router = APIRouter(tags=['Category'], prefix='/categories')
+router = APIRouter(
+    tags=['Category'], prefix=f'{settings.API_PREFIX}/categories'
+)
 
-CategoryRepo = Annotated[CategoryRepository, Depends(get_category_repository)]
+ItemCategoryRepo = Annotated[
+    ItemCategoryRepository, Depends(get_category_repository)
+]
 
 
-@router.get('/', response_model=list[Category])
+@router.get('/', response_model=list[ItemCategory])
 def get_categories(
     request: Request,
-    repository: CategoryRepo,
+    repository: ItemCategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
     offset: int = 0,
     limit: int = Query(default=100, le=100),
@@ -56,8 +63,8 @@ def get_categories(
     return categories
 
 
-@router.get('/{category_id}', response_model=Category)
-def get_category_by_id(category_id: str, repository: CategoryRepo):
+@router.get('/{category_id}', response_model=ItemCategory)
+def get_category_by_id(category_id: str, repository: ItemCategoryRepo):
     """
     Get a category by ID.
     """
@@ -72,8 +79,8 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
     return category
 
 
-@router.get('/{category_id}/itens', response_model=list[Item])
-def get_(category_id: str, repository: CategoryRepo):
+@router.get('/{category_id}/itens', response_model=list[ItemCategory])
+def get_items_by_category(category_id: str, repository: ItemCategoryRepo):
     """
     Get items by category ID.
     """
@@ -96,7 +103,7 @@ def get_(category_id: str, repository: CategoryRepo):
 def create_category(
     request: Request,
     data: CreateCategoryDTO,
-    repository: CategoryRepo,
+    repository: ItemCategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
@@ -111,7 +118,7 @@ def create_category(
             detail='Category already exists',
         )
 
-    new_category = Category(name=data.name, icon_url=data.icon_url)
+    new_category = ItemCategory(name=data.name, icon_url=data.icon_url)
     repository.create(new_category)
 
     return {
@@ -122,7 +129,7 @@ def create_category(
 
 @router.patch('/{category_id}', response_model=BaseResponse)
 def update_category(
-    category_id: str, dto: UpdateCategoryDTO, repository: CategoryRepo
+    category_id: str, dto: UpdateCategoryDTO, repository: ItemCategoryRepo
 ):
     """
     Update a category by ID.
@@ -145,7 +152,7 @@ def update_category(
 
 
 @router.delete('/{category_id}', response_model=BaseResponse)
-def delete_category(category_id: str, repository: CategoryRepo):
+def delete_category(category_id: str, repository: ItemCategoryRepo):
     """
     Delete a category by ID.
     """

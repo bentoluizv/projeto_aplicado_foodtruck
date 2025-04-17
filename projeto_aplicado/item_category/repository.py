@@ -3,21 +3,21 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, select
 
-from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.models.entities import Category
-from projeto_aplicado.models.schemas import (
+from projeto_aplicado.data.schemas import (
     UpdateCategoryDTO,
 )
+from projeto_aplicado.ext.database.db import get_session
+from projeto_aplicado.item_category.model import ItemCategory
 
 
-class CategoryRepository:
+class ItemCategoryRepository:
     def __init__(self, session: Session):
         """
         Repository for Category entity.
         """
         self.session = session
 
-    def create(self, category: Category):
+    def create(self, category: ItemCategory):
         try:
             self.session.add(category)
             self.session.commit()
@@ -31,7 +31,7 @@ class CategoryRepository:
     def get_all(self, offset: int = 0, limit: int = 100):
         try:
             categories = self.session.exec(
-                select(Category).offset(offset).limit(limit)
+                select(ItemCategory).offset(offset).limit(limit)
             ).all()
 
             return categories
@@ -42,7 +42,7 @@ class CategoryRepository:
 
     def get_by_id(self, category_id: str):
         try:
-            category = self.session.get(Category, category_id)
+            category = self.session.get(ItemCategory, category_id)
 
             return category
 
@@ -56,7 +56,7 @@ class CategoryRepository:
         """
         try:
             category = self.session.exec(
-                select(Category).where(Category.name == name)
+                select(ItemCategory).where(ItemCategory.name == name)
             ).first()
 
             return category
@@ -65,7 +65,7 @@ class CategoryRepository:
             self.session.rollback()
             raise e
 
-    def update(self, category: Category, dto: UpdateCategoryDTO):
+    def update(self, category: ItemCategory, dto: UpdateCategoryDTO):
         """
         Update a category.
         """
@@ -79,7 +79,7 @@ class CategoryRepository:
             self.session.rollback()
             raise e
 
-    def delete(self, category: Category):
+    def delete(self, category: ItemCategory):
         try:
             self.session.delete(category)
             self.session.commit()
@@ -96,4 +96,4 @@ def get_category_repository(
     Dependency to get the CategoryRepository.
 
     """
-    return CategoryRepository(session)
+    return ItemCategoryRepository(session)

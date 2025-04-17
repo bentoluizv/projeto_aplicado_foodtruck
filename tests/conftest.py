@@ -3,13 +3,10 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
+from projeto_aplicado.data.utils import create_all, drop_all
 from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.models.entities import (
-    Category,
-    Item,
-    create_all,
-    drop_all,
-)
+from projeto_aplicado.item.model import Item
+from projeto_aplicado.item_category.model import ItemCategory
 
 
 @pytest.fixture(scope='session')
@@ -24,7 +21,7 @@ def engine():
 
 @pytest.fixture
 def session(engine):
-    create_all(engine)
+    create_all(engine)  # noqa: F821
 
     with Session(engine) as session:
         yield session
@@ -54,7 +51,7 @@ def categories(session: Session):
         {'name': 'Sobremesas', 'icon_url': 'i'},
     ]
     categories = [
-        Category(name=category['name'], icon_url=category['icon_url'])
+        ItemCategory(name=category['name'], icon_url=category['icon_url'])
         for category in categories
     ]
     session.add_all(categories)
