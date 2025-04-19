@@ -66,7 +66,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
     Invoke-RestMethod -Uri <https://get.scoop.sh> | Invoke-Expression
 
-    Opcionalmente, se ocorrer erro, Instalar o Scoop no Modo Usuário:
+    Opcionalmente se ocorrer erro, instalar o Scoop no Modo Usuário:
     irm get.scoop.sh | iex  
     ```
 
