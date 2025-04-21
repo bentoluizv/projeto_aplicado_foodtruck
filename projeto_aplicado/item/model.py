@@ -8,7 +8,7 @@ class Item(SQLModel, table=True):
     name: str = Field(max_length=80, index=True)
     description: str | None = Field(default=None, max_length=255)
     price: float = Field(nullable=False, gt=0.0)
-    image: bytes | None = Field(default=None)
+    image_url: str | None = Field(default=None)
     category_id: str = Field(foreign_key='itemcategory.id')
     category: 'ItemCategory' = Relationship(back_populates='itens')
 
