@@ -1,7 +1,16 @@
 from http import HTTPStatus
-from typing import Annotated
+from typing import Annotated, Union
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.templating import Jinja2Templates
 from supabase import Client
 
@@ -59,31 +68,28 @@ def get_product_by_id(product_id: str, repository: ProductRepo):
 
 
 @router.post('/', response_model=BaseResponse, status_code=HTTPStatus.CREATED)
-def create_product(  # noqa: PLR0913, PLR0917
+async def create_product(  # noqa: PLR0913, PLR0917
     request: Request,
     price: Annotated[float, Form()],
-    image: Annotated[bytes, Form()],
+    image: Annotated[UploadFile, File()],
     name: Annotated[str, Form()],
     description: Annotated[str, Form()],
     category_id: Annotated[str, Form()],
     repository: ProductRepo,
     supabase: Supabase,
+    hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
     Create a new product.
     """
 
-    img_url = uploadProductImage(
-        supabase, image, name.strip().replace(' ', '-').lower()
-    )
-
-    hasDescription = bool(description.strip())
+    img_url = await uploadProductImage(supabase, image)
 
     data = CreateProductDTO(
         name=name,
         price=price,
         img_url=img_url,
-        description=description if hasDescription else None,
+        description=description,
         category_id=category_id,
     )
 
@@ -105,6 +111,16 @@ def create_product(  # noqa: PLR0913, PLR0917
 
     repository.create(new_product)
 
+    if hx_request:
+        return templates.TemplateResponse(
+            request,
+            'product_item.html',
+            headers={'HX-Trigger': 'productsUpdated'},
+            context={
+                'product': repository.get_all(),
+            },
+            status_code=HTTPStatus.CREATED,
+        )
     return BaseResponse(id=new_product.id, action='created')
 
 
