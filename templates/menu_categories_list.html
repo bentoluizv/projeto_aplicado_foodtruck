@@ -1,4 +1,4 @@
-<!-- templates/categories.html -->
+<!-- templates/menu_categories_list.html -->
 {% if not categories %}
 <p class="text-sm max-w-sm text-center text-gray-700">
     Parece que você ainda não tem nenhuma categoria cadastrada. Tente clicar <span
@@ -14,7 +14,7 @@
     <span class="text-xs text-center font-semibold">Categoria</span>
 </div>
 {% for category in categories %}
-<div id="{{ category.id }}" hx-get="/api/v1/categories/{{category.id}}/products" hx-target="#category-item"
+<div id="{{ category.id }}" hx-get="/api/v1/categories/{{category.id}}" hx-target="#selected-category"
     hx-trigger="click" hx-on:click="onCategorySelect(this)"
     class="size-25 p-2 flex flex-col items-center justify-center hover:border-2 hover:border-orange-600 rounded cursor-pointer shrink-0">
     <img src="{{ category.icon_url }}" alt="{{ category.name }}"

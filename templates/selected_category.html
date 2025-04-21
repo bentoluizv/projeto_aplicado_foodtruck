@@ -1,16 +1,6 @@
-{% if not products %}
-<p class="text-gray-800 text-center mt-4">
-    Nenhum produto cadastrado, você pode cadastrar um clicando
-    <span hx-on:click="toggleHidden('#edit-category-dialog')"
-        class="text-orange-600 font-semibold underline cursor-pointer">aqui</span>.
-</p>
-{% else %}
-<ul class="list-disc list-inside mt-4 space-y-2">
-    {% for product in products %}
-    <li class="text-gray-700">{{ product.name }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+<div id="selected-category-products" hx-get="/api/v1/categories/{{category.id}}/products"
+    hx-trigger="load, productsUpdated from:body" hx-headers='{"source": "selected_category_products"}'>
+</div>
 
 <dialog id="edit-category-dialog"
     class="hidden w-screen h-screen bg-orange-200/30 absolute top-0 backdrop-blur-xs flex items-center justify-center">
@@ -23,8 +13,9 @@
             </button>
         </div>
 
-        <form hx-post="/api/v1/products/" hx-on::after-request="if(event.detail.successful) this.reset()"
-            hx-target="#category-itens" class="flex flex-col p-8" id="category-form">
+        <form hx-post="/api/v1/products/" hx-on:after-request="if(event.detail.successful) this.reset()"
+            hx-target="#category-products" hx-encoding="multipart/form-data" class="flex flex-col p-8"
+            id="category-form">
             <div class="flex w-full gap-2 items-end justify-between">
                 <div class="flex flex-col w-3/4">
                     <label for="item-name-input" class="mb-2 text-sm font-medium text-gray-700">Nome:</label>
@@ -71,19 +62,9 @@
             </button>
         </form>
 
-        <div id="category-itens" hx-get="/api/v1/categories/{{category.id}}/products" hx-target="this" hx-trigger="load"
-            hx-headers='{"source": "category-itens"}'
+        <div id="category-products" hx-get="/api/v1/categories/{{category.id}}/products" hx-target="this"
+            hx-trigger="load, productsUpdated from:body" hx-headers='{"source": "edit_category_products"}'
             class="w-full h-full flex flex-col gap-2 p-8 rounded-b-lg overflow-x-auto">
         </div>
     </div>
 </dialog>
-
-<script>
-    document.getElementById('category-form').addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent the default form submission
-        const formData = new FormData(this);
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-    });
-</script>
