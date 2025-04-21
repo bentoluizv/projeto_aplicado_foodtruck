@@ -66,28 +66,38 @@ def itens(session, categories):
             'name': 'X-Burguer',
             'price': 25.0,
             'category_id': categories[0].id,
+            'image_url': 'image_x_burguer.jpg',
         },
         {
             'name': 'X-Salada',
             'price': 20.0,
             'category_id': categories[0].id,
+            'image_url': 'image_x_salada.jpg',
         },
         {
             'name': 'Cachorro-quente',
             'price': 10.0,
             'category_id': categories[1].id,
+            'image_url': 'image_cachorro_quente.jpg',
         },
         {
             'name': 'Refrigerante',
             'price': 5.0,
             'category_id': categories[2].id,
+            'image_url': 'image_refrigerante.jpg',
         },
         {
             'name': 'Batata frita',
             'price': 8.0,
             'category_id': categories[3].id,
+            'image_url': 'image_batata_frita.jpg',
         },
-        {'name': 'Pudim', 'price': 12.0, 'category_id': categories[4].id},
+        {
+            'name': 'Pudim',
+            'price': 12.0,
+            'category_id': categories[4].id,
+            'image_url': 'image_pudim.jpg',
+        },
     ]
 
     itens = [
@@ -95,6 +105,7 @@ def itens(session, categories):
             name=item['name'],
             price=item['price'],
             category_id=item['category_id'],
+            image_url=item['image_url'],
         )
         for item in itens
     ]
