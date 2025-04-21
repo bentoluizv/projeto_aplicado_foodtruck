@@ -39,11 +39,11 @@
         <nav class="flex flex-col items-end justify-between">
             <div class="flex flex-col items-end">
                 <a hx-get="/menu" hx-target="#content" hx-load="innerHTML"
-                    hx-trigger="click, keyup[ctrlKey&&key=='C'] from:body"
+                    hx-trigger="click, keyup[shiftKey&&key=='C'] from:body"
                     class="menu-link cursor-pointer hover:font-semibold hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2"
                     tabindex="0">Cardápio</a>
                 <a hx-get="/pedidos" hx-target="#content" hx-load="innerHTML"
-                    hx-trigger="click, keyup[ctrlKey&&key=='X'] from:body"
+                    hx-trigger="click, keyup[shiftKey&&key=='P'] from:body"
                     class="menu-link cursor-pointer hover:font-semibold hover:text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2"
                     tabindex="0">Pedidos</a>
             </div>
