@@ -30,8 +30,6 @@ const onIconClick = (id) => {
     const srcUrl = iconImgElement.getAttribute('src');
     iconInput.value = srcUrl;
     iconElement.classList.add("border-2", "border-orange-600");
-    console.log(iconInput)
-    console.log(iconInput.value)
     removeIconSelection(iconElement);
 };
 
