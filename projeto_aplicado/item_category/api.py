@@ -122,7 +122,7 @@ def get_items_by_category(
             },
         )
 
-    if hx_request and source == 'categories_new':
+    if hx_request and source == 'category-itens':
         return templates.TemplateResponse(
             request,
             'category_item_list.html',
