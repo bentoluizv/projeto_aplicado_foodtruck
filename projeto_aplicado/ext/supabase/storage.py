@@ -1,3 +1,5 @@
+from fastapi import UploadFile
+
 from supabase import Client
 
 
@@ -58,7 +60,7 @@ def list_all_icons(
     return {'icons': result}
 
 
-def uploadProductImage(supabase: Client, image: bytes, file_name: str) -> str:  # noqa: E501
+async def uploadProductImage(supabase: Client, file: UploadFile) -> str:  # noqa: E501
     """
     Uploads a product image to the Supabase storage bucket.
 
@@ -71,12 +73,18 @@ def uploadProductImage(supabase: Client, image: bytes, file_name: str) -> str:  
 
     bucket_name = 'product-images'
 
-    storage = supabase.storage
+    products_images_storage = supabase.storage.from_(bucket_name)
 
-    res = storage.from_(bucket_name).upload(
-        file=image, path=f'{file_name}.png'
+    img_bytes = await file.read()
+
+    parsed_filename = file.filename.strip().replace(' ', '-')  # type: ignore
+
+    res = products_images_storage.upload(
+        file=img_bytes,
+        path=parsed_filename,
+        file_options={'content-type': file.content_type, 'upsert': 'true'},  # type: ignore
     )
 
-    public_url = storage.from_(bucket_name).get_public_url(res.path)
+    public_url = products_images_storage.get_public_url(res.path)
 
     return public_url
