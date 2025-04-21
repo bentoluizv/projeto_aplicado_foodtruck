@@ -55,7 +55,7 @@ async def home_page(request: Request):
     Serve a página principal do projeto, retorna um HTML Response.
 
     """
-    return templates.TemplateResponse('index.html', {'request': request})
+    return templates.TemplateResponse(request, 'index.html')
 
 
 @app.get('/menu')
@@ -64,7 +64,7 @@ async def menu_page(request: Request):
     Serve a página de cardápio do projeto, retorna um HTML Response.
 
     """
-    return templates.TemplateResponse('menu.html', {'request': request})
+    return templates.TemplateResponse(request, 'menu.html')
 
 
 @app.get('/icons', response_model=IconsResponse)
