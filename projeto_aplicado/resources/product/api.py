@@ -114,7 +114,7 @@ async def create_product(  # noqa: PLR0913, PLR0917
     if hx_request:
         return templates.TemplateResponse(
             request,
-            'product_item.html',
+            'selected_category_new_products.html',
             headers={'HX-Trigger': 'productsUpdated'},
             context={
                 'product': repository.get_all(),
@@ -145,7 +145,12 @@ def update_product(
 
 
 @router.delete('/{product_id}', response_model=BaseResponse)
-def delete_product(product_id: str, repository: ProductRepo):
+def delete_product(
+    request: Request,
+    product_id: str,
+    repository: ProductRepo,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+):
     """
     Delete an product by ID.
     """
@@ -159,4 +164,14 @@ def delete_product(product_id: str, repository: ProductRepo):
         )
 
     repository.delete(existing_product)
+
+    if hx_request:
+        return templates.TemplateResponse(
+            request,
+            'selected_category_new_products.html',
+            headers={'HX-Trigger': 'productsUpdated'},
+            context={'categories': repository.get_all()},
+            status_code=HTTPStatus.OK,
+        )
+
     return BaseResponse(id=existing_product.id, action='deleted')

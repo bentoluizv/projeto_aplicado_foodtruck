@@ -80,7 +80,13 @@ def get_categories(  # noqa: PLR0913, PLR0917
 
 
 @router.get('/{category_id}', response_model=Category)
-def get_category_by_id(category_id: str, repository: CategoryRepo):
+def get_category_by_id(
+    request: Request,
+    category_id: str,
+    repository: CategoryRepo,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+    source: Annotated[Union[str, None], Header()] = None,
+):
     """
     Get a category by ID.
     """
@@ -92,6 +98,14 @@ def get_category_by_id(category_id: str, repository: CategoryRepo):
             detail=f'Category with {category_id} not found',
         )
 
+    if hx_request and source == 'menu_categories_list':
+        return templates.TemplateResponse(
+            request,
+            'selected_category.html',
+            context={
+                'category': category,
+            },
+        )
     return category
 
 
@@ -114,20 +128,20 @@ def get_products_by_category(
             detail=f'Category with {category_id} not found',
         )
 
-    if hx_request and source == 'menu_categories_list':
+    if hx_request and source == 'selected_category_products':
         return templates.TemplateResponse(
             request,
-            'category_products.html',
+            'selected_category_products.html',
             context={
                 'products': category.products,
                 'category': category,
             },
         )
 
-    if hx_request and source == 'category-products':
+    if hx_request and source == 'edit_category_products':
         return templates.TemplateResponse(
             request,
-            'category_item_list.html',
+            'selected_category_new_products.html',
             context={
                 'products': category.products,
                 'category': category,
