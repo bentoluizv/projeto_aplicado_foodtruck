@@ -45,6 +45,9 @@ def list_all_icons(
     for file in files:
         file_name = file['name']
 
+        if file_name.startswith('add_'):
+            continue
+
         public_url = supabase.storage.from_(bucket_name).get_public_url(
             file_name
         )
