@@ -18,7 +18,7 @@
         </div>
 
         <form hx-post="/api/v1/categories/" hx-on::after-request="if(event.detail.successful) this.reset()"
-            hx-target="#categories_new" class="flex flex-col p-8" id="category-form">
+            hx-target="#menu_new_category_list" class="flex flex-col p-8" id="category-form">
             <label for="icon_url" class="mb-2 text-sm font-medium text-gray-700">Selecione o
                 Icone:</label>
             <input type="text" id="icon_url" name="icon_url" class="hidden">
@@ -44,8 +44,8 @@
             </div>
         </form>
 
-        <div id="categories_new" hx-get="/api/v1/categories/" hx-target="this" hx-trigger="load"
-            hx-headers='{"source": "categories_new"}'
+        <div id="menu_new_category_list" hx-get="/api/v1/categories/" hx-target="this" hx-trigger="load"
+            hx-headers='{"source": "menu_new_category_list"}'
             class="w-full h-full flex flex-col gap-2 p-8 rounded-b-lg overflow-x-auto">
         </div>
     </div>

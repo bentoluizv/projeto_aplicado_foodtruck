@@ -69,9 +69,11 @@ def get_categories(  # noqa: PLR0913, PLR0917
             context={'categories': categories},
         )
 
-    if hx_request and source == 'categories_new':
+    if hx_request and source == 'menu_new_category_list':
         return templates.TemplateResponse(
-            request, 'categories_new.html', context={'categories': categories}
+            request,
+            'menu_new_category_list.html',
+            context={'categories': categories},
         )
 
     return categories
@@ -171,7 +173,7 @@ def create_category(
     if hx_request:
         return templates.TemplateResponse(
             request,
-            'categories_new.html',
+            'menu_new_category_list.html',
             headers={'HX-Trigger': 'categoriesUpdated'},
             context={'categories': repository.get_all()},
             status_code=HTTPStatus.CREATED,
@@ -231,7 +233,7 @@ def delete_category(
     if hx_request:
         return templates.TemplateResponse(
             request,
-            'categories_new.html',
+            'menu_new_category_list.html',
             headers={'HX-Trigger': 'categoriesUpdated'},
             context={'categories': repository.get_all()},
         )
