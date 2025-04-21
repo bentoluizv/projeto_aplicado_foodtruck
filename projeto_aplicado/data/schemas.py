@@ -13,6 +13,8 @@ class UpdateCategoryDTO(SQLModel):
 class CreateItemDTO(SQLModel):
     name: str
     price: float
+    img_url: str
+    description: str | None = None
     category_id: str
 
 
