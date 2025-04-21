@@ -62,9 +62,11 @@ def get_categories(  # noqa: PLR0913, PLR0917
 
     categories = repository.get_all(offset=offset, limit=limit)
 
-    if hx_request and source == 'categories':
+    if hx_request and source == 'menu_categories_list':
         return templates.TemplateResponse(
-            request, 'categories.html', context={'categories': categories}
+            request,
+            'menu_categories_list.html',
+            context={'categories': categories},
         )
 
     if hx_request and source == 'categories_new':
@@ -110,7 +112,7 @@ def get_products_by_category(
             detail=f'Category with {category_id} not found',
         )
 
-    if hx_request and source == 'categories':
+    if hx_request and source == 'menu_categories_list':
         return templates.TemplateResponse(
             request,
             'category_products.html',
