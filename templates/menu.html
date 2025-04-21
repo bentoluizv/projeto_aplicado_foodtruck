@@ -4,9 +4,6 @@
 </section>
 
 <section id="category-item" class="grow flex flex-col items-center justify-center">
-    <p>
-        Nenhuma categoria selecionada.
-    </p>
 </section>
 
 <dialog id="new-category-dialog"
@@ -20,7 +17,7 @@
             </button>
         </div>
 
-        <form hx-post="/api/v1/categories" hx-on::after-request="if(event.detail.successful) this.reset()"
+        <form hx-post="/api/v1/categories/" hx-on::after-request="if(event.detail.successful) this.reset()"
             hx-target="#categories_new" class="flex flex-col p-8" id="category-form">
             <label for="icon_url" class="mb-2 text-sm font-medium text-gray-700">Selecione o
                 Icone:</label>
@@ -47,7 +44,7 @@
             </div>
         </form>
 
-        <div id="categories_new" hx-get="/api/v1/categories" hx-target="this" hx-trigger="load"
+        <div id="categories_new" hx-get="/api/v1/categories/" hx-target="this" hx-trigger="load"
             hx-headers='{"source": "categories_new"}'
             class="w-full h-full flex flex-col gap-2 p-8 rounded-b-lg overflow-x-auto">
         </div>

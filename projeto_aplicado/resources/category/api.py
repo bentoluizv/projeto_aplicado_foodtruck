@@ -16,14 +16,14 @@ from projeto_aplicado.data.schemas import (
     BaseResponse,
     UpdateCategoryDTO,
 )
-
-# from projeto_aplicado.ext.cache.redis import get_many
-from projeto_aplicado.item.model import Item
-from projeto_aplicado.item_category.model import ItemCategory
-from projeto_aplicado.item_category.repository import (
-    ItemCategoryRepository,
+from projeto_aplicado.resources.category.model import Category
+from projeto_aplicado.resources.category.repository import (
+    CategoryRepository,
     get_category_repository,
 )
+
+# from projeto_aplicado.ext.cache.redis import get_many
+from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.settings import get_settings
 
 templates = Jinja2Templates(
@@ -38,15 +38,13 @@ router = APIRouter(
     tags=['Category'], prefix=f'{settings.API_PREFIX}/categories'
 )
 
-ItemCategoryRepo = Annotated[
-    ItemCategoryRepository, Depends(get_category_repository)
-]
+CategoryRepo = Annotated[CategoryRepository, Depends(get_category_repository)]
 
 
-@router.get('/', response_model=list[ItemCategory])
+@router.get('/', response_model=list[Category])
 def get_categories(  # noqa: PLR0913, PLR0917
     request: Request,
-    repository: ItemCategoryRepo,
+    repository: CategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
     source: Annotated[Union[str, None], Header()] = None,
     offset: int = 0,
@@ -77,8 +75,8 @@ def get_categories(  # noqa: PLR0913, PLR0917
     return categories
 
 
-@router.get('/{category_id}', response_model=ItemCategory)
-def get_category_by_id(category_id: str, repository: ItemCategoryRepo):
+@router.get('/{category_id}', response_model=Category)
+def get_category_by_id(category_id: str, repository: CategoryRepo):
     """
     Get a category by ID.
     """
@@ -93,16 +91,16 @@ def get_category_by_id(category_id: str, repository: ItemCategoryRepo):
     return category
 
 
-@router.get('/{category_id}/itens', response_model=list[Item])
-def get_items_by_category(
+@router.get('/{category_id}/products', response_model=list[Product])
+def get_products_by_category(
     request: Request,
     category_id: str,
-    repository: ItemCategoryRepo,
+    repository: CategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
     source: Annotated[Union[str, None], Header()] = None,
 ):
     """
-    Get items by category ID.
+    Get products by category ID.
     """
     category = repository.get_by_id(category_id)
 
@@ -115,24 +113,24 @@ def get_items_by_category(
     if hx_request and source == 'categories':
         return templates.TemplateResponse(
             request,
-            'category_itens.html',
+            'category_products.html',
             context={
-                'itens': category.itens,
+                'products': category.products,
                 'category': category,
             },
         )
 
-    if hx_request and source == 'category-itens':
+    if hx_request and source == 'category-products':
         return templates.TemplateResponse(
             request,
             'category_item_list.html',
             context={
-                'itens': category.itens,
+                'products': category.products,
                 'category': category,
             },
         )
 
-    return category.itens
+    return category.products
 
 
 @router.post(
@@ -144,7 +142,7 @@ def create_category(
     request: Request,
     icon_url: Annotated[str, Form()],
     name: Annotated[str, Form()],
-    repository: ItemCategoryRepo,
+    repository: CategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
@@ -165,7 +163,7 @@ def create_category(
             detail='Icon URL is required',
         )
 
-    new_category = ItemCategory(name=name, icon_url=icon_url)
+    new_category = Category(name=name, icon_url=icon_url)
     repository.create(new_category)
 
     if hx_request:
@@ -174,6 +172,7 @@ def create_category(
             'categories_new.html',
             headers={'HX-Trigger': 'categoriesUpdated'},
             context={'categories': repository.get_all()},
+            status_code=HTTPStatus.CREATED,
         )
 
     return {
@@ -184,7 +183,7 @@ def create_category(
 
 @router.patch('/{category_id}', response_model=BaseResponse)
 def update_category(
-    category_id: str, dto: UpdateCategoryDTO, repository: ItemCategoryRepo
+    category_id: str, dto: UpdateCategoryDTO, repository: CategoryRepo
 ):
     """
     Update a category by ID.
@@ -210,7 +209,7 @@ def update_category(
 def delete_category(
     request: Request,
     category_id: str,
-    repository: ItemCategoryRepo,
+    repository: CategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """

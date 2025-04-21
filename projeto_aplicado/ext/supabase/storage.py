@@ -56,3 +56,27 @@ def list_all_icons(
         result.append({'id': id, 'icon': name, 'url': public_url})
 
     return {'icons': result}
+
+
+def uploadProductImage(supabase: Client, image: bytes, file_name: str) -> str:  # noqa: E501
+    """
+    Uploads a product image to the Supabase storage bucket.
+
+    Returns:
+        str: The public URL of the uploaded image.
+
+    Raises:
+        Exception: If there is an issue with uploading the image or generating the public URL.
+    """  # noqa: E501
+
+    bucket_name = 'product-images'
+
+    storage = supabase.storage
+
+    res = storage.from_(bucket_name).upload(
+        file=image, path=f'{file_name}.png'
+    )
+
+    public_url = storage.from_(bucket_name).get_public_url(res.path)
+
+    return public_url

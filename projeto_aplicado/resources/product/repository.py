@@ -4,47 +4,54 @@ from fastapi import Depends
 from sqlmodel import Session, select
 
 from projeto_aplicado.data.schemas import (
-    UpdateCategoryDTO,
+    UpdateProductDTO,
 )
 from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.item_category.model import ItemCategory
+from projeto_aplicado.resources.product.model import Product
 
 
-class ItemCategoryRepository:
+class ProductRepository:
     def __init__(self, session: Session):
         """
-        Repository for Category entity.
+        Repository for Item entity.
         """
         self.session = session
 
-    def create(self, category: ItemCategory):
+    def create(self, item: Product):
+        """
+        Create a new item.
+        """
         try:
-            self.session.add(category)
+            self.session.add(item)
             self.session.commit()
-
-            return category.id
 
         except Exception as e:
             self.session.rollback()
             raise e
 
     def get_all(self, offset: int = 0, limit: int = 100):
+        """
+        Get all items.
+        """
         try:
-            categories = self.session.exec(
-                select(ItemCategory).offset(offset).limit(limit)
+            items = self.session.exec(
+                select(Product).offset(offset).limit(limit)
             ).all()
 
-            return categories
+            return items
 
         except Exception as e:
             self.session.rollback()
             raise e
 
-    def get_by_id(self, category_id: str):
+    def get_by_id(self, item_id: str):
+        """
+        Get an item by ID.
+        """
         try:
-            category = self.session.get(ItemCategory, category_id)
+            item = self.session.get(Product, item_id)
 
-            return category
+            return item
 
         except Exception as e:
             self.session.rollback()
@@ -52,48 +59,55 @@ class ItemCategoryRepository:
 
     def get_by_name(self, name: str):
         """
-        Get a category by name.
+        Get an item by name.
         """
         try:
-            category = self.session.exec(
-                select(ItemCategory).where(ItemCategory.name == name)
+            item = self.session.exec(
+                select(Product).where(Product.name == name)
             ).first()
 
-            return category
+            return item
 
         except Exception as e:
             self.session.rollback()
             raise e
 
-    def update(self, category: ItemCategory, dto: UpdateCategoryDTO):
+    def update(self, item: Product, dto: UpdateProductDTO):
         """
-        Update a category.
+        Update an item.
         """
         try:
             update_data = dto.model_dump(exclude_unset=True)
-            category.sqlmodel_update(update_data)
+            item.sqlmodel_update(update_data)
 
             self.session.commit()
+            self.session.refresh(item)
+
+            return item.id
 
         except Exception as e:
             self.session.rollback()
             raise e
 
-    def delete(self, category: ItemCategory):
+    def delete(self, item: Product):
+        """
+        Delete an item.
+        """
         try:
-            self.session.delete(category)
+            self.session.delete(item)
             self.session.commit()
+
+            return item.id
 
         except Exception as e:
             self.session.rollback()
             raise e
 
 
-def get_category_repository(
+def get_product_repository(
     session: Annotated[Session, Depends(get_session)],
 ):
     """
-    Dependency to get the CategoryRepository.
-
+    Dependency to get the ItemRepository.
     """
-    return ItemCategoryRepository(session)
+    return ProductRepository(session)

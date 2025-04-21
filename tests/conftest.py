@@ -5,8 +5,8 @@ from sqlmodel import Session, StaticPool, create_engine
 from projeto_aplicado.app import app
 from projeto_aplicado.data.utils import create_all, drop_all
 from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.item.model import Item
-from projeto_aplicado.item_category.model import ItemCategory
+from projeto_aplicado.resources.category.model import Category
+from projeto_aplicado.resources.product.model import Product
 
 
 @pytest.fixture(scope='session')
@@ -51,7 +51,7 @@ def categories(session: Session):
         {'name': 'Sobremesas', 'icon_url': 'i'},
     ]
     categories = [
-        ItemCategory(name=category['name'], icon_url=category['icon_url'])
+        Category(name=category['name'], icon_url=category['icon_url'])
         for category in categories
     ]
     session.add_all(categories)
@@ -91,7 +91,7 @@ def itens(session, categories):
     ]
 
     itens = [
-        Item(
+        Product(
             name=item['name'],
             price=item['price'],
             category_id=item['category_id'],

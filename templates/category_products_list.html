@@ -1,16 +1,16 @@
 <!-- templates/categories_new.html -->
-{% if not itens %}
+{% if not products %}
 <div class="flex items-center justify-center h-full">
     <p class="text-gray-500 text-sm">Nenhum produto cadastrado.</p>
 </div>
 {% else %}
-{% for item in itens %}
+{% for product in products %}
 <div class="flex items-center justify-between bg-gray-100 p-2 rounded shadow">
     <div class="flex items-center gap-2">
-        <img src="{{item.icon_url}}" alt="{{item.name}}" class="w-6 h-6">
-        <span class="text-sm font-medium text-gray-800">{{item.name}}</span>
+        <img src="{{product.icon_url}}" alt="{{product.name}}" class="w-6 h-6">
+        <span class="text-sm font-medium text-gray-800">{{product.name}}</span>
     </div>
-    <button hx-delete="/api/v1/categories/{{item.id}}" type="button"
+    <button hx-delete="/api/v1/categories/{{product.id}}" type="button"
         class="px-4 py-2 bg-zinc-800 text-white rounded shadow-md hover:bg-red-600 transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400 text-sm font-semibold">
         ✖
     </button>

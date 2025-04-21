@@ -1,4 +1,4 @@
-{% if not itens %}
+{% if not products %}
 <p class="text-gray-800 text-center mt-4">
     Nenhum produto cadastrado, você pode cadastrar um clicando
     <span hx-on:click="toggleHidden('#edit-category-dialog')"
@@ -6,8 +6,8 @@
 </p>
 {% else %}
 <ul class="list-disc list-inside mt-4 space-y-2">
-    {% for item in itens %}
-    <li class="text-gray-700">{{ item.name }}</li>
+    {% for product in products %}
+    <li class="text-gray-700">{{ product.name }}</li>
     {% endfor %}
 </ul>
 {% endif %}
@@ -23,7 +23,7 @@
             </button>
         </div>
 
-        <form hx-post="/api/v1/itens/" hx-on::after-request="if(event.detail.successful) this.reset()"
+        <form hx-post="/api/v1/products/" hx-on::after-request="if(event.detail.successful) this.reset()"
             hx-target="#category-itens" class="flex flex-col p-8" id="category-form">
             <div class="flex w-full gap-2 items-end justify-between">
                 <div class="flex flex-col w-3/4">
@@ -71,9 +71,19 @@
             </button>
         </form>
 
-        <div id="category-itens" hx-get="/api/v1/categories/{{category.id}}/itens" hx-target="this" hx-trigger="load"
+        <div id="category-itens" hx-get="/api/v1/categories/{{category.id}}/products" hx-target="this" hx-trigger="load"
             hx-headers='{"source": "category-itens"}'
             class="w-full h-full flex flex-col gap-2 p-8 rounded-b-lg overflow-x-auto">
         </div>
     </div>
 </dialog>
+
+<script>
+    document.getElementById('category-form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent the default form submission
+        const formData = new FormData(this);
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+    });
+</script>
