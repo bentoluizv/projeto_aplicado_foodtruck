@@ -43,8 +43,8 @@
                 <!-- Description Text Area -->
                 <div class="flex flex-col w-3/4">
                     <label for="description" class="mb-2 text-sm font-medium text-gray-700">Descrição:</label>
-                    <textarea id="description" name="description" rows="5"
-                        class="p-2 border bg-white border-2 border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    <textarea id="description" name="description" rows="8"
+                        class="p-2 h-full border bg-white border-2 border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                         placeholder="Digite a descrição do item..."></textarea>
                 </div>
 
@@ -53,7 +53,7 @@
                     <label for="item-image-input" class="mb-2 text-sm font-medium text-gray-700">
                         Selecione a imagem
                     </label>
-                    <div
+                    <div hx-on:click="htmx.find('#item-image-input').click()"
                         class="flex flex-col items-center justify-center h-full w-full border-2 border-dashed border-gray-300 rounded-lg bg-white">
                         <img id="item-image-preview"
                             src="https://asrcslgoqgtuqtuwczjv.supabase.co/storage/v1/object/public/static//selection_18684621.png"
