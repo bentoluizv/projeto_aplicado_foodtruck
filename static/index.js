@@ -72,7 +72,17 @@ const toggleHidden = (id) => {
 };
 
 const selectImage = (ctx) => {
-    console.log(ctx);
+    const uploadedImage = ctx.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        const imgPreview = htmx.find('#item-image-preview');
+        imgPreview.src = e.target.result;
+        imgPreview.classList.add('w-full', 'h-full', 'object-cover');
+        imgPreview.parentElement.classList.add('rounded-lg', 'border-2', 'border-solid', 'border-zinc-800');
+    };
+
+    reader.readAsDataURL(uploadedImage);
 }
 
 
