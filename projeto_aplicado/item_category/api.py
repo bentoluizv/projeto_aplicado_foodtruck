@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Annotated, Union
 
-from click import echo
 from fastapi import (
     APIRouter,
     Depends,
@@ -65,8 +64,6 @@ def get_categories(  # noqa: PLR0913, PLR0917
 
     categories = repository.get_all(offset=offset, limit=limit)
 
-    echo('AQUI' + (source or ''))
-
     if hx_request and source == 'categories':
         return templates.TemplateResponse(
             request, 'categories.html', context={'categories': categories}
@@ -102,6 +99,7 @@ def get_items_by_category(
     category_id: str,
     repository: ItemCategoryRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,
+    source: Annotated[Union[str, None], Header()] = None,
 ):
     """
     Get items by category ID.
@@ -114,10 +112,20 @@ def get_items_by_category(
             detail=f'Category with {category_id} not found',
         )
 
-    if hx_request:
+    if hx_request and source == 'categories':
         return templates.TemplateResponse(
             request,
             'category_itens.html',
+            context={
+                'itens': category.itens,
+                'category': category,
+            },
+        )
+
+    if hx_request and source == 'categories_new':
+        return templates.TemplateResponse(
+            request,
+            'category_item_list.html',
             context={
                 'itens': category.itens,
                 'category': category,
