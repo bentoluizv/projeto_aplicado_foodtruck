@@ -7,7 +7,8 @@ from fastapi.templating import Jinja2Templates
 from supabase import Client
 
 from projeto_aplicado.data.schemas import IconsResponse
-from projeto_aplicado.data.utils import create_all
+
+# from projeto_aplicado.data.utils import create_all
 from projeto_aplicado.ext.database.db import (
     get_engine,
 )
@@ -38,7 +39,7 @@ app = FastAPI(
     # pois ele tenta executar o lifespan antes da fixture que faz override
     # do engine. Isso gera um erro, pois o engine não está configurado para
     # o banco de dados correto. Ainda tentando descobrir como resolver isso.
-    lifespan=create_all(engine),
+    # lifespan=create_all(engine),
 )
 
 app.mount(
@@ -48,7 +49,7 @@ app.mount(
 )
 
 
-@app.get('/')
+@app.get('/', include_in_schema=False)
 async def home_page(request: Request):
     """
     Serve a página principal do projeto, retorna um HTML Response.
@@ -57,7 +58,7 @@ async def home_page(request: Request):
     return templates.TemplateResponse(request, 'index.html')
 
 
-@app.get('/menu')
+@app.get('/menu', include_in_schema=False)
 async def menu_page(request: Request):
     """
     Serve a página de cardápio do projeto, retorna um HTML Response.
@@ -66,7 +67,7 @@ async def menu_page(request: Request):
     return templates.TemplateResponse(request, 'menu.html')
 
 
-@app.get('/icons', response_model=IconsResponse)
+@app.get('/icons', response_model=IconsResponse, include_in_schema=False)
 async def icons_page(
     request: Request,
     supabase: Supabase,
