@@ -130,8 +130,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
     ```sh
     docker-compose up --build
-    ``
-
+    ```
     Certifique-se de que o banco de dados foi inicializado corretamente antes de prosseguir.
 
 ### Próximos Passos
