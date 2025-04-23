@@ -1,5 +1,6 @@
 <div id="selected-category-products" hx-get="/api/v1/categories/{{category.id}}/products"
-    hx-trigger="load, productsUpdated from:body" hx-headers='{"source": "selected_category_products"}'>
+    hx-trigger="load, productsUpdated from:body" hx-headers='{"source": "selected_category_products"}'
+    class="grow flex flex-col w-full max-w-2xl gap-4">
 </div>
 
 <dialog id="edit-category-dialog"
