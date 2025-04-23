@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - .:/projeto_aplicado
     env_file:
       - .env
     networks:
@@ -14,7 +14,7 @@ services:
     depends_on:
       - postgres
       - redis
-    command: "fastapi dev app.py --host 0.0.0.0"
+    command: "fastapi dev projeto_aplicado/app.py --host 0.0.0.0"
 
   postgres:
     image: postgres:17.4

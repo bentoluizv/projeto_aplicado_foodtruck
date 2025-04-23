@@ -1,0 +1,18 @@
+<!-- templates/menu_new_category_list.html -->
+{% import "components/delete_btn.html" as d %}
+{% if not categories %}
+<div class="flex items-center justify-center h-full">
+    <p class="text-gray-500 text-sm">Nenhuma categoria encontrada.</p>
+</div>
+{% else %}
+{% for category in categories %}
+<div class="flex items-center justify-between bg-gray-100 p-2 rounded shadow">
+    <div class="flex items-center gap-2">
+        <img src="{{category.icon_url}}" alt="{{category.name}}" class="w-6 h-6">
+        <span class="text-sm font-medium text-gray-800">{{category.name}}</span>
+    </div>
+
+    {{ d.delete_button("/api/v1/categories/" ~ category.id) }}
+</div>
+{% endfor %}
+{% endif %}
