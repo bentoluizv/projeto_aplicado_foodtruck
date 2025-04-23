@@ -14,7 +14,7 @@
             </button>
         </div>
 
-        <form hx-post="/api/v1/products/" hx-on:after-request="if(event.detail.successful) this.reset()"
+        <form hx-post="/api/v1/products/" hx-on::after-request="if(event.detail.successful) this.reset()"
             hx-target="#category-products" hx-encoding="multipart/form-data" class="flex flex-col p-8"
             id="category-form">
             <div class="flex w-full gap-2 items-end justify-between">
