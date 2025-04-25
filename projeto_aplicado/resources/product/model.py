@@ -11,10 +11,12 @@ class Product(SQLModel, table=True):
     image_url: str = Field(nullable=False, max_length=255)
     category_id: str = Field(foreign_key='category.id')
     category: 'Category' = Relationship(back_populates='products')
+    order_items: list['OrderItem'] = Relationship(back_populates='product')
 
 
 from projeto_aplicado.resources.category.model import (  # noqa: E402, PLC0415
     Category,
 )
+from projeto_aplicado.resources.order_item.model import OrderItem  # noqa: E402
 
 Product.model_rebuild()
