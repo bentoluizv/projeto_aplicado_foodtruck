@@ -4,7 +4,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 from projeto_aplicado.resources.order.schemas import OrderStatus
 
-from ...data.utils import get_ulid_as_str
+from ...utils import get_ulid_as_str
 
 
 class Order(SQLModel, table=True):

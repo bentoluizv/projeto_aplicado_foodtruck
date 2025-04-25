@@ -1,6 +1,6 @@
 from sqlmodel import Field, Relationship, SQLModel
 
-from ...data.utils import get_ulid_as_str
+from ...utils import get_ulid_as_str
 
 
 class Product(SQLModel, table=True):

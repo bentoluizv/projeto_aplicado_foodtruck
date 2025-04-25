@@ -3,10 +3,10 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
-from projeto_aplicado.data.utils import create_all, drop_all
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.category.model import Category
 from projeto_aplicado.resources.product.model import Product
+from projeto_aplicado.utils import create_all, drop_all
 
 
 @pytest.fixture(scope='session')

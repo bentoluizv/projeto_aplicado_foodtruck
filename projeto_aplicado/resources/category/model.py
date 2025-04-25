@@ -1,6 +1,6 @@
 from sqlmodel import Field, Relationship, SQLModel
 
-from projeto_aplicado.data.utils import get_ulid_as_str
+from projeto_aplicado.utils import get_ulid_as_str
 
 
 class Category(SQLModel, table=True):
