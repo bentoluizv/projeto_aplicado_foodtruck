@@ -14,6 +14,7 @@ dependencies = [
     "redis[hiredis] (>=5.2.1,<6.0.0)",
     "supabase (>=2.15.0,<3.0.0)",
     "python-multipart (>=0.0.20,<0.0.21)",
+    "email-validator (>=2.2.0,<3.0.0)",
 
 ]
 
