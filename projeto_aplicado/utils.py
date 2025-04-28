@@ -1,3 +1,6 @@
+import random
+import string
+
 from sqlalchemy import Engine
 from sqlmodel import MetaData, SQLModel
 from ulid import ULID
@@ -49,3 +52,13 @@ def get_metadata() -> MetaData:
     :return: Metadata do SQLModel.
     """
     return SQLModel.metadata
+
+
+def generate_locator():
+    """
+    Gera um localizador composto por uma letra e três números.
+    :return: str.
+    """
+    letter = random.choice(string.ascii_uppercase)
+    numbers = ''.join(random.choices(string.digits, k=3))
+    return f'{letter}{numbers}'
