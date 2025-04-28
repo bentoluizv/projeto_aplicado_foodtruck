@@ -8,12 +8,18 @@ from ...utils import get_ulid_as_str
 class OrderItem(SQLModel, table=True):
     id: str = Field(default_factory=get_ulid_as_str, primary_key=True)
     created_at: str = Field(default_factory=datetime.now, nullable=False)
-    quantity: int = Field(nullable=False, default=1, gt=0)
+    quantity: int = Field(nullable=False, gt=0)
     price: float = Field(nullable=False, gt=0.0)
     order_id: str = Field(foreign_key='order.id', nullable=False)
     order: 'Order' = Relationship(back_populates='products')
     product_id: str = Field(foreign_key='product.id', nullable=False)
     product: 'Product' = Relationship(back_populates='order_items')
+
+    def calculate_total(self) -> float:
+        """
+        Calculate the total price of the order item.
+        """
+        return self.quantity * self.price
 
 
 from projeto_aplicado.resources.order.model import Order  # noqa: E402
