@@ -42,7 +42,9 @@ router = APIRouter(
 
 
 @router.get('/', response_model=OrderItemList, status_code=HTTPStatus.OK)
-def get_products(repository: OrderItemRepo, offset: int = 0, limit: int = 100):
+def fetch_order_items(
+    repository: OrderItemRepo, offset: int = 0, limit: int = 100
+):
     """
     Retrieve a list of order items with optional pagination.
     Args:
@@ -60,7 +62,7 @@ def get_products(repository: OrderItemRepo, offset: int = 0, limit: int = 100):
 
 
 @router.get('/{order_item_id}')
-def get_order_item_by_id(order_item_id: str, repository: OrderItemRepo):
+def fetch_order_item_by_id(order_item_id: str, repository: OrderItemRepo):
     """
     Get a order item by ID.
     Args:
@@ -124,7 +126,7 @@ async def create_order_item(  # noqa: PLR0913, PLR0917
 
 
 @router.patch('/{order_item_id}', response_model=BaseResponse)
-def update_product(
+def update_order_item(
     order_item_id: str,
     dto: UpdateOrderItemDTO,
     repository: OrderItemRepo,
@@ -155,7 +157,7 @@ def update_product(
 
 
 @router.delete('/{order_item_id}', response_model=BaseResponse)
-def delete_product(
+def delete_order_item(
     order_item_id: str,
     repository: OrderItemRepo,
     hx_request: Annotated[Union[str, None], Header()] = None,

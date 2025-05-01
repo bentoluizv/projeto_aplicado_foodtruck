@@ -39,7 +39,7 @@ router = APIRouter(tags=['Order'], prefix=f'{settings.API_PREFIX}/orders')
 
 
 @router.get('/', response_model=OrderList, status_code=HTTPStatus.OK)
-def get_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
+def fetch_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
     """
     Get all orders.
     Args:
@@ -56,7 +56,7 @@ def get_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
 
 
 @router.get('/{order_id}', response_model=Order)
-def get_product_by_id(order_id: str, repository: OrderRepo):
+def fetch_order_by_id(order_id: str, repository: OrderRepo):
     """
     Get a order by ID.
     Args:
