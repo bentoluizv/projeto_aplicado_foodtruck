@@ -1,15 +1,16 @@
 from typing import Annotated
 
 from fastapi import Depends
-from schemas import (
-    CategoryList,
-    Pagination,
-    UpdateCategoryDTO,
-)
 from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.category.model import Category
+
+from .schemas import (
+    CategoryList,
+    Pagination,
+    UpdateCategoryDTO,
+)
 
 
 class CategoryRepository:
