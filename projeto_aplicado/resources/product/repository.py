@@ -3,11 +3,11 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, select
 
-from projeto_aplicado.data.schemas import (
-    UpdateProductDTO,
-)
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.product.model import Product
+from projeto_aplicado.schemas import (
+    UpdateProductDTO,
+)
 
 
 class ProductRepository:

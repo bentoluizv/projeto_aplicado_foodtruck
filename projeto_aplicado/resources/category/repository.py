@@ -3,11 +3,11 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, select
 
-from projeto_aplicado.data.schemas import (
-    UpdateCategoryDTO,
-)
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.category.model import Category
+from projeto_aplicado.schemas import (
+    UpdateCategoryDTO,
+)
 
 
 class CategoryRepository:

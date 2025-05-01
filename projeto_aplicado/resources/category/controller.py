@@ -12,10 +12,6 @@ from fastapi import (
 )
 from fastapi.templating import Jinja2Templates
 
-from projeto_aplicado.data.schemas import (
-    BaseResponse,
-    UpdateCategoryDTO,
-)
 from projeto_aplicado.resources.category.model import Category
 from projeto_aplicado.resources.category.repository import (
     CategoryRepository,
@@ -24,6 +20,10 @@ from projeto_aplicado.resources.category.repository import (
 
 # from projeto_aplicado.ext.cache.redis import get_many
 from projeto_aplicado.resources.product.model import Product
+from projeto_aplicado.schemas import (
+    BaseResponse,
+    UpdateCategoryDTO,
+)
 from projeto_aplicado.settings import get_settings
 
 templates = Jinja2Templates(

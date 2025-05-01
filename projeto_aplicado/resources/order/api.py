@@ -11,20 +11,19 @@ from fastapi import (
 )
 from fastapi.templating import Jinja2Templates
 
-from projeto_aplicado.data.schemas import (
-    BaseResponse,
-    UpdateProductDTO,
-)
 from projeto_aplicado.resources.order.model import Order
 from projeto_aplicado.resources.order.repository import (
     OrderRepository,
     get_order_repository,
 )
-from projeto_aplicado.resources.order.schemas import CreateOrderDTO
 from projeto_aplicado.resources.order_item.model import OrderItem
 from projeto_aplicado.resources.product.repository import (
     ProductRepository,
     get_product_repository,
+)
+from projeto_aplicado.schemas import (
+    BaseResponse,
+    UpdateProductDTO,
 )
 from projeto_aplicado.settings import get_settings
 

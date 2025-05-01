@@ -14,17 +14,17 @@ from fastapi import (
 from fastapi.templating import Jinja2Templates
 from supabase import Client
 
-from projeto_aplicado.data.schemas import (
-    BaseResponse,
-    CreateProductDTO,
-    UpdateProductDTO,
-)
 from projeto_aplicado.ext.supabase.client import get_supabase_client
 from projeto_aplicado.ext.supabase.storage import uploadProductImage
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.resources.product.repository import (
     ProductRepository,
     get_product_repository,
+)
+from projeto_aplicado.schemas import (
+    BaseResponse,
+    CreateProductDTO,
+    UpdateProductDTO,
 )
 from projeto_aplicado.settings import get_settings
 

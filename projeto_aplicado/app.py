@@ -12,7 +12,9 @@ from projeto_aplicado.ext.database.db import (
 )
 from projeto_aplicado.ext.supabase.client import get_supabase_client
 from projeto_aplicado.ext.supabase.storage import list_all_icons
-from projeto_aplicado.resources.category.api import router as category_router
+from projeto_aplicado.resources.category.controller import (
+    router as category_router,
+)
 from projeto_aplicado.resources.product.api import router as item_router
 from projeto_aplicado.schemas import IconsResponse
 from projeto_aplicado.settings import get_settings
