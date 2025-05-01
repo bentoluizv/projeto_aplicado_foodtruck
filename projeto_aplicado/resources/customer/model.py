@@ -12,9 +12,9 @@ class Customer(SQLModel, table=True):
     )
     name: str = Field(index=True, nullable=False)
     email: EmailStr = Field(index=True, nullable=False)
-    orders: list['Order'] = Relationship(back_populates='customer')
+    orders: list['Order'] = Relationship(back_populates='customer')  # type: ignore # noqa: F821
 
 
-from projeto_aplicado.resources.order.model import Order  # noqa: E402
+# from projeto_aplicado.resources.order.model import Order  # noqa: E402
 
 Customer.model_rebuild()
