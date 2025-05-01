@@ -19,7 +19,10 @@ from projeto_aplicado.resources.category.repository import (
 )
 
 # from projeto_aplicado.ext.cache.redis import get_many
-from projeto_aplicado.resources.category.schemas import UpdateCategoryDTO
+from projeto_aplicado.resources.category.schemas import (
+    CategoryList,
+    UpdateCategoryDTO,
+)
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.schemas import (
     BaseResponse,
@@ -41,7 +44,7 @@ router = APIRouter(
 CategoryRepo = Annotated[CategoryRepository, Depends(get_category_repository)]
 
 
-@router.get('/', response_model=list[Category])
+@router.get('/', response_model=CategoryList, status_code=HTTPStatus.OK)
 def get_categories(  # noqa: PLR0913, PLR0917
     request: Request,
     repository: CategoryRepo,
@@ -51,15 +54,22 @@ def get_categories(  # noqa: PLR0913, PLR0917
     limit: int = Query(default=100, le=100),
 ):
     """
-    Get all categories.
-
-    """
-
-    # cache = get_many('categories')
-
-    # if cache:
-    #     return cache
-
+    Retrieve a list of categories with optional support for rendering templates
+    based on the request headers.
+    Args:
+        request (Request): The HTTP request object.
+        repository (CategoryRepo): The repository instance to fetch categories from.
+        hx_request (Union[str, None], optional): Header indicating if the request is
+            an HTMX request. Defaults to None.
+        source (Union[str, None], optional): Header specifying the source of the
+            request, used to determine the template to render. Defaults to None.
+        offset (int, optional): The starting point for fetching categories. Defaults to 0.
+        limit (int, optional): The maximum number of categories to fetch, with a
+            default of 100 and a maximum of 100.
+    Returns:
+        Union[List[Category], TemplateResponse]: A list of categories if no template
+        rendering is required, or a TemplateResponse object if a template is rendered.
+    """  # noqa: E501
     categories = repository.get_all(offset=offset, limit=limit)
 
     if hx_request and source == 'menu_categories_list':
