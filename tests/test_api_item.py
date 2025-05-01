@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from io import BytesIO
 
 from projeto_aplicado.settings import get_settings
 
@@ -7,45 +8,70 @@ settings = get_settings()
 API_PREFIX = settings.API_PREFIX
 
 
-def test_get_itens(client, itens):
-    response = client.get(f'{API_PREFIX}/itens/')
+def test_get_products(client, itens):
+    response = client.get(f'{API_PREFIX}/products/')
     assert response.status_code == HTTPStatus.OK
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == len(itens)
+    assert len(response.json()['products']) == len(itens)
+    assert response.json()['products'] == [
+        {
+            'id': str(item.id),
+            'description': item.description,
+            'image_url': item.image_url,
+            'name': item.name,
+            'price': item.price,
+            'category_id': item.category_id,
+        }
+        for item in itens
+    ]
 
 
 def test_get_item_by_id_not_found(client):
     response = client.get(f'{API_PREFIX}/itens/nonexistent-id')
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()['detail'] == 'Item with nonexistent-id not found'
+    assert response.json()['detail'] == 'Not Found'
 
 
 def test_create_item(client, categories):
-    payload = {
+    file_content = BytesIO(b'fake image content')
+
+    data = {
         'name': 'Test Item',
+        'description': 'Test Description',
         'price': 10.99,
         'category_id': categories[0].id,
     }
-    response = client.post(f'{API_PREFIX}/itens/', json=payload)
+
+    response = client.post(
+        f'{API_PREFIX}/products/', data=data, files={'image': file_content}
+    )
+
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()['action'] == 'created'
     assert response.json()['id'] is not None
 
 
-def test_create_item_conflict(client, itens):
-    payload = {
+def test_create_products_conflict(client, itens):
+    file_content = BytesIO(b'fake image content')
+
+    data = {
         'name': itens[0].name,
-        'price': itens[0].price,
+        'description': 'Test Description',
+        'price': 10.99,
         'category_id': itens[0].category_id,
     }
-    response = client.post(f'{API_PREFIX}/itens/', json=payload)
+
+    response = client.post(
+        f'{API_PREFIX}/products/', data=data, files={'image': file_content}
+    )
     assert response.status_code == HTTPStatus.CONFLICT
-    assert response.json()['detail'] == 'Item already exists'
+    assert response.json()['detail'] == 'Product already exists'
 
 
 def test_update_item(client, itens):
     payload = {'name': 'Updated Item', 'price': 1599.99}
-    response = client.patch(f'{API_PREFIX}/itens/{itens[0].id}', json=payload)
+    response = client.patch(
+        f'{API_PREFIX}/products/{itens[0].id}', json=payload
+    )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['action'] == 'updated'
@@ -58,11 +84,11 @@ def test_update_item_not_found(client):
         f'{API_PREFIX}/itens/nonexistent-id', json=update_payload
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()['detail'] == 'Item not found'
+    assert response.json()['detail'] == 'Not Found'
 
 
 def test_delete_item(client, itens):
-    response = client.delete(f'{API_PREFIX}/itens/{itens[0].id}')
+    response = client.delete(f'{API_PREFIX}/products/{itens[0].id}')
     assert response.status_code == HTTPStatus.OK
     assert response.json()['action'] == 'deleted'
     assert response.json()['id'] == itens[0].id
@@ -71,4 +97,4 @@ def test_delete_item(client, itens):
 def test_delete_item_not_found(client):
     response = client.delete(f'{API_PREFIX}/itens/nonexistent-id')
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()['detail'] == 'Item not found'
+    assert response.json()['detail'] == 'Not Found'

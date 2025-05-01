@@ -9,8 +9,8 @@ API_PREFIX = settings.API_PREFIX
 def test_get_categories(client, categories):
     response = client.get(f'{API_PREFIX}/categories/')
     assert response.status_code == HTTPStatus.OK
-    assert len(response.json()) == len(categories)
-    assert response.json() == [
+    assert len(response.json()['categories']) == len(categories)
+    assert response.json()['categories'] == [
         {
             'id': category.id,
             'name': category.name,
@@ -18,6 +18,13 @@ def test_get_categories(client, categories):
         }
         for category in categories
     ]
+    assert response.json()['pagination'] == {
+        'offset': 0,
+        'limit': 100,
+        'total_count': len(categories),
+        'page': 1,
+        'total_pages': 1,
+    }
 
 
 def test_get_category_by_id(client, categories):
@@ -30,7 +37,7 @@ def test_get_category_by_id(client, categories):
     }
 
 
-def test_get_category_by_id_not_found(client, categories):
+def test_get_category_by_id_not_found(client):
     response = client.get(f'{API_PREFIX}/categories/99999999')
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'Category with 99999999 not found'}
@@ -38,14 +45,14 @@ def test_get_category_by_id_not_found(client, categories):
 
 def test_create_category(client):
     data = {'name': 'New Category', 'icon_url': 'icon_url_value'}
-    response = client.post(f'{API_PREFIX}/categories/', json=data)
+    response = client.post(f'{API_PREFIX}/categories/', data=data)
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()['action'] == 'created'
 
 
 def test_create_category_conflict(client, categories):
     data = {'name': categories[0].name, 'icon_url': 'icon_url_value'}
-    response = client.post(f'{API_PREFIX}/categories/', json=data)
+    response = client.post(f'{API_PREFIX}/categories/', data=data)
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Category already exists'}
 
