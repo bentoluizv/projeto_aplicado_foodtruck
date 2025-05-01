@@ -21,11 +21,12 @@ from projeto_aplicado.resources.product.repository import (
     ProductRepository,
     get_product_repository,
 )
-from projeto_aplicado.schemas import (
-    BaseResponse,
+from projeto_aplicado.resources.product.schemas import (
     CreateProductDTO,
+    ProductList,
     UpdateProductDTO,
 )
+from projeto_aplicado.schemas import BaseResponse
 from projeto_aplicado.settings import get_settings
 
 templates = Jinja2Templates(
@@ -41,10 +42,17 @@ Supabase = Annotated[Client, Depends(get_supabase_client)]
 router = APIRouter(tags=['Product'], prefix=f'{settings.API_PREFIX}/products')
 
 
-@router.get('/', response_model=list[Product])
+@router.get('/', response_model=ProductList, status_code=HTTPStatus.OK)
 def get_products(repository: ProductRepo, offset: int = 0, limit: int = 100):
     """
-    Get all products.
+    Retrieve a list of products with optional pagination.
+    Args:
+        repository (ProductRepo): The product repository.
+        offset (int): The offset for pagination.
+        limit (int): The maximum number of products to retrieve.
+    Returns:
+        ProductList: A list of products with pagination information.
+
     """
     products = repository.get_all(offset=offset, limit=limit)
 

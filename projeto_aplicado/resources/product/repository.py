@@ -1,13 +1,15 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.product.model import Product
-from projeto_aplicado.schemas import (
+from projeto_aplicado.resources.product.schemas import (
+    ProductList,
     UpdateProductDTO,
 )
+from projeto_aplicado.schemas import Pagination
 
 
 class ProductRepository:
@@ -31,14 +33,35 @@ class ProductRepository:
 
     def get_all(self, offset: int = 0, limit: int = 100):
         """
-        Get all items.
+        Get all items with optional pagination.
+        Args:
+            offset (int): The offset for pagination.
+            limit (int): The maximum number of items to retrieve.
+        Returns:
+            ProductList: A list of items with pagination information.
         """
         try:
-            items = self.session.exec(
-                select(Product).offset(offset).limit(limit)
-            ).all()
+            products_count_stmt = select(func.count()).select_from(Product)
 
-            return items
+            total_count = self.session.exec(products_count_stmt).first()
+
+            if not total_count:
+                total_count = 0
+
+            get_all_products_stmt = select(Product).offset(offset).limit(limit)
+            products = self.session.exec(get_all_products_stmt).all()
+
+            pagination = Pagination(
+                offset=offset,
+                limit=limit,
+                total_count=total_count,
+                page=offset // limit + 1,
+                total_pages=(total_count // limit) + 1,
+            )
+
+            result = ProductList(products=products, pagination=pagination)
+
+            return result
 
         except Exception as e:
             self.session.rollback()
