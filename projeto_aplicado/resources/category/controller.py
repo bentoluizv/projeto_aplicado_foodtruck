@@ -19,10 +19,10 @@ from projeto_aplicado.resources.category.repository import (
 )
 
 # from projeto_aplicado.ext.cache.redis import get_many
+from projeto_aplicado.resources.category.schemas import UpdateCategoryDTO
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.schemas import (
     BaseResponse,
-    UpdateCategoryDTO,
 )
 from projeto_aplicado.settings import get_settings
 
