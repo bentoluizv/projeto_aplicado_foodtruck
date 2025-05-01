@@ -1,13 +1,15 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlmodel import Session, select
+from schemas import (
+    CategoryList,
+    Pagination,
+    UpdateCategoryDTO,
+)
+from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.category.model import Category
-from projeto_aplicado.schemas import (
-    UpdateCategoryDTO,
-)
 
 
 class CategoryRepository:
@@ -30,11 +32,29 @@ class CategoryRepository:
 
     def get_all(self, offset: int = 0, limit: int = 100):
         try:
-            categories = self.session.exec(
-                select(Category).offset(offset).limit(limit)
-            ).all()
+            category_count_stmt = select(func.count()).select_from(Category)
 
-            return categories
+            total_count = self.session.exec(category_count_stmt).first()
+
+            if not total_count:
+                total_count = 0
+
+            get_all_categories_stmt = (
+                select(Category).offset(offset).limit(limit)
+            )
+            categories = self.session.exec(get_all_categories_stmt).all()
+
+            pagination = Pagination(
+                offset=offset,
+                limit=limit,
+                total_count=total_count,
+                page=offset // limit + 1,
+                total_pages=(total_count // limit) + 1,
+            )
+
+            result = CategoryList(categories=categories, pagination=pagination)
+
+            return result
 
         except Exception as e:
             self.session.rollback()
