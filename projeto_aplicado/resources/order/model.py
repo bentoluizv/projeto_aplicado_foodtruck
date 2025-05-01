@@ -4,9 +4,10 @@ from typing import Self
 from pydantic import model_validator
 from sqlmodel import Field, Relationship, SQLModel
 
-from projeto_aplicado.resources.order.schemas import OrderStatus
+from projeto_aplicado.resources.customer.model import Customer
 
 from ...utils import generate_locator, get_ulid_as_str
+from .enums import OrderStatus
 
 
 class Order(SQLModel, table=True):
@@ -20,16 +21,10 @@ class Order(SQLModel, table=True):
     notes: str | None = Field(default=None, nullable=True, max_length=255)
     customer_id: str = Field(foreign_key='customer.id', nullable=False)
     customer: 'Customer' = Relationship(back_populates='orders')
-    products: list['OrderItem'] = Relationship(back_populates='order')
+    products: list['OrderItem'] = Relationship(back_populates='order')  # type: ignore # noqa: F821
 
     @model_validator(mode='after')
     def calculate_total(self) -> Self:
         total = sum(product.calculate_total() for product in self.products)
         self.total = total
         return self
-
-
-from projeto_aplicado.resources.customer.model import Customer  # noqa: E402
-from projeto_aplicado.resources.order_item.model import OrderItem  # noqa: E402
-
-Order.model_rebuild()

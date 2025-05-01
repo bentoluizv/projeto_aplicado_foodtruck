@@ -11,18 +11,12 @@ class OrderItem(SQLModel, table=True):
     quantity: int = Field(nullable=False, gt=0)
     price: float = Field(nullable=False, gt=0.0)
     order_id: str = Field(foreign_key='order.id', nullable=False)
-    order: 'Order' = Relationship(back_populates='products')
+    order: 'Order' = Relationship(back_populates='products')  # type: ignore # noqa: F821
     product_id: str = Field(foreign_key='product.id', nullable=False)
-    product: 'Product' = Relationship(back_populates='order_items')
+    product: 'Product' = Relationship(back_populates='order_items')  # type: ignore # noqa: F821
 
     def calculate_total(self) -> float:
         """
         Calculate the total price of the order item.
         """
         return self.quantity * self.price
-
-
-from projeto_aplicado.resources.order.model import Order  # noqa: E402
-from projeto_aplicado.resources.product.model import Product  # noqa: E402
-
-OrderItem.model_rebuild()

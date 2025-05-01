@@ -1,14 +1,15 @@
 from typing import Annotated
 
 from fastapi import Depends
-from model import (
-    Order,
-)
 from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.order.schemas import OrderList, UpdateOrderDTO
 from projeto_aplicado.schemas import Pagination
+
+from .model import (
+    Order,
+)
 
 
 class OrderRepository:
