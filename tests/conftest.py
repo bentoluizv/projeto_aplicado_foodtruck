@@ -5,6 +5,9 @@ from sqlmodel import Session, StaticPool, create_engine
 from projeto_aplicado.app import app
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.category.model import Category
+from projeto_aplicado.resources.customer.model import Customer
+from projeto_aplicado.resources.order.model import Order
+from projeto_aplicado.resources.order_item.model import OrderItem
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.utils import create_all, drop_all
 
@@ -112,3 +115,34 @@ def itens(session, categories):
     session.add_all(itens)
     session.commit()
     return itens
+
+
+@pytest.fixture
+def customers(session):
+    customers = [
+        {
+            'name': 'John Doe',
+            'email': 'john.doe@example.com',
+            'phone': '123456789',
+        },
+        {
+            'name': 'Jane Smith',
+            'email': 'jane.smith@example.com',
+            'phone': '987654321',
+        },
+        {
+            'name': 'Alice Johnson',
+            'email': 'alice.johnson@example.com',
+            'phone': '456123789',
+        },
+    ]
+    customers = [
+        Customer(
+            name=customer['name'],
+            email=customer['email'],
+        )
+        for customer in customers
+    ]
+    session.add_all(customers)
+    session.commit()
+    return customers

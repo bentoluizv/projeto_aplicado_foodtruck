@@ -24,4 +24,7 @@ class UpdateProductDTO(SQLModel):
 
 class ProductList(SQLModel):
     pagination: Pagination
-    products: Sequence[Product]
+    products: Sequence['Product']
+
+
+ProductList.model_rebuild()

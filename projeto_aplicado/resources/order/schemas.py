@@ -15,10 +15,16 @@ class UpdateOrderDTO(SQLModel):
 
 class CreateOrderDTO(SQLModel):
     customer_id: str
-    items: list[OrderItem]
+    items: list['OrderItem']
     notes: Optional[str] = None
 
 
+CreateOrderDTO.model_rebuild()
+
+
 class OrderList(SQLModel):
-    orders: Sequence[Order]
+    orders: Sequence['Order']
     pagination: Pagination
+
+
+OrderList.model_rebuild()

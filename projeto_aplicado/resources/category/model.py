@@ -8,3 +8,10 @@ class Category(SQLModel, table=True):
     name: str = Field(max_length=20, index=True, unique=True)
     icon_url: str = Field(nullable=False)
     products: list['Product'] = Relationship(back_populates='category')  # type: ignore  # noqa: F821
+
+    @classmethod
+    def create(cls, dto: 'CreateCategoryDTO'):  # type: ignore # noqa: F821
+        return cls(**dto.model_dump())
+
+
+Category.model_rebuild()

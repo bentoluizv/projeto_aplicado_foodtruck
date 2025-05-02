@@ -15,8 +15,15 @@ class OrderItem(SQLModel, table=True):
     product_id: str = Field(foreign_key='product.id', nullable=False)
     product: 'Product' = Relationship(back_populates='order_items')  # type: ignore # noqa: F821
 
+    @classmethod
+    def create(cls, dto: 'CreateOrderItemDTO'):  # type: ignore # noqa: F821
+        return cls(**dto.model_dump())
+
     def calculate_total(self) -> float:
         """
         Calculate the total price of the order item.
         """
         return self.quantity * self.price
+
+
+OrderItem.model_rebuild()

@@ -19,5 +19,8 @@ class UpdateOrderItemDTO(SQLModel):
 
 
 class OrderItemList(SQLModel):
-    order_itens: Sequence[OrderItem]
+    order_itens: Sequence['OrderItem']
     pagination: Pagination
+
+
+OrderItemList.model_rebuild()

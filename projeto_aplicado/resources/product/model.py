@@ -12,3 +12,13 @@ class Product(SQLModel, table=True):
     category_id: str = Field(foreign_key='category.id')
     category: 'Category' = Relationship(back_populates='products')  # type: ignore # noqa: F821
     order_items: list['OrderItem'] = Relationship(back_populates='product')  # type: ignore # noqa: F821
+
+    @classmethod
+    def create(cls, dto: 'CreateProductDTO'):  # type: ignore  # noqa: F821
+        """
+        Create a Product instance from a DTO.
+        """
+        return cls(**dto.model_dump())
+
+
+Product.model_rebuild()
