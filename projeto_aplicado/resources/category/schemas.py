@@ -16,8 +16,5 @@ class UpdateCategoryDTO(SQLModel):
 
 
 class CategoryList(SQLModel):
-    categories: Sequence['Category']
+    categories: Sequence[Category]
     pagination: Pagination
-
-
-CategoryList.model_rebuild()

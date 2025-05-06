@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 from ...utils import get_ulid_as_str
 
@@ -11,9 +11,7 @@ class OrderItem(SQLModel, table=True):
     quantity: int = Field(nullable=False, gt=0)
     price: float = Field(nullable=False, gt=0.0)
     order_id: str = Field(foreign_key='order.id', nullable=False)
-    order: 'Order' = Relationship(back_populates='products')  # type: ignore # noqa: F821
     product_id: str = Field(foreign_key='product.id', nullable=False)
-    product: 'Product' = Relationship(back_populates='order_items')  # type: ignore # noqa: F821
 
     @classmethod
     def create(cls, dto: 'CreateOrderItemDTO'):  # type: ignore # noqa: F821
@@ -24,6 +22,3 @@ class OrderItem(SQLModel, table=True):
         Calculate the total price of the order item.
         """
         return self.quantity * self.price
-
-
-OrderItem.model_rebuild()

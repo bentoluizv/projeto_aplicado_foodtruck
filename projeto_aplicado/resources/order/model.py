@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import List, Self
 
 from pydantic import model_validator
 from sqlmodel import Field, Relationship, SQLModel
@@ -18,8 +18,7 @@ class Order(SQLModel, table=True):
     total: float = Field(nullable=False, default=0.0, gt=0)
     notes: str | None = Field(default=None, nullable=True, max_length=255)
     customer_id: str = Field(foreign_key='customer.id', nullable=False)
-    customer: 'Customer' = Relationship(back_populates='orders')  # type: ignore # noqa: F821
-    products: list['OrderItem'] = Relationship(back_populates='order')  # type: ignore # noqa: F821
+    products: List['OrderItem'] = Relationship()  # type: ignore # noqa: F821
 
     @classmethod
     def create(cls, dto: 'CreateOrderDTO'):  # type: ignore # noqa: F821
@@ -30,6 +29,3 @@ class Order(SQLModel, table=True):
         total = sum(product.calculate_total() for product in self.products)
         self.total = total
         return self
-
-
-Order.model_rebuild()
