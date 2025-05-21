@@ -1,9 +1,0 @@
-<!-- templates/icons.html -->
-{% for icon in icons %}
-<div hx-on:click="onIconClick({{icon.id}})" id="icon-{{icon.id}}"
-    class="flex items-center justify-center bg-orange-200 border-2 p-1 hover:bg-orange-300 hover:border-orange-600 transition-all duration-300 ease-in-out transform hover:scale-105"
-    data-toggle="tooltip" data-placement="top" title="{{ icon.name }}"
-    class="#icon-{{icon.id}} p-2 size-12 hover:border-2 hover:border-orange-600 rounded cursor-pointer">
-    <img src="{{ icon.url }}" alt="{{ icon.name }}" class="size-7 rounded cursor-pointer object-contain">
-</div>
-{% endfor %}
