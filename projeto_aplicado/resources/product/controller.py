@@ -1,17 +1,14 @@
 from http import HTTPStatus
-from typing import Annotated, Union
+from typing import Annotated
 
 from fastapi import (
     APIRouter,
     Depends,
     File,
     Form,
-    Header,
     HTTPException,
-    Request,
     UploadFile,
 )
-from fastapi.templating import Jinja2Templates
 from supabase import Client
 
 from projeto_aplicado.ext.supabase.client import get_supabase_client
@@ -29,11 +26,6 @@ from projeto_aplicado.resources.product.schemas import (
 from projeto_aplicado.schemas import BaseResponse
 from projeto_aplicado.settings import get_settings
 
-templates = Jinja2Templates(
-    directory='templates',
-    auto_reload=True,
-    cache_size=0,
-)
 settings = get_settings()
 
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
@@ -52,10 +44,8 @@ def get_products(repository: ProductRepo, offset: int = 0, limit: int = 100):
         limit (int): The maximum number of products to retrieve.
     Returns:
         ProductList: A list of products with pagination information.
-
     """
     products = repository.get_all(offset=offset, limit=limit)
-
     return products
 
 
@@ -77,7 +67,6 @@ def get_product_by_id(product_id: str, repository: ProductRepo):
 
 @router.post('/', response_model=BaseResponse, status_code=HTTPStatus.CREATED)
 async def create_product(  # noqa: PLR0913, PLR0917
-    request: Request,
     price: Annotated[float, Form()],
     image: Annotated[UploadFile, File()],
     name: Annotated[str, Form()],
@@ -85,18 +74,16 @@ async def create_product(  # noqa: PLR0913, PLR0917
     category_id: Annotated[str, Form()],
     repository: ProductRepo,
     supabase: Supabase,
-    hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
     Create a new product.
     """
-
     img_url = await uploadProductImage(supabase, image)
 
     data = CreateProductDTO(
         name=name,
         price=price,
-        img_url=img_url,
+        image_url=img_url,
         description=description,
         category_id=category_id,
     )
@@ -113,22 +100,11 @@ async def create_product(  # noqa: PLR0913, PLR0917
         name=data.name,
         price=data.price,
         category_id=data.category_id,
-        image_url=data.img_url,
+        image_url=data.image_url,
         description=data.description,
     )
 
     repository.create(new_product)
-
-    if hx_request:
-        return templates.TemplateResponse(
-            request,
-            'selected_category_new_products.html',
-            headers={'HX-Trigger': 'productsUpdated'},
-            context={
-                'product': repository.get_all(),
-            },
-            status_code=HTTPStatus.CREATED,
-        )
     return BaseResponse(id=new_product.id, action='created')
 
 
@@ -141,7 +117,6 @@ def update_product(
     """
     Update an product by ID.
     """
-
     existing_product = repository.get_by_id(product_id)
     if not existing_product:
         raise HTTPException(
@@ -154,15 +129,12 @@ def update_product(
 
 @router.delete('/{product_id}', response_model=BaseResponse)
 def delete_product(
-    request: Request,
     product_id: str,
     repository: ProductRepo,
-    hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
     Delete an product by ID.
     """
-
     existing_product = repository.get_by_id(product_id)
 
     if not existing_product:
@@ -172,14 +144,4 @@ def delete_product(
         )
 
     repository.delete(existing_product)
-
-    if hx_request:
-        return templates.TemplateResponse(
-            request,
-            'selected_category_new_products.html',
-            headers={'HX-Trigger': 'productsUpdated'},
-            context={'categories': repository.get_all()},
-            status_code=HTTPStatus.OK,
-        )
-
     return BaseResponse(id=existing_product.id, action='deleted')

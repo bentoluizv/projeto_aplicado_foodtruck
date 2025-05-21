@@ -7,24 +7,36 @@ from projeto_aplicado.schemas import Pagination
 
 
 class CreateProductDTO(SQLModel):
+    """
+    Data transfer object for creating a product.
+    """
+
     name: str
     price: float
-    img_url: str
+    image_url: str
     description: str | None = None
     category_id: str
 
 
 class UpdateProductDTO(SQLModel):
+    """
+    Data transfer object for updating a product.
+    """
+
     name: str | None = None
     description: str | None = None
     price: float | None = None
-    image: bytes | None = None
+    image_url: str | None = None
     category_id: str | None = None
 
 
 class ProductList(SQLModel):
+    """
+    Response model for listing products with pagination.
+    """
+
+    products: Sequence[Product]
     pagination: Pagination
-    products: Sequence['Product']
 
 
 ProductList.model_rebuild()

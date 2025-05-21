@@ -6,11 +6,18 @@ from projeto_aplicado.utils import get_ulid_as_str
 
 
 class Category(SQLModel, table=True):
+    """
+    Category model representing a product category in the system.
+    """
+
     id: str = Field(default_factory=get_ulid_as_str, primary_key=True)
-    name: str = Field(max_length=20, index=True, unique=True)
-    icon_url: str = Field(nullable=False)
+    name: str = Field(max_length=20, index=True, unique=True, nullable=False)
+    icon_url: str = Field(max_length=255, nullable=False)
     products: List['Product'] = Relationship()  # type: ignore # noqa: F821
 
     @classmethod
     def create(cls, dto: 'CreateCategoryDTO'):  # type: ignore # noqa: F821
+        """
+        Create a Category instance from a DTO.
+        """
         return cls(**dto.model_dump())

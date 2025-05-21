@@ -9,19 +9,31 @@ from .enums import OrderStatus
 
 
 class Order(SQLModel, table=True):
+    """
+    Order model representing a customer order in the system.
+    """
+
     id: str = Field(default_factory=get_ulid_as_str, primary_key=True)
-    created_at: str = Field(default_factory=datetime.now, nullable=False)
+    customer_id: str = Field(foreign_key='customer.id', nullable=False)
+    status: str = Field(max_length=20, nullable=False)
+    total: float = Field(nullable=False, gt=0.0)
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow, nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow, nullable=False
+    )
     locator: str = Field(
         default_factory=generate_locator, index=True, nullable=False
     )
-    status: OrderStatus = Field(nullable=False, default=OrderStatus.PENDING)
-    total: float = Field(nullable=False, default=0.0, gt=0)
     notes: str | None = Field(default=None, nullable=True, max_length=255)
-    customer_id: str = Field(foreign_key='customer.id', nullable=False)
     products: List['OrderItem'] = Relationship()  # type: ignore # noqa: F821
 
     @classmethod
-    def create(cls, dto: 'CreateOrderDTO'):  # type: ignore # noqa: F821
+    def create(cls, dto: 'CreateOrderDTO'):  # type: ignore  # noqa: F821
+        """
+        Create an Order instance from a DTO.
+        """
         return cls(**dto.model_dump())
 
     @model_validator(mode='after')

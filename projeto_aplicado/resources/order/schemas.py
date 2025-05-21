@@ -9,21 +9,33 @@ from projeto_aplicado.schemas import Pagination
 
 
 class UpdateOrderDTO(SQLModel):
+    """
+    Data transfer object for updating an order.
+    """
+
     status: Optional[OrderStatus] = None
     notes: Optional[str] = None
 
 
 class CreateOrderDTO(SQLModel):
+    """
+    Data transfer object for creating an order.
+    """
+
     customer_id: str
-    items: list['OrderItem']
-    notes: Optional[str] = None
+    items: list[OrderItem]
+    notes: str | None = None
 
 
 CreateOrderDTO.model_rebuild()
 
 
 class OrderList(SQLModel):
-    orders: Sequence['Order']
+    """
+    Response model for listing orders with pagination.
+    """
+
+    orders: Sequence[Order]
     pagination: Pagination
 
 

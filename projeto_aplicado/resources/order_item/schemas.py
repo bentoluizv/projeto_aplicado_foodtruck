@@ -7,6 +7,10 @@ from projeto_aplicado.schemas import Pagination
 
 
 class CreateOrderItemDTO(SQLModel):
+    """
+    Data transfer object for creating an order item.
+    """
+
     quantity: int
     price: float
     order_id: str
@@ -14,12 +18,20 @@ class CreateOrderItemDTO(SQLModel):
 
 
 class UpdateOrderItemDTO(SQLModel):
+    """
+    Data transfer object for updating an order item.
+    """
+
     quantity: int | None = None
     price: float | None = None
 
 
 class OrderItemList(SQLModel):
-    order_itens: Sequence['OrderItem']
+    """
+    Response model for listing order items with pagination.
+    """
+
+    order_items: Sequence[OrderItem]
     pagination: Pagination
 
 

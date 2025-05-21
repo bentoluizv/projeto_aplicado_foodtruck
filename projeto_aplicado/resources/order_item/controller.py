@@ -1,14 +1,12 @@
 from http import HTTPStatus
-from typing import Annotated, Union
+from typing import Annotated
 
 from fastapi import (
     APIRouter,
     Depends,
     Form,
-    Header,
     HTTPException,
 )
-from fastapi.templating import Jinja2Templates
 
 from projeto_aplicado.resources.order_item.model import OrderItem
 from projeto_aplicado.resources.order_item.repository import (
@@ -23,18 +21,11 @@ from projeto_aplicado.resources.order_item.schemas import (
 from projeto_aplicado.schemas import BaseResponse
 from projeto_aplicado.settings import get_settings
 
-templates = Jinja2Templates(
-    directory='templates',
-    auto_reload=True,
-    cache_size=0,
-)
-
 settings = get_settings()
 
 OrderItemRepo = Annotated[
     OrderItemRepository, Depends(get_order_item_repository)
 ]
-
 
 router = APIRouter(
     tags=['OrderItem'], prefix=f'{settings.API_PREFIX}/order_items'
@@ -53,11 +44,8 @@ def fetch_order_items(
         limit (int): The maximum number of products to retrieve.
     Returns:
         OrderItemList: A list of order items with pagination information.
-
     """
-
     order_items = repository.get_all(offset=offset, limit=limit)
-
     return order_items
 
 
@@ -73,7 +61,6 @@ def fetch_order_item_by_id(order_item_id: str, repository: OrderItemRepo):
     Raises:
         HTTPException: If the order item with the specified ID is not found.
     """
-
     order_item = repository.get_by_id(order_item_id)
 
     if not order_item:
@@ -92,22 +79,18 @@ async def create_order_item(  # noqa: PLR0913, PLR0917
     order_id: Annotated[str, Form()],
     product_id: Annotated[str, Form()],
     repository: OrderItemRepo,
-    hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
     Create a new order item.
     Args:
-        request (Request): The HTTP request object.
         price (float): The price of the order item.
         quantity (int): The quantity of the order item.
         order_id (str): The ID of the order.
         product_id (str): The ID of the product.
         repository (OrderItemRepo): The order item repository.
-        hx_request (Union[str, None]): Optional header for HTMX requests.
     Returns:
         BaseResponse: A response indicating the result of the operation.
     """
-
     data = CreateOrderItemDTO(
         quantity=quantity,
         price=price,
@@ -116,12 +99,7 @@ async def create_order_item(  # noqa: PLR0913, PLR0917
     )
 
     new_order_item = OrderItem(**data.model_dump())
-
     repository.create(new_order_item)
-
-    if hx_request:
-        pass
-
     return BaseResponse(id=new_order_item.id, action='created')
 
 
@@ -132,17 +110,16 @@ def update_order_item(
     repository: OrderItemRepo,
 ):
     """
-    Update an product by ID.
+    Update an order item by ID.
     Args:
-        order_item_id (str): The ID of the product to update.
-        dto (UpdateProductDTO): The data transfer object containing the updated product information.
+        order_item_id (str): The ID of the order item to update.
+        dto (UpdateOrderItemDTO): The data transfer object containing the updated order item information.
         repository (OrderItemRepo): The order item repository.
     Returns:
         BaseResponse: A response indicating the result of the operation.
     Raises:
-        HTTPException: If the product with the specified ID is not found.
-    """  # noqa: E501
-
+        HTTPException: If the order item with the specified ID is not found.
+    """
     existing_order_item = repository.get_by_id(order_item_id)
 
     if not existing_order_item:
@@ -152,7 +129,6 @@ def update_order_item(
         )
 
     repository.update(existing_order_item, dto)
-
     return BaseResponse(id=existing_order_item.id, action='updated')
 
 
@@ -160,20 +136,17 @@ def update_order_item(
 def delete_order_item(
     order_item_id: str,
     repository: OrderItemRepo,
-    hx_request: Annotated[Union[str, None], Header()] = None,
 ):
     """
-    Delete an product by ID.
+    Delete an order item by ID.
     Args:
-        order_item_id (str): The ID of the product to delete.
+        order_item_id (str): The ID of the order item to delete.
         repository (OrderItemRepo): The order item repository.
-        hx_request (Union[str, None]): Optional header for HTMX requests.
     Returns:
         BaseResponse: A response indicating the result of the operation.
     Raises:
-        HTTPException: If the product with the specified ID is not found.
-    """  # noqa: E501
-
+        HTTPException: If the order item with the specified ID is not found.
+    """
     existing_order_item = repository.get_by_id(order_item_id)
 
     if not existing_order_item:
@@ -183,8 +156,4 @@ def delete_order_item(
         )
 
     repository.delete(existing_order_item)
-
-    if hx_request:
-        pass
-
     return BaseResponse(id=existing_order_item.id, action='deleted')
