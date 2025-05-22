@@ -9,7 +9,7 @@ from projeto_aplicado.resources.product.schemas import (
     ProductList,
     UpdateProductDTO,
 )
-from projeto_aplicado.schemas import Pagination
+from projeto_aplicado.resources.shared.schemas import Pagination
 
 
 class ProductRepository:

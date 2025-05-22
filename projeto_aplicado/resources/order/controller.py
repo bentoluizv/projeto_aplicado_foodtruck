@@ -4,29 +4,31 @@ from typing import Annotated
 from fastapi import (
     APIRouter,
     Depends,
-    Form,
     HTTPException,
 )
 
-from projeto_aplicado.resources.order.model import Order
+from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.order.repository import (
     OrderRepository,
     get_order_repository,
 )
-from projeto_aplicado.resources.order.schemas import OrderList, UpdateOrderDTO
-from projeto_aplicado.resources.order_item.model import OrderItem
+from projeto_aplicado.resources.order.schemas import (
+    CreateOrderDTO,
+    OrderItemList,
+    OrderList,
+    UpdateOrderDTO,
+)
 from projeto_aplicado.resources.product.repository import (
     ProductRepository,
     get_product_repository,
 )
-from projeto_aplicado.schemas import BaseResponse
+from projeto_aplicado.resources.shared.schemas import BaseResponse, Pagination
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
 OrderRepo = Annotated[OrderRepository, Depends(get_order_repository)]
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
-
 router = APIRouter(tags=['Order'], prefix=f'{settings.API_PREFIX}/orders')
 
 
@@ -62,26 +64,49 @@ def fetch_order_by_id(order_id: str, repository: OrderRepo):
     if not order:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail=f'Order with {order_id} not found',
+            detail='Order not found',
         )
 
     return order
 
 
+@router.get('/{order_id}/items', response_model=OrderItemList)
+def fetch_order_items(
+    order_id: str, repository: OrderRepo, offset: int = 0, limit: int = 100
+):
+    """
+    Get all items of an order.
+    """
+    order = repository.get_by_id(order_id)
+
+    if not order:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail='Order not found',
+        )
+
+    return OrderItemList(
+        order_items=order.products,
+        pagination=Pagination(
+            total_count=len(order.products),
+            page=offset // limit + 1,
+            total_pages=1,
+            offset=offset,
+            limit=limit,
+        ),
+    )
+
+
 @router.post('/', response_model=BaseResponse, status_code=HTTPStatus.CREATED)
 async def create_order(  # noqa: PLR0913, PLR0917
-    order_itens: Annotated[list[dict], Form()],
-    customer_id: Annotated[str, Form()],
-    notes: Annotated[str, Form()],
+    dto: CreateOrderDTO,
     order_repository: OrderRepo,
     product_repository: ProductRepo,
 ):
     """
     Create a new order.
     Args:
-        order_itens (list[dict]): A list of order items.
-        customer_id (str): The ID of the customer.
-        notes (str): Additional notes for the order.
+        dto (CreateOrderDTO): The order data.
         order_repository (OrderRepo): The order repository.
         product_repository (ProductRepo): The product repository.
     Returns:
@@ -89,30 +114,19 @@ async def create_order(  # noqa: PLR0913, PLR0917
     Raises:
         HTTPException: If a product in the order items is not found.
     """
-    new_order = Order(
-        customer_id=customer_id,
-        status='pending',
-        total=0,
-        products=[],
-        notes=notes,
-    )
 
-    for item in order_itens:
-        product = product_repository.get_by_id(item['product_id'])
+    new_order = Order.create(dto)
+
+    for item in dto.items:
+        product = product_repository.get_by_id(item.product_id)
+
         if not product:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
-                detail=f'Product with {item["product_id"]} not found',
+                detail='Product not found',
             )
 
-        order_item = OrderItem(
-            quantity=item['quantity'],
-            price=product.price,
-            order_id=new_order.id,
-            subtotal=product.price * item['quantity'],
-            product_id=item['product_id'],
-        )
-
+        order_item = OrderItem.create(item)
         new_order.products.append(order_item)
 
     order_repository.create(new_order)
@@ -133,6 +147,7 @@ def update_order(
         HTTPException: If the order with the specified ID is not found.
     """
     existing_order = repository.get_by_id(order_id)
+
     if not existing_order:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,

@@ -4,15 +4,9 @@ from typing import Annotated
 from fastapi import (
     APIRouter,
     Depends,
-    File,
-    Form,
     HTTPException,
-    UploadFile,
 )
-from supabase import Client
 
-from projeto_aplicado.ext.supabase.client import get_supabase_client
-from projeto_aplicado.ext.supabase.storage import uploadProductImage
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.resources.product.repository import (
     ProductRepository,
@@ -23,13 +17,12 @@ from projeto_aplicado.resources.product.schemas import (
     ProductList,
     UpdateProductDTO,
 )
-from projeto_aplicado.schemas import BaseResponse
+from projeto_aplicado.resources.shared.schemas import BaseResponse
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
-Supabase = Annotated[Client, Depends(get_supabase_client)]
 
 router = APIRouter(tags=['Product'], prefix=f'{settings.API_PREFIX}/products')
 
@@ -59,36 +52,22 @@ def get_product_by_id(product_id: str, repository: ProductRepo):
     if not product:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail=f'Product with {product_id} not found',
+            detail='Product not found',
         )
 
     return product
 
 
 @router.post('/', response_model=BaseResponse, status_code=HTTPStatus.CREATED)
-async def create_product(  # noqa: PLR0913, PLR0917
-    price: Annotated[float, Form()],
-    image: Annotated[UploadFile, File()],
-    name: Annotated[str, Form()],
-    description: Annotated[str, Form()],
-    category_id: Annotated[str, Form()],
+async def create_product(
+    dto: CreateProductDTO,
     repository: ProductRepo,
-    supabase: Supabase,
 ):
     """
     Create a new product.
     """
-    img_url = await uploadProductImage(supabase, image)
 
-    data = CreateProductDTO(
-        name=name,
-        price=price,
-        image_url=img_url,
-        description=description,
-        category_id=category_id,
-    )
-
-    existing_product = repository.get_by_name(data.name)
+    existing_product = repository.get_by_name(dto.name)
 
     if existing_product:
         raise HTTPException(
@@ -97,11 +76,9 @@ async def create_product(  # noqa: PLR0913, PLR0917
         )
 
     new_product = Product(
-        name=data.name,
-        price=data.price,
-        category_id=data.category_id,
-        image_url=data.image_url,
-        description=data.description,
+        name=dto.name,
+        price=dto.price,
+        description=dto.description,
     )
 
     repository.create(new_product)
@@ -121,7 +98,7 @@ def update_product(
     if not existing_product:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='product not found',
+            detail='Product not found',
         )
     repository.update(existing_product, dto)
     return BaseResponse(id=existing_product.id, action='updated')
@@ -140,7 +117,7 @@ def delete_product(
     if not existing_product:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail='product not found',
+            detail='Product not found',
         )
 
     repository.delete(existing_product)

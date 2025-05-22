@@ -3,9 +3,18 @@ from typing import Optional, Sequence
 from sqlmodel import SQLModel
 
 from projeto_aplicado.resources.order.enums import OrderStatus
-from projeto_aplicado.resources.order.model import Order
-from projeto_aplicado.resources.order_item.model import OrderItem
-from projeto_aplicado.schemas import Pagination
+from projeto_aplicado.resources.order.model import Order, OrderItem
+from projeto_aplicado.resources.shared.schemas import Pagination
+
+
+class CreateOrderItemDTO(SQLModel):
+    """
+    Data transfer object for creating an order item.
+    """
+
+    quantity: int
+    product_id: str
+    price: float
 
 
 class UpdateOrderDTO(SQLModel):
@@ -22,9 +31,8 @@ class CreateOrderDTO(SQLModel):
     Data transfer object for creating an order.
     """
 
-    customer_id: str
-    items: list[OrderItem]
-    notes: str | None = None
+    items: list[CreateOrderItemDTO]
+    notes: Optional[str] = None
 
 
 CreateOrderDTO.model_rebuild()
@@ -40,3 +48,24 @@ class OrderList(SQLModel):
 
 
 OrderList.model_rebuild()
+
+
+class UpdateOrderItemDTO(SQLModel):
+    """
+    Data transfer object for updating an order item.
+    """
+
+    quantity: int | None = None
+    price: float | None = None
+
+
+class OrderItemList(SQLModel):
+    """
+    Response model for listing order items with pagination.
+    """
+
+    order_items: Sequence[OrderItem]
+    pagination: Pagination
+
+
+OrderItemList.model_rebuild()

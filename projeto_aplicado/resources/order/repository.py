@@ -5,7 +5,7 @@ from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.order.schemas import OrderList, UpdateOrderDTO
-from projeto_aplicado.schemas import Pagination
+from projeto_aplicado.resources.shared.schemas import Pagination
 
 from .model import (
     Order,

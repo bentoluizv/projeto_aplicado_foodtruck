@@ -1,4 +1,3 @@
-import os
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
@@ -7,15 +6,9 @@ from supabase import Client
 from projeto_aplicado.ext.database.db import get_engine
 from projeto_aplicado.ext.supabase.client import get_supabase_client
 from projeto_aplicado.ext.supabase.storage import list_all_icons
-from projeto_aplicado.resources.category.controller import (
-    router as category_router,
-)
 from projeto_aplicado.resources.order.controller import router as order_router
-from projeto_aplicado.resources.order_item.controller import (
-    router as order_item_router,
-)
 from projeto_aplicado.resources.product.controller import router as item_router
-from projeto_aplicado.schemas import IconsResponse
+from projeto_aplicado.resources.shared.schemas import IconsResponse
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
@@ -53,6 +46,4 @@ async def get_icons(supabase: Supabase):
 
 
 app.include_router(item_router)
-app.include_router(category_router)
 app.include_router(order_router)
-app.include_router(order_item_router)

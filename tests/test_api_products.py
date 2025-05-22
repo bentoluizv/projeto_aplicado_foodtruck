@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from io import BytesIO
 
 from projeto_aplicado.settings import get_settings
 
@@ -16,10 +15,10 @@ def test_get_products(client, itens):
         {
             'id': str(item.id),
             'description': item.description,
-            'image_url': item.image_url,
             'name': item.name,
             'price': item.price,
-            'category_id': item.category_id,
+            'created_at': item.created_at.isoformat(),
+            'updated_at': item.updated_at.isoformat(),
         }
         for item in itens
     ]
@@ -32,19 +31,14 @@ def test_get_product_by_id_not_found(client):
     assert response.json()['detail'] == 'Product not found'
 
 
-def test_create_product(client, categories):
-    file_content = BytesIO(b'fake image content')
-
+def test_create_product(client):
     data = {
         'name': 'Test Item',
         'description': 'Test Description',
         'price': 10.99,
-        'category_id': categories[0].id,
     }
 
-    response = client.post(
-        f'{API_PREFIX}/products/', data=data, files={'image': file_content}
-    )
+    response = client.post(f'{API_PREFIX}/products/', json=data)
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.headers['Content-Type'] == 'application/json'
@@ -53,17 +47,15 @@ def test_create_product(client, categories):
 
 
 def test_create_product_conflict(client, itens):
-    file_content = BytesIO(b'fake image content')
-
     data = {
         'name': itens[0].name,
         'description': 'Test Description',
         'price': 10.99,
-        'category_id': itens[0].category_id,
     }
 
     response = client.post(
-        f'{API_PREFIX}/products/', data=data, files={'image': file_content}
+        f'{API_PREFIX}/products/',
+        json=data,
     )
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.headers['Content-Type'] == 'application/json'

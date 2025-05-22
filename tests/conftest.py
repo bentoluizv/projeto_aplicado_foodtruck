@@ -4,10 +4,7 @@ from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
 from projeto_aplicado.ext.database.db import get_session
-from projeto_aplicado.resources.category.model import Category
-from projeto_aplicado.resources.customer.model import Customer
-from projeto_aplicado.resources.order.model import Order
-from projeto_aplicado.resources.order_item.model import OrderItem
+from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.utils import create_all, drop_all
 
@@ -45,60 +42,36 @@ def client(session):
 
 
 @pytest.fixture
-def categories(session: Session):
-    categories = [
-        {'name': 'Hambúrgueres', 'icon_url': 'i'},
-        {'name': 'Cachorros-quentes', 'icon_url': 'i'},
-        {'name': 'Bebidas', 'icon_url': 'i'},
-        {'name': 'Acompanhamentos', 'icon_url': 'i'},
-        {'name': 'Sobremesas', 'icon_url': 'i'},
-    ]
-    categories = [
-        Category(name=category['name'], icon_url=category['icon_url'])
-        for category in categories
-    ]
-    session.add_all(categories)
-    session.commit()
-    return categories
-
-
-@pytest.fixture
-def itens(session, categories):
+def itens(session):
     itens = [
         {
             'name': 'X-Burguer',
             'price': 25.0,
-            'category_id': categories[0].id,
             'image_url': 'image_x_burguer.jpg',
         },
         {
             'name': 'X-Salada',
             'price': 20.0,
-            'category_id': categories[0].id,
             'image_url': 'image_x_salada.jpg',
         },
         {
             'name': 'Cachorro-quente',
             'price': 10.0,
-            'category_id': categories[1].id,
             'image_url': 'image_cachorro_quente.jpg',
         },
         {
             'name': 'Refrigerante',
             'price': 5.0,
-            'category_id': categories[2].id,
             'image_url': 'image_refrigerante.jpg',
         },
         {
             'name': 'Batata frita',
             'price': 8.0,
-            'category_id': categories[3].id,
             'image_url': 'image_batata_frita.jpg',
         },
         {
             'name': 'Pudim',
             'price': 12.0,
-            'category_id': categories[4].id,
             'image_url': 'image_pudim.jpg',
         },
     ]
@@ -107,8 +80,6 @@ def itens(session, categories):
         Product(
             name=item['name'],
             price=item['price'],
-            category_id=item['category_id'],
-            image_url=item['image_url'],
         )
         for item in itens
     ]
@@ -118,31 +89,56 @@ def itens(session, categories):
 
 
 @pytest.fixture
-def customers(session):
-    customers = [
+def orders(session):
+    orders = [
         {
-            'name': 'John Doe',
-            'email': 'john.doe@example.com',
-            'phone': '123456789',
+            'status': 'pending',
+            'total': 0.0,
+            'notes': 'First order',
         },
         {
-            'name': 'Jane Smith',
-            'email': 'jane.smith@example.com',
-            'phone': '987654321',
+            'status': 'completed',
+            'total': 0.0,
+            'notes': 'Second order',
         },
         {
-            'name': 'Alice Johnson',
-            'email': 'alice.johnson@example.com',
-            'phone': '456123789',
+            'status': 'cancelled',
+            'total': 0.0,
+            'notes': 'Third order',
         },
     ]
-    customers = [
-        Customer(
-            name=customer['name'],
-            email=customer['email'],
-        )
-        for customer in customers
-    ]
-    session.add_all(customers)
+    orders = [Order(**order) for order in orders]
+    session.add_all(orders)
     session.commit()
-    return customers
+    return orders
+
+
+@pytest.fixture
+def order_items(session, orders, itens):
+    order_items = [
+        {
+            'order_id': orders[0].id,
+            'product_id': itens[0].id,
+            'quantity': 2,
+            'price': itens[0].price,
+            'subtotal': itens[0].price * 2,
+        },
+        {
+            'order_id': orders[0].id,
+            'product_id': itens[2].id,
+            'quantity': 1,
+            'price': itens[2].price,
+            'subtotal': itens[2].price,
+        },
+        {
+            'order_id': orders[1].id,
+            'product_id': itens[1].id,
+            'quantity': 3,
+            'price': itens[1].price,
+            'subtotal': itens[1].price * 3,
+        },
+    ]
+    order_items = [OrderItem(**item) for item in order_items]
+    session.add_all(order_items)
+    session.commit()
+    return order_items
