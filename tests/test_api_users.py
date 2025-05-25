@@ -1,6 +1,13 @@
 from http import HTTPStatus
 
+import pytest
+
+from projeto_aplicado.auth.security import verify_password
 from projeto_aplicado.resources.users.model import UserRole
+from projeto_aplicado.resources.users.schemas import (
+    CreateUserDTO,
+    UpdateUserDTO,
+)
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
@@ -11,8 +18,8 @@ def test_get_users(client, users):
     response = client.get(f'{API_PREFIX}/users/')
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
-    assert len(response.json()['items']) == len(users)
-    assert response.json()['items'] == [
+    assert len(response.json()['users']) == len(users)
+    assert response.json()['users'] == [
         {
             'id': user.id,
             'name': user.name,
@@ -23,6 +30,13 @@ def test_get_users(client, users):
         }
         for user in users
     ]
+    assert response.json()['pagination'] == {
+        'offset': 0,
+        'limit': 100,
+        'total_count': len(users),
+        'page': 1,
+        'total_pages': 1,
+    }
 
 
 def test_get_user_by_id(client, users):
@@ -99,3 +113,74 @@ def test_delete_user_not_found(client):
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'detail': 'User not found'}
+
+
+def test_create_user_dto_password_hashing():
+    # Arrange
+    password = 'test123'
+    dto = CreateUserDTO(
+        name='Test User',
+        email='test@example.com',
+        password=password,
+        role=UserRole.KITCHEN,
+    )
+
+    # Assert
+    assert dto.password != password  # Password should be hashed
+    assert verify_password(
+        password, dto.password
+    )  # Should verify against original
+
+
+def test_update_user_dto_password_hashing():
+    # Arrange
+    password = 'newpass123'
+    dto = UpdateUserDTO(
+        name='Updated User',
+        email='updated@example.com',
+        password=password,
+        role=UserRole.KITCHEN,
+    )
+
+    # Assert
+    assert dto.password is not None  # Password should be set
+    assert dto.password != password  # Password should be hashed
+    assert verify_password(
+        password, dto.password
+    )  # Should verify against original
+
+
+def test_update_user_dto_password_optional():
+    # Arrange
+    dto = UpdateUserDTO(
+        name='Updated User',
+        email='updated@example.com',
+        role=UserRole.KITCHEN,
+    )
+
+    # Assert
+    assert (
+        dto.password is None
+    )  # Password should remain None when not provided
+
+
+def test_create_user_dto_password_min_length():
+    # Arrange & Act & Assert
+    with pytest.raises(ValueError):
+        CreateUserDTO(
+            name='Test User',
+            email='test@example.com',
+            password='12345',  # Too short
+            role=UserRole.KITCHEN,
+        )
+
+
+def test_update_user_dto_password_min_length():
+    # Arrange & Act & Assert
+    with pytest.raises(ValueError):
+        UpdateUserDTO(
+            name='Test User',
+            email='test@example.com',
+            password='12345',  # Too short
+            role=UserRole.KITCHEN,
+        )
