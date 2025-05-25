@@ -37,7 +37,59 @@ router = APIRouter(tags=['Order'], prefix=f'{settings.API_PREFIX}/orders')
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-@router.get('/', response_model=OrderList, status_code=HTTPStatus.OK)
+@router.get(
+    '/',
+    response_model=OrderList,
+    status_code=HTTPStatus.OK,
+    responses={
+        200: {
+            'description': 'Lista de pedidos retornada com sucesso',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'orders': [
+                            {
+                                'id': '1',
+                                'status': 'pending',
+                                'total': 41.80,
+                                'created_at': '2024-03-20T10:00:00',
+                                'updated_at': '2024-03-20T10:00:00',
+                                'locator': 'A123',
+                                'notes': 'Sem cebola',
+                            },
+                            {
+                                'id': '2',
+                                'status': 'preparing',
+                                'total': 25.90,
+                                'created_at': '2024-03-20T10:00:00',
+                                'updated_at': '2024-03-20T10:00:00',
+                                'locator': 'B456',
+                                'notes': None,
+                            },
+                        ],
+                        'pagination': {
+                            'offset': 0,
+                            'limit': 100,
+                            'total_count': 2,
+                            'total_pages': 1,
+                            'page': 1,
+                        },
+                    }
+                }
+            },
+        },
+        401: {
+            'description': 'Não autorizado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Not authenticated',
+                    }
+                }
+            },
+        },
+    },
+)
 def fetch_orders(
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -45,13 +97,47 @@ def fetch_orders(
     limit: int = 100,
 ):
     """
-    Get all orders.
+    Retorna a lista de pedidos do sistema.
+
     Args:
-        repository (OrderRepo): The order repository.
-        offset (int): The offset for pagination.
-        limit (int): The maximum number of orders to retrieve.
+        repository (OrderRepository): Repositório de pedidos.
+        current_user (User): Usuário autenticado.
+        offset (int, optional): Número de registros para pular. Padrão: 0.
+        limit (int, optional): Limite de registros por página. Padrão: 100.
+
     Returns:
-        OrderList: A list of orders with pagination information.
+        OrderList: Lista de pedidos com informações de paginação.
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.get(
+            '/api/v1/orders',
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (200 OK)
+        {
+            'orders': [
+                {
+                    'id': '1',
+                    'status': 'pending',
+                    'total': 41.80,
+                    'created_at': '2024-03-20T10:00:00',
+                    'updated_at': '2024-03-20T10:00:00',
+                    'locator': 'A123',
+                    'notes': 'Sem cebola'
+                }
+            ],
+            'pagination': {
+                'offset': 0,
+                'limit': 100,
+                'total_count': 1,
+                'total_pages': 1,
+                'page': 1
+            }
+        }
+        ```
     """
     orders = repository.get_all(offset=offset, limit=limit)
     total_count = repository.get_total_count()
@@ -142,23 +228,127 @@ def fetch_order_items(
     )
 
 
-@router.post('/', response_model=BaseResponse, status_code=HTTPStatus.CREATED)
-async def create_order(  # noqa: PLR0913, PLR0917
+@router.post(
+    '/',
+    response_model=BaseResponse,
+    status_code=HTTPStatus.CREATED,
+    responses={
+        201: {
+            'description': 'Pedido criado com sucesso',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'id': '3',
+                        'action': 'created',
+                    }
+                }
+            },
+        },
+        400: {
+            'description': 'Dados inválidos',
+            'content': {
+                'application/json': {
+                    'examples': {
+                        'empty_items': {
+                            'value': {
+                                'detail': 'Order must have at least one item'
+                            },
+                            'summary': 'Lista de itens vazia',
+                        },
+                        'invalid_quantity': {
+                            'value': {
+                                'detail': 'Quantity must be greater than zero'
+                            },
+                            'summary': 'Quantidade inválida',
+                        },
+                    }
+                }
+            },
+        },
+        401: {
+            'description': 'Não autorizado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Not authenticated',
+                    }
+                }
+            },
+        },
+        403: {
+            'description': 'Acesso negado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'You are not allowed to create orders',
+                    }
+                }
+            },
+        },
+        422: {
+            'description': 'Entidade não processável',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Product not found',
+                    }
+                }
+            },
+        },
+    },
+)
+async def create_order(
     dto: CreateOrderDTO,
     order_repository: OrderRepo,
     product_repository: ProductRepo,
     current_user: CurrentUser,
 ):
     """
-    Create a new order.
+    Cria um novo pedido no sistema.
+
     Args:
-        dto (CreateOrderDTO): The order data.
-        order_repository (OrderRepo): The order repository.
-        product_repository (ProductRepo): The product repository.
+        dto (CreateOrderDTO): Dados do pedido a ser criado.
+        order_repository (OrderRepository): Repositório de pedidos.
+        product_repository (ProductRepository): Repositório de produtos.
+        current_user (User): Usuário autenticado.
+
     Returns:
-        BaseResponse: A response indicating the result of the operation.
+        BaseResponse: Resposta indicando o resultado da operação.
+
     Raises:
-        HTTPException: If a product in the order items is not found.
+        HTTPException:
+            - Se os dados forem inválidos (400)
+            - Se o usuário não estiver autenticado (401)
+            - Se o usuário não tiver permissão (403)
+            - Se algum produto não for encontrado (422)
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.post(
+            '/api/v1/orders',
+            json={
+                'items': [
+                    {
+                        'product_id': '1',
+                        'quantity': 1
+                    },
+                    {
+                        'product_id': '2',
+                        'quantity': 2
+                    }
+                ],
+                'notes': 'Sem cebola'
+            },
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (201 Created)
+        {
+            'id': '3',
+            'action': 'created'
+        }
+        ```
     """
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
