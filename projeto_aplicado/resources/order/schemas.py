@@ -4,7 +4,7 @@ from pydantic import Field, field_validator
 from sqlmodel import SQLModel
 
 from projeto_aplicado.resources.order.enums import OrderStatus
-from projeto_aplicado.resources.order.model import Order, OrderItem
+from projeto_aplicado.resources.order.model import OrderItem
 from projeto_aplicado.resources.shared.schemas import Pagination
 
 
@@ -48,12 +48,25 @@ class CreateOrderDTO(SQLModel):
 CreateOrderDTO.model_rebuild()
 
 
+class OrderOut(SQLModel):
+    id: str
+    status: OrderStatus
+    total: float
+    created_at: str
+    updated_at: str
+    locator: str
+    notes: Optional[str] = None
+
+    class Config:
+        json_encoders = {OrderStatus: lambda v: v.value.lower()}
+
+
 class OrderList(SQLModel):
     """
     Response model for listing orders with pagination.
     """
 
-    orders: Sequence[Order]
+    orders: Sequence[OrderOut]
     pagination: Pagination
 
 

@@ -7,6 +7,7 @@ from fastapi import (
     HTTPException,
 )
 
+from projeto_aplicado.resources.order.enums import OrderStatus
 from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.order.repository import (
     OrderRepository,
@@ -16,6 +17,7 @@ from projeto_aplicado.resources.order.schemas import (
     CreateOrderDTO,
     OrderItemList,
     OrderList,
+    OrderOut,
     UpdateOrderDTO,
 )
 from projeto_aplicado.resources.product.repository import (
@@ -44,7 +46,34 @@ def fetch_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
         OrderList: A list of orders with pagination information.
     """
     orders = repository.get_all(offset=offset, limit=limit)
-    return orders
+    total_count = repository.get_total_count()
+    total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
+    page = (offset // limit) + 1 if limit > 0 else 1
+    return OrderList(
+        orders=[
+            OrderOut(
+                id=order.id,
+                status=OrderStatus(order.status.upper()),
+                total=order.total,
+                created_at=order.created_at.isoformat()
+                if hasattr(order.created_at, 'isoformat')
+                else str(order.created_at),
+                updated_at=order.updated_at.isoformat()
+                if hasattr(order.updated_at, 'isoformat')
+                else str(order.updated_at),
+                locator=order.locator,
+                notes=order.notes,
+            )
+            for order in orders
+        ],
+        pagination=Pagination(
+            offset=offset,
+            limit=limit,
+            total_count=total_count,
+            total_pages=total_pages,
+            page=page,
+        ),
+    )
 
 
 @router.get('/{order_id}', response_model=Order)

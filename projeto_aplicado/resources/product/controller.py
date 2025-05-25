@@ -28,18 +28,12 @@ router = APIRouter(tags=['Product'], prefix=f'{settings.API_PREFIX}/products')
 
 
 @router.get('/', response_model=ProductList, status_code=HTTPStatus.OK)
-def get_products(repository: ProductRepo, offset: int = 0, limit: int = 100):
-    """
-    Retrieve a list of products with optional pagination.
-    Args:
-        repository (ProductRepo): The product repository.
-        offset (int): The offset for pagination.
-        limit (int): The maximum number of products to retrieve.
-    Returns:
-        ProductList: A list of products with pagination information.
-    """
+def fetch_products(repository: ProductRepo, offset: int = 0, limit: int = 100):
     products = repository.get_all(offset=offset, limit=limit)
-    return products
+    return ProductList(
+        items=products.items,
+        pagination=products.pagination,
+    )
 
 
 @router.get('/{product_id}')

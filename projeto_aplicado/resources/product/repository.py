@@ -22,15 +22,18 @@ class ProductRepository(BaseRepository[Product]):
     def __init__(self, session: Session):
         super().__init__(session, Product)
 
+    def get_total_count(self) -> int:
+        stmt = select(func.count()).select_from(Product)
+        return self.session.exec(stmt).one()
+
     def get_all(self, offset: int = 0, limit: int = 100) -> ProductList:
-        total_count_stmt = select(func.count()).select_from(Product)
-        total_count = self.session.exec(total_count_stmt).first() or 0
-
+        total_count = self.get_total_count()
         products = super().get_all(offset=offset, limit=limit)
-        product_outs = [ProductOut.model_validate(p) for p in products]
         pagination = Pagination.create(offset, limit, total_count)
-
-        return ProductList(items=product_outs, pagination=pagination)
+        return ProductList(
+            items=[ProductOut.model_validate(product) for product in products],
+            pagination=pagination,
+        )
 
     def get_by_name(self, name: str) -> Product | None:
         stmt = select(Product).where(Product.name == name)
