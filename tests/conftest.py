@@ -9,7 +9,10 @@ from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.product.enums import ProductCategory
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.resources.users.model import User, UserRole
+from projeto_aplicado.settings import get_settings
 from projeto_aplicado.utils import create_all, drop_all
+
+settings = get_settings()
 
 
 @pytest.fixture(scope='session')
@@ -190,7 +193,7 @@ def users(session):
 @pytest.fixture
 def admin_headers(client, users):
     response = client.post(
-        '/token/',
+        f'{settings.API_PREFIX}/token/',
         data={'username': users[2].email, 'password': 'password'},
     )
     token = response.json()['access_token']
@@ -201,7 +204,7 @@ def admin_headers(client, users):
 @pytest.fixture
 def kitchen_headers(client, users):
     response = client.post(
-        '/token/',
+        f'{settings.API_PREFIX}/token/',
         data={'username': users[1].email, 'password': 'password'},
     )
     headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
@@ -211,7 +214,7 @@ def kitchen_headers(client, users):
 @pytest.fixture
 def attendant_headers(client, users):
     response = client.post(
-        '/token/',
+        f'{settings.API_PREFIX}/token/',
         data={'username': users[0].email, 'password': 'password'},
     )
     headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}

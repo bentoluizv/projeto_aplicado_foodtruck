@@ -10,8 +10,10 @@ from projeto_aplicado.resources.users.repository import (
     UserRepository,
     get_user_repository,
 )
+from projeto_aplicado.settings import get_settings
 
-router = APIRouter(tags=['Token'], prefix='/token')
+settings = get_settings()
+router = APIRouter(tags=['Token'], prefix=f'{settings.API_PREFIX}/token')
 
 user_repository_dep = Annotated[UserRepository, Depends(get_user_repository)]
 
