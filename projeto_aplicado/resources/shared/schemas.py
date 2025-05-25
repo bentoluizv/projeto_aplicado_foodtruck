@@ -34,6 +34,9 @@ class BaseListResponse(SQLModel, Generic[T]):
     items: Sequence[T]
     pagination: Pagination
 
+    class Config:
+        populate_by_name = True
+
 
 class BaseModel(SQLModel):
     id: str
