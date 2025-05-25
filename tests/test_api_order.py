@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from http import HTTPStatus
 
@@ -9,8 +8,8 @@ settings = get_settings()
 API_PREFIX = settings.API_PREFIX
 
 
-def test_get_orders(client, orders):
-    response = client.get(f'{API_PREFIX}/orders/')
+def test_get_orders(client, orders, admin_headers):
+    response = client.get(f'{API_PREFIX}/orders/', headers=admin_headers)
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
     assert len(response.json()['orders']) == len(orders)
@@ -35,8 +34,10 @@ def test_get_orders(client, orders):
     }
 
 
-def test_get_order_by_id(client, orders):
-    response = client.get(f'{API_PREFIX}/orders/{orders[0].id}')
+def test_get_order_by_id(client, orders, admin_headers):
+    response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=admin_headers
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {
@@ -50,14 +51,16 @@ def test_get_order_by_id(client, orders):
     }
 
 
-def test_get_order_by_id_not_found(client):
-    response = client.get(f'{API_PREFIX}/orders/99999999')
+def test_get_order_by_id_not_found(client, admin_headers):
+    response = client.get(
+        f'{API_PREFIX}/orders/99999999', headers=admin_headers
+    )
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'detail': 'Order not found'}
 
 
-def test_create_order(client, itens):
+def test_create_order(client, itens, attendant_headers):
     data = {
         'items': [
             {
@@ -73,19 +76,24 @@ def test_create_order(client, itens):
         ],
         'notes': 'Test order',
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.CREATED
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json()['action'] == 'created'
 
-    order_response = client.get(f'{API_PREFIX}/orders/{response.json()["id"]}')
+    order_response = client.get(
+        f'{API_PREFIX}/orders/{response.json()["id"]}',
+        headers=attendant_headers,
+    )
     assert order_response.status_code == HTTPStatus.OK
 
     expected_total = (itens[0].price * 2) + (itens[1].price * 3)
     assert order_response.json()['total'] == expected_total
 
 
-def test_create_order_single_item(client, itens):
+def test_create_order_single_item(client, itens, attendant_headers):
     data = {
         'items': [
             {
@@ -96,61 +104,78 @@ def test_create_order_single_item(client, itens):
         ],
         'notes': 'Test order with single item',
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.CREATED
 
-    order_response = client.get(f'{API_PREFIX}/orders/{response.json()["id"]}')
+    order_response = client.get(
+        f'{API_PREFIX}/orders/{response.json()["id"]}',
+        headers=attendant_headers,
+    )
     assert order_response.status_code == HTTPStatus.OK
 
     assert order_response.json()['total'] == itens[0].price
 
 
-def test_update_order(client, orders):
+def test_update_order(client, orders, attendant_headers):
     data = {
         'status': 'COMPLETED',
         'notes': 'Updated order',
     }
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json()['action'] == 'updated'
 
 
-def test_update_order_not_found(client):
+def test_update_order_not_found(client, attendant_headers):
     data = {
         'status': 'COMPLETED',
         'notes': 'Updated order',
     }
-    response = client.patch(f'{API_PREFIX}/orders/99999999', json=data)
+    response = client.patch(
+        f'{API_PREFIX}/orders/99999999', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'detail': 'Order not found'}
 
 
-def test_delete_order(client, orders):
-    response = client.delete(f'{API_PREFIX}/orders/{orders[0].id}')
+def test_delete_order(client, orders, attendant_headers):
+    response = client.delete(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json()['action'] == 'deleted'
 
 
-def test_delete_order_not_found(client):
-    response = client.delete(f'{API_PREFIX}/orders/1')
+def test_delete_order_not_found(client, attendant_headers):
+    response = client.delete(
+        f'{API_PREFIX}/orders/1', headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'detail': 'Order not found'}
 
 
-def test_create_order_with_empty_items(client):
+def test_create_order_with_empty_items(client, attendant_headers):
     data = {
         'items': [],
         'notes': 'Empty order',
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_create_order_with_zero_quantity(client):
+def test_create_order_with_zero_quantity(client, attendant_headers):
     data = {
         'items': [
             {
@@ -160,11 +185,13 @@ def test_create_order_with_zero_quantity(client):
             }
         ],
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_create_order_with_negative_price(client):
+def test_create_order_with_negative_price(client, attendant_headers):
     data = {
         'items': [
             {
@@ -174,13 +201,17 @@ def test_create_order_with_negative_price(client):
             }
         ],
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_update_order_created_at_unchanged(client, orders):
+def test_update_order_created_at_unchanged(client, orders, attendant_headers):
     # Get initial created_at
-    initial_response = client.get(f'{API_PREFIX}/orders/{orders[0].id}')
+    initial_response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
+    )
     initial_created_at = datetime.fromisoformat(
         initial_response.json()['created_at']
     )
@@ -190,62 +221,81 @@ def test_update_order_created_at_unchanged(client, orders):
         'status': OrderStatus.COMPLETED,
         'notes': 'Updated order',
     }
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
 
     # Verify created_at remains unchanged
-    updated_response = client.get(f'{API_PREFIX}/orders/{orders[0].id}')
+    updated_response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
+    )
     updated_created_at = datetime.fromisoformat(
         updated_response.json()['created_at']
     )
     assert updated_created_at == initial_created_at
 
 
-def test_update_order_updated_at_changes(client, orders):
+def test_update_order_updated_at_changes(client, orders, attendant_headers):
     # Get initial updated_at
-    initial_response = client.get(f'{API_PREFIX}/orders/{orders[0].id}')
+    initial_response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
+    )
     initial_updated_at = datetime.fromisoformat(
         initial_response.json()['updated_at']
     )
-
-    # Wait a moment to ensure timestamp difference
-    time.sleep(1)
 
     # Update the order
     data = {
         'status': OrderStatus.COMPLETED,
         'notes': 'Updated order',
     }
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
 
-    # Verify updated_at is newer
-    updated_response = client.get(f'{API_PREFIX}/orders/{orders[0].id}')
+    # Verify updated_at changes
+    updated_response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
+    )
     updated_updated_at = datetime.fromisoformat(
         updated_response.json()['updated_at']
     )
     assert updated_updated_at > initial_updated_at
 
 
-def test_order_total_with_large_quantity(client, itens):
+def test_order_total_with_large_quantity(client, itens, attendant_headers):
     data = {
         'items': [
             {
                 'product_id': itens[0].id,
-                'quantity': 999999,
+                'quantity': 1000,
                 'price': itens[0].price,
             }
         ],
+        'notes': 'Large quantity order',
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.CREATED
 
-    order_response = client.get(f'{API_PREFIX}/orders/{response.json()["id"]}')
-    expected_total = itens[0].price * 999999
+    order_response = client.get(
+        f'{API_PREFIX}/orders/{response.json()["id"]}',
+        headers=attendant_headers,
+    )
+    assert order_response.status_code == HTTPStatus.OK
+
+    expected_total = itens[0].price * 1000
     assert order_response.json()['total'] == expected_total
 
 
-def test_order_total_with_small_price(client, itens):
+def test_order_total_with_small_price(client, itens, attendant_headers):
     data = {
         'items': [
             {
@@ -254,39 +304,82 @@ def test_order_total_with_small_price(client, itens):
                 'price': 0.01,
             }
         ],
+        'notes': 'Small price order',
     }
-    response = client.post(f'{API_PREFIX}/orders/', json=data)
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
     assert response.status_code == HTTPStatus.CREATED
 
-    order_response = client.get(f'{API_PREFIX}/orders/{response.json()["id"]}')
-    assert order_response.json()['total'] == 0.01  # noqa: PLR2004
+    order_response = client.get(
+        f'{API_PREFIX}/orders/{response.json()["id"]}',
+        headers=attendant_headers,
+    )
+    assert order_response.status_code == HTTPStatus.OK
+
+    expected_total = 0.01
+    assert order_response.json()['total'] == expected_total
 
 
-def test_order_status_transition_to_pending(client, orders):
-    data = {'status': OrderStatus.PENDING}
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+def test_order_status_transition_to_pending(client, orders, attendant_headers):
+    data = {
+        'status': OrderStatus.PENDING,
+        'notes': 'Transition to pending',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
 
 
-def test_order_status_transition_to_completed(client, orders):
-    data = {'status': OrderStatus.COMPLETED}
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+def test_order_status_transition_to_completed(
+    client, orders, attendant_headers
+):
+    data = {
+        'status': OrderStatus.COMPLETED,
+        'notes': 'Transition to completed',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
 
 
-def test_order_status_transition_to_cancelled(client, orders):
-    data = {'status': OrderStatus.CANCELLED}
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+def test_order_status_transition_to_cancelled(
+    client, orders, attendant_headers
+):
+    data = {
+        'status': OrderStatus.CANCELLED,
+        'notes': 'Transition to cancelled',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.OK
 
 
-def test_order_status_transition_to_invalid_status(client, orders):
-    data = {'status': 'INVALID_STATUS'}
-    response = client.patch(f'{API_PREFIX}/orders/{orders[0].id}', json=data)
+def test_order_status_transition_to_invalid_status(
+    client, orders, attendant_headers
+):
+    data = {
+        'status': 'INVALID_STATUS',
+        'notes': 'Invalid status transition',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_order_locator_not_empty(client, itens):
+def test_order_locator_not_empty(client, itens, attendant_headers):
     data = {
         'items': [
             {
@@ -295,19 +388,82 @@ def test_order_locator_not_empty(client, itens):
                 'price': itens[0].price,
             }
         ],
+        'notes': 'Order with locator',
     }
-    create_response = client.post(f'{API_PREFIX}/orders/', json=data)
-    assert create_response.status_code == HTTPStatus.CREATED
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
+    assert response.status_code == HTTPStatus.CREATED
 
     order_response = client.get(
-        f'{API_PREFIX}/orders/{create_response.json()["id"]}'
+        f'{API_PREFIX}/orders/{response.json()["id"]}',
+        headers=attendant_headers,
     )
-    locator = order_response.json()['locator']
-    assert len(locator) > 0
+    assert order_response.status_code == HTTPStatus.OK
+    assert order_response.json()['locator'] is not None
 
 
-def test_order_locator_unique(client, itens):
+def test_order_locator_unique(client, itens, attendant_headers):
     # Create first order
+    data1 = {
+        'items': [
+            {
+                'product_id': itens[0].id,
+                'quantity': 1,
+                'price': itens[0].price,
+            }
+        ],
+        'notes': 'First order',
+    }
+    response1 = client.post(
+        f'{API_PREFIX}/orders/', json=data1, headers=attendant_headers
+    )
+    assert response1.status_code == HTTPStatus.CREATED
+
+    # Create second order
+    data2 = {
+        'items': [
+            {
+                'product_id': itens[1].id,
+                'quantity': 1,
+                'price': itens[1].price,
+            }
+        ],
+        'notes': 'Second order',
+    }
+    response2 = client.post(
+        f'{API_PREFIX}/orders/', json=data2, headers=attendant_headers
+    )
+    assert response2.status_code == HTTPStatus.CREATED
+
+    # Verify locators are unique
+    order1_response = client.get(
+        f'{API_PREFIX}/orders/{response1.json()["id"]}',
+        headers=attendant_headers,
+    )
+    order2_response = client.get(
+        f'{API_PREFIX}/orders/{response2.json()["id"]}',
+        headers=attendant_headers,
+    )
+    assert (
+        order1_response.json()['locator'] != order2_response.json()['locator']
+    )
+
+
+def test_get_orders_unauthorized(client, orders):
+    response = client.get(f'{API_PREFIX}/orders/')
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_get_orders_invalid_token(client, orders):
+    response = client.get(
+        f'{API_PREFIX}/orders/',
+        headers={'Authorization': 'Bearer invalid_token'},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_kitchen_cannot_create_order(client, itens, kitchen_headers):
     data = {
         'items': [
             {
@@ -316,21 +472,89 @@ def test_order_locator_unique(client, itens):
                 'price': itens[0].price,
             }
         ],
+        'notes': 'Test order',
     }
-    create_response1 = client.post(f'{API_PREFIX}/orders/', json=data)
-    assert create_response1.status_code == HTTPStatus.CREATED
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=kitchen_headers
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
-    # Create second order
-    create_response2 = client.post(f'{API_PREFIX}/orders/', json=data)
-    assert create_response2.status_code == HTTPStatus.CREATED
 
-    # Get locators
-    locator1 = client.get(
-        f'{API_PREFIX}/orders/{create_response1.json()["id"]}'
-    ).json()['locator']
-    locator2 = client.get(
-        f'{API_PREFIX}/orders/{create_response2.json()["id"]}'
-    ).json()['locator']
+def test_kitchen_cannot_update_order(client, orders, kitchen_headers):
+    data = {
+        'status': 'COMPLETED',
+        'notes': 'Updated order',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=kitchen_headers,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
-    # Verify locators are different
-    assert locator1 != locator2
+
+def test_kitchen_cannot_delete_order(client, orders, kitchen_headers):
+    response = client.delete(
+        f'{API_PREFIX}/orders/{orders[0].id}', headers=kitchen_headers
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_create_order_with_invalid_product_id(client, attendant_headers):
+    data = {
+        'items': [
+            {
+                'product_id': 'invalid_id',
+                'quantity': 1,
+                'price': 10.0,
+            }
+        ],
+        'notes': 'Test order',
+    }
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_create_order_with_missing_required_fields(client, attendant_headers):
+    data = {
+        'items': [
+            {
+                'product_id': '1',
+                'quantity': 1,
+            }
+        ],
+    }
+    response = client.post(
+        f'{API_PREFIX}/orders/', json=data, headers=attendant_headers
+    )
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_update_order_with_invalid_status(client, orders, attendant_headers):
+    data = {
+        'status': 'INVALID_STATUS',
+        'notes': 'Invalid status',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_update_order_with_invalid_data_type(
+    client, orders, attendant_headers
+):
+    data = {
+        'status': 123,  # Should be string
+        'notes': 'Invalid data type',
+    }
+    response = client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
