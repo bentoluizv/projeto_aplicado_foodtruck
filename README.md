@@ -4,7 +4,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
 ## Requisitos
 
-- Python 3.13
+- Python 3.12
 
 ## Ambiente de Desenvolvimento
 
@@ -12,9 +12,9 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 >
 > Linux > Windows
 
-### Instale o Python e o Poetry
+### Instale o Python e o uv
 
-1. Instale o Python 3.13 usando o [pyenv](https://github.com/pyenv/pyenv) (Linux) ou [pyenv-win](https://github.com/pyenv-win/pyenv-win) (Windows):
+1. Instale o Python 3.12 usando o [pyenv](https://github.com/pyenv/pyenv) (Linux) ou [pyenv-win](https://github.com/pyenv-win/pyenv-win) (Windows):
 
     ***Linux***
 
@@ -36,7 +36,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     - Instale o Python
 
     ```sh
-    pyenv install 3.13.0
+    pyenv install 3.12.0
     ```
 
     ***Windows***
@@ -46,48 +46,25 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     ```
     - Para atualizar o Pyenv pelo  Power Shell:
     ```
-    &"${env:PYENV_HOME}\install-pyenv-win.ps1"  
+    &"${env:PYENV_HOME}\install-pyenv-win.ps1"
     ```
      - Instalação:
     ```
-    pyenv install 3.13.0
+    pyenv install 3.12.0
     ```
 
-2. Instale o [pipx](https://pypa.github.io/pipx/):
+2. Instale o [uv](https://github.com/astral-sh/uv):
 
     ***Linux***
 
     ```sh
-    sudo apt update
-    sudo apt install pipx
-    pipx ensurepath
-    sudo pipx ensurepath --global # optional to allow pipx actions with --global argument
+    curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
 
     ***Windows***
-    - Instale o Scoop
 
     ```powershell
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-    Invoke-RestMethod -Uri <https://get.scoop.sh> | Invoke-Expression
-    ```  
-    - Opcionalmente é possível instalar o Scoop no Modo Usuário:
-    ```
-    irm get.scoop.sh | iex  
-    ```
-
-    - Instale o Pipx com o Scoop
-
-    ```powershell
-    scoop install pipx
-    pipx ensurepath
-    ```
-
-4. Instale o [Poetry](https://python-poetry.org/docs/#installation) usando o pipx e o Poetry Shell:
-
-    ```sh
-    pipx install poetry
-    poetry self add poetry-plugin-shell
+    (Invoke-WebRequest -Uri "https://astral.sh/uv/install.ps1" -UseBasicParsing).Content | pwsh -Command -
     ```
 
 ### Download do Projeto e Instalação
@@ -102,15 +79,17 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 2. Crie um ambiente virtual e instale as dependências:
 
     ```sh
-    poetry env use 3.13 # Crie um ambiente virtual com a versão 3.13
-    poetry shell # Ativa o venv
-    poetry install # Instala as dependências
+    uv venv # Cria um ambiente virtual
+    source .venv/bin/activate # Ativa o venv (Linux/macOS)
+    # ou
+    .venv\Scripts\activate # Ativa o venv (Windows)
+    uv pip install -e . # Instala o projeto em modo de desenvolvimento
     ```
 
-3. Crie um arquivo requirements.txt a partir do Poetry:
+3. Crie um arquivo requirements.txt a partir do uv:
 
     ```sh
-    task export
+    uv pip freeze > requirements.txt
     ```
 
 ### Instalação do Docker
