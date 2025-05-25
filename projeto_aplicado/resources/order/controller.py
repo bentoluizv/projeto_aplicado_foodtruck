@@ -7,6 +7,7 @@ from fastapi import (
     HTTPException,
 )
 
+from projeto_aplicado.auth.security import get_current_user
 from projeto_aplicado.resources.order.enums import OrderStatus
 from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.order.repository import (
@@ -25,6 +26,7 @@ from projeto_aplicado.resources.product.repository import (
     get_product_repository,
 )
 from projeto_aplicado.resources.shared.schemas import BaseResponse, Pagination
+from projeto_aplicado.resources.users.model import User, UserRole
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
@@ -32,10 +34,16 @@ settings = get_settings()
 OrderRepo = Annotated[OrderRepository, Depends(get_order_repository)]
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
 router = APIRouter(tags=['Order'], prefix=f'{settings.API_PREFIX}/orders')
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.get('/', response_model=OrderList, status_code=HTTPStatus.OK)
-def fetch_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
+def fetch_orders(
+    repository: OrderRepo,
+    current_user: CurrentUser,
+    offset: int = 0,
+    limit: int = 100,
+):
     """
     Get all orders.
     Args:
@@ -77,7 +85,11 @@ def fetch_orders(repository: OrderRepo, offset: int = 0, limit: int = 100):
 
 
 @router.get('/{order_id}', response_model=Order)
-def fetch_order_by_id(order_id: str, repository: OrderRepo):
+def fetch_order_by_id(
+    order_id: str,
+    repository: OrderRepo,
+    current_user: CurrentUser,
+):
     """
     Get a order by ID.
     Args:
@@ -101,7 +113,11 @@ def fetch_order_by_id(order_id: str, repository: OrderRepo):
 
 @router.get('/{order_id}/items', response_model=OrderItemList)
 def fetch_order_items(
-    order_id: str, repository: OrderRepo, offset: int = 0, limit: int = 100
+    order_id: str,
+    repository: OrderRepo,
+    current_user: CurrentUser,
+    offset: int = 0,
+    limit: int = 100,
 ):
     """
     Get all items of an order.
@@ -131,6 +147,7 @@ async def create_order(  # noqa: PLR0913, PLR0917
     dto: CreateOrderDTO,
     order_repository: OrderRepo,
     product_repository: ProductRepo,
+    current_user: CurrentUser,
 ):
     """
     Create a new order.
@@ -143,6 +160,11 @@ async def create_order(  # noqa: PLR0913, PLR0917
     Raises:
         HTTPException: If a product in the order items is not found.
     """
+    if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You are not allowed to create orders',
+        )
 
     new_order = Order.create(dto)
 
@@ -151,7 +173,7 @@ async def create_order(  # noqa: PLR0913, PLR0917
 
         if not product:
             raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND,
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail='Product not found',
             )
 
@@ -167,6 +189,7 @@ def update_order(
     order_id: str,
     dto: UpdateOrderDTO,
     repository: OrderRepo,
+    current_user: CurrentUser,
 ):
     """
     Update an order by ID.
@@ -175,6 +198,12 @@ def update_order(
     Raises:
         HTTPException: If the order with the specified ID is not found.
     """
+    if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You are not allowed to update orders',
+        )
+
     existing_order = repository.get_by_id(order_id)
 
     if not existing_order:
@@ -191,6 +220,7 @@ def update_order(
 def delete_order(
     order_id: str,
     repository: OrderRepo,
+    current_user: CurrentUser,
 ):
     """
     Delete an order by ID.
@@ -202,6 +232,12 @@ def delete_order(
     Raises:
         HTTPException: If the order with the specified ID is not found.
     """
+    if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail='You are not allowed to delete orders',
+        )
+
     existing_order = repository.get_by_id(order_id)
 
     if not existing_order:
