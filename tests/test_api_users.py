@@ -1,9 +1,10 @@
 from http import HTTPStatus
 
 import pytest
+from fastapi.testclient import TestClient
 
 from projeto_aplicado.auth.security import verify_password
-from projeto_aplicado.resources.users.model import UserRole
+from projeto_aplicado.resources.users.model import User, UserRole
 from projeto_aplicado.resources.users.schemas import (
     CreateUserDTO,
     UpdateUserDTO,
@@ -14,7 +15,7 @@ settings = get_settings()
 API_PREFIX = settings.API_PREFIX
 
 
-def test_get_users(client, users):
+def test_get_users(client: TestClient, users: list[User]):
     response = client.get(f'{API_PREFIX}/users/')
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
@@ -39,7 +40,7 @@ def test_get_users(client, users):
     }
 
 
-def test_get_user_by_id(client, users):
+def test_get_user_by_id(client: TestClient, users: list[User]):
     response = client.get(f'{API_PREFIX}/users/{users[0].id}')
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
@@ -53,14 +54,14 @@ def test_get_user_by_id(client, users):
     }
 
 
-def test_get_user_by_id_not_found(client):
+def test_get_user_by_id_not_found(client: TestClient):
     response = client.get(f'{API_PREFIX}/users/99999999')
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_create_user(client):
+def test_create_user(client: TestClient):
     data = {
         'name': 'New User',
         'email': 'newuser@example.com',
@@ -75,7 +76,7 @@ def test_create_user(client):
     assert response.json()['role'] == data['role'].value
 
 
-def test_update_user(client, users):
+def test_update_user(client: TestClient, users: list[User]):
     data = {
         'name': 'Updated User',
         'email': 'updated@example.com',
@@ -89,7 +90,7 @@ def test_update_user(client, users):
     assert response.json()['role'] == data['role'].value
 
 
-def test_update_user_not_found(client):
+def test_update_user_not_found(client: TestClient):
     data = {
         'name': 'Updated User',
         'email': 'updated@example.com',
@@ -101,14 +102,14 @@ def test_update_user_not_found(client):
     assert response.json() == {'detail': 'User not found'}
 
 
-def test_delete_user(client, users):
+def test_delete_user(client: TestClient, users: list[User]):
     response = client.delete(f'{API_PREFIX}/users/{users[0].id}')
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {'action': 'deleted', 'id': users[0].id}
 
 
-def test_delete_user_not_found(client):
+def test_delete_user_not_found(client: TestClient):
     response = client.delete(f'{API_PREFIX}/users/99999999')
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.headers['Content-Type'] == 'application/json'
@@ -166,7 +167,7 @@ def test_update_user_dto_password_optional():
 
 def test_create_user_dto_password_min_length():
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         CreateUserDTO(
             name='Test User',
             email='test@example.com',
@@ -177,7 +178,7 @@ def test_create_user_dto_password_min_length():
 
 def test_update_user_dto_password_min_length():
     # Arrange & Act & Assert
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         UpdateUserDTO(
             name='Test User',
             email='test@example.com',
