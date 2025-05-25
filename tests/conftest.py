@@ -3,8 +3,10 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, StaticPool, create_engine
 
 from projeto_aplicado.app import app
+from projeto_aplicado.auth.password import get_password_hash
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.order.model import Order, OrderItem
+from projeto_aplicado.resources.product.enums import ProductCategory
 from projeto_aplicado.resources.product.model import Product
 from projeto_aplicado.resources.users.model import User, UserRole
 from projeto_aplicado.utils import create_all, drop_all
@@ -49,31 +51,37 @@ def itens(session):
             'name': 'X-Burguer',
             'price': 25.0,
             'image_url': 'image_x_burguer.jpg',
+            'category': ProductCategory.FOOD,
         },
         {
             'name': 'X-Salada',
             'price': 20.0,
             'image_url': 'image_x_salada.jpg',
+            'category': ProductCategory.FOOD,
         },
         {
             'name': 'Cachorro-quente',
             'price': 10.0,
             'image_url': 'image_cachorro_quente.jpg',
+            'category': ProductCategory.FOOD,
         },
         {
             'name': 'Refrigerante',
             'price': 5.0,
             'image_url': 'image_refrigerante.jpg',
+            'category': ProductCategory.DRINK,
         },
         {
             'name': 'Batata frita',
             'price': 8.0,
             'image_url': 'image_batata_frita.jpg',
+            'category': ProductCategory.SNACK,
         },
         {
             'name': 'Pudim',
             'price': 12.0,
             'image_url': 'image_pudim.jpg',
+            'category': ProductCategory.DESSERT,
         },
     ]
 
@@ -81,11 +89,17 @@ def itens(session):
         Product(
             name=item['name'],
             price=item['price'],
+            category=item['category'],
         )
         for item in itens
     ]
     session.add_all(itens)
     session.commit()
+    return itens
+
+
+@pytest.fixture
+def products(itens):
     return itens
 
 
@@ -151,17 +165,54 @@ def users(session):
         {
             'name': 'John Doe',
             'email': 'john.doe@example.com',
-            'password': 'password',
+            'password': get_password_hash('password'),
             'role': UserRole.ATTENDANT,
         },
         {
             'name': 'Jane Doe',
             'email': 'jane.doe@example.com',
-            'password': 'password',
+            'password': get_password_hash('password'),
             'role': UserRole.KITCHEN,
+        },
+        {
+            'name': 'Admin',
+            'email': 'admin@example.com',
+            'password': get_password_hash('password'),
+            'role': UserRole.ADMIN,
         },
     ]
     users = [User(**user) for user in users]
     session.add_all(users)
     session.commit()
     return users
+
+
+@pytest.fixture
+def admin_headers(client, users):
+    response = client.post(
+        '/token/',
+        data={'username': users[2].email, 'password': 'password'},
+    )
+    token = response.json()['access_token']
+    headers = {'Authorization': f'Bearer {token}'}
+    return headers
+
+
+@pytest.fixture
+def kitchen_headers(client, users):
+    response = client.post(
+        '/token/',
+        data={'username': users[1].email, 'password': 'password'},
+    )
+    headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
+    return headers
+
+
+@pytest.fixture
+def attendant_headers(client, users):
+    response = client.post(
+        '/token/',
+        data={'username': users[0].email, 'password': 'password'},
+    )
+    headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
+    return headers
