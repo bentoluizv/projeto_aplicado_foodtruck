@@ -1,18 +1,36 @@
 from datetime import datetime, timedelta
+from typing import Annotated
 from zoneinfo import ZoneInfo
 
-from jwt import encode
-from pwdlib import PasswordHash
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jwt import PyJWTError, decode, encode
 
+from projeto_aplicado.resources.users.repository import (
+    UserRepository,
+    get_user_repository,
+)
+
+# TODO: Move these to a settings/config module
 SECRET_KEY = 'your-secret-key'  # Isso é provisório, vamos ajustar!
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-pwd_context = PasswordHash.recommended()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
 
 def create_access_token(data: dict):
+    """
+    Create a JWT access token.
+
+    Args:
+        data (dict): The data to encode in the token.
+
+    Returns:
+        str: The JWT access token.
+    """
     to_encode = data.copy()
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
@@ -22,9 +40,27 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
+def get_current_user(
+    user_repository: UserRepositoryDep,
+    token: str = Depends(oauth2_scheme),
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Could not validate credentials',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+    try:
+        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get('sub')
 
+        if email is None:
+            raise credentials_exception
 
-def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
+        user = user_repository.get_by_email(email)
+
+        if user is None:
+            raise credentials_exception
+
+        return user
+    except PyJWTError:
+        raise credentials_exception
