@@ -1,5 +1,6 @@
 from typing import Optional, Sequence
 
+from pydantic import Field, field_validator
 from sqlmodel import SQLModel
 
 from projeto_aplicado.resources.order.enums import OrderStatus
@@ -12,9 +13,9 @@ class CreateOrderItemDTO(SQLModel):
     Data transfer object for creating an order item.
     """
 
-    quantity: int
+    quantity: int = Field(gt=0)
     product_id: str
-    price: float
+    price: float = Field(gt=0.0)
 
 
 class UpdateOrderDTO(SQLModel):
@@ -33,6 +34,15 @@ class CreateOrderDTO(SQLModel):
 
     items: list[CreateOrderItemDTO]
     notes: Optional[str] = None
+
+    @field_validator('items')
+    @classmethod
+    def validate_items_not_empty(
+        cls, items: list[CreateOrderItemDTO]
+    ) -> list[CreateOrderItemDTO]:
+        if not items:
+            raise ValueError('Order must have at least one item')
+        return items
 
 
 CreateOrderDTO.model_rebuild()
