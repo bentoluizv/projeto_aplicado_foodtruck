@@ -8,6 +8,7 @@ from projeto_aplicado.resources.shared.model import BaseModel
 class UserRole(str, Enum):
     KITCHEN = 'kitchen'
     ATTENDANT = 'attendant'
+    ADMIN = 'admin'
 
 
 class User(BaseModel, table=True):
