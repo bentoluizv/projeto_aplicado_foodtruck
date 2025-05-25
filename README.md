@@ -125,7 +125,7 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
 ### Próximos Passos
 
-Após configurar o ambiente e inicializar o banco de dados, você pode explorar a documentação interativa da API fornecida pelo FastAPI. A aplicação disponibiliza duas rotas principaispara documentação:
+Após configurar o ambiente e inicializar o banco de dados, você pode explorar a documentação interativa da API fornecida pelo FastAPI. A aplicação disponibiliza duas rotas principais para documentação:
 
 1. **Swagger UI**: Acesse a rota `/docs` para visualizar e testar os endpoints da API de forma interativa.
     - URL: `http://localhost:8000/docs`
@@ -133,3 +133,214 @@ Após configurar o ambiente e inicializar o banco de dados, você pode explorar 
     - URL: `http://localhost:8000/redoc`
 
 Certifique-se de que a aplicação está em execução antes de acessar as rotas de documentação.
+
+## Documentação da API
+
+A API do FoodTruck é organizada em quatro módulos principais:
+
+### 🔐 Autenticação
+
+O módulo de autenticação gerencia o acesso à API através de tokens JWT.
+
+```http
+POST /api/v1/token
+Content-Type: application/x-www-form-urlencoded
+
+username=user@example.com&password=secure_password123
+```
+
+**Resposta:**
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer"
+}
+```
+
+### 👥 Usuários
+
+O módulo de usuários permite gerenciar contas e perfis do sistema.
+
+#### Listar Usuários
+```http
+GET /api/v1/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Resposta:**
+```json
+{
+    "items": [
+        {
+            "id": "1",
+            "name": "Admin User",
+            "email": "admin@example.com",
+            "role": "admin",
+            "created_at": "2024-03-20T10:00:00",
+            "updated_at": "2024-03-20T10:00:00"
+        }
+    ],
+    "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total_count": 1,
+        "total_pages": 1,
+        "page": 1
+    }
+}
+```
+
+#### Criar Usuário
+```http
+POST /api/v1/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+    "name": "New User",
+    "email": "new@example.com",
+    "password": "secure_password123",
+    "role": "attendant"
+}
+```
+
+### 🍔 Produtos
+
+O módulo de produtos gerencia o catálogo de itens disponíveis.
+
+#### Listar Produtos
+```http
+GET /api/v1/products
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Resposta:**
+```json
+{
+    "items": [
+        {
+            "id": "1",
+            "name": "X-Burger",
+            "description": "Hambúrguer artesanal com queijo",
+            "price": 25.90,
+            "category": "burger",
+            "image_url": "https://example.com/x-burger.jpg",
+            "is_available": true,
+            "created_at": "2024-03-20T10:00:00",
+            "updated_at": "2024-03-20T10:00:00"
+        }
+    ],
+    "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total_count": 1,
+        "total_pages": 1,
+        "page": 1
+    }
+}
+```
+
+#### Criar Produto
+```http
+POST /api/v1/products
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+    "name": "X-Bacon",
+    "description": "Hambúrguer com bacon e queijo",
+    "price": 29.90,
+    "category": "burger",
+    "image_url": "https://example.com/x-bacon.jpg",
+    "is_available": true
+}
+```
+
+### 🛍️ Pedidos
+
+O módulo de pedidos gerencia as comandas e itens solicitados.
+
+#### Listar Pedidos
+```http
+GET /api/v1/orders
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Resposta:**
+```json
+{
+    "orders": [
+        {
+            "id": "1",
+            "status": "pending",
+            "total": 41.80,
+            "created_at": "2024-03-20T10:00:00",
+            "updated_at": "2024-03-20T10:00:00",
+            "locator": "A123",
+            "notes": "Sem cebola"
+        }
+    ],
+    "pagination": {
+        "offset": 0,
+        "limit": 100,
+        "total_count": 1,
+        "total_pages": 1,
+        "page": 1
+    }
+}
+```
+
+#### Criar Pedido
+```http
+POST /api/v1/orders
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+    "items": [
+        {
+            "product_id": "1",
+            "quantity": 1
+        },
+        {
+            "product_id": "2",
+            "quantity": 2
+        }
+    ],
+    "notes": "Sem cebola"
+}
+```
+
+### Códigos de Status
+
+A API utiliza os seguintes códigos de status HTTP:
+
+- `200 OK`: Requisição bem-sucedida
+- `201 Created`: Recurso criado com sucesso
+- `400 Bad Request`: Dados inválidos
+- `401 Unauthorized`: Não autenticado
+- `403 Forbidden`: Sem permissão
+- `404 Not Found`: Recurso não encontrado
+- `409 Conflict`: Conflito de dados
+- `422 Unprocessable Entity`: Entidade não processável
+- `429 Too Many Requests`: Muitas requisições
+
+### Autenticação
+
+Todas as requisições à API (exceto login) devem incluir o token JWT no header:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Paginação
+
+Os endpoints de listagem suportam paginação através dos parâmetros:
+
+- `offset`: Número de registros para pular (padrão: 0)
+- `limit`: Limite de registros por página (padrão: 100)
+
+Exemplo:
+```http
+GET /api/v1/products?offset=0&limit=10
+```
