@@ -18,21 +18,53 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 app = FastAPI(
     debug=settings.API_DEBUG,
-    title='Projeto Aplicado SENAI 2025',
+    title='FoodTruck API',
     version=settings.API_VERSION,
-    description='API para o projeto aplicado do SENAI 2025',
+    description="""
+    API do sistema de gerenciamento de FoodTruck desenvolvido para o Projeto Aplicado do SENAI 2025.
+
+    ## Funcionalidades
+
+    * 🔐 **Autenticação**: Sistema de login com JWT
+    * 👥 **Usuários**: Gerenciamento de usuários e perfis
+    * 🍔 **Produtos**: Cadastro e gerenciamento de produtos
+    * 🛍️ **Pedidos**: Sistema completo de pedidos
+
+    ## Documentação
+
+    * `/docs`: Interface Swagger para testes interativos
+    * `/redoc`: Documentação ReDoc mais detalhada
+    """,  # noqa: E501
+    openapi_tags=[
+        {
+            'name': 'Token',
+            'description': 'Operações de autenticação e geração de tokens JWT',
+        },
+        {
+            'name': 'Usuários',
+            'description': 'Gerenciamento de usuários e perfis do sistema',
+        },
+        {
+            'name': 'Produtos',
+            'description': 'Operações relacionadas ao cadastro e gerenciamento de produtos',  # noqa: E501
+        },
+        {
+            'name': 'Pedidos',
+            'description': 'Sistema de pedidos e gerenciamento de comandas',
+        },
+    ],
 )
 
 
 @app.get('/')
 async def home():
     """
-    Root endpoint that returns API information.
+    Endpoint raiz que retorna informações sobre a API.
     """
     return {
-        'name': 'Projeto Aplicado SENAI 2025',
+        'name': 'FoodTruck API',
         'version': settings.API_VERSION,
-        'description': 'API para o projeto aplicado do SENAI 2025',
+        'description': 'API do sistema de gerenciamento de FoodTruck',
     }
 
 
