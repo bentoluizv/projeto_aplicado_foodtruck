@@ -1,9 +1,12 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
+from pydantic import Field
 from sqlmodel import SQLModel
 
-from projeto_aplicado.resources.product.model import Product
-from projeto_aplicado.resources.shared.schemas import Pagination
+from projeto_aplicado.resources.shared.schemas import (
+    BaseListResponse,
+    BaseModel,
+)
 
 
 class CreateProductDTO(SQLModel):
@@ -12,8 +15,8 @@ class CreateProductDTO(SQLModel):
     """
 
     name: str
-    price: float
-    description: str | None = None
+    price: float = Field(gt=0.0)
+    description: Optional[str] = None
 
 
 class UpdateProductDTO(SQLModel):
@@ -21,18 +24,26 @@ class UpdateProductDTO(SQLModel):
     Data transfer object for updating a product.
     """
 
-    name: str | None = None
-    description: str | None = None
-    price: float | None = None
+    name: Optional[str] = None
+    price: Optional[float] = Field(default=None, gt=0.0)
+    description: Optional[str] = None
 
 
-class ProductList(SQLModel):
+class ProductOut(BaseModel):
+    name: str
+    price: float
+    description: Optional[str] = None
+
+
+class ProductList(BaseListResponse[ProductOut]):
     """
     Response model for listing products with pagination.
     """
 
-    products: Sequence[Product]
-    pagination: Pagination
+    items: Sequence[ProductOut] = Field(alias='products')
+
+    class Config:
+        populate_by_name = True
 
 
 ProductList.model_rebuild()
