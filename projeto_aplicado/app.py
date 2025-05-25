@@ -1,93 +1,42 @@
-import os
-from typing import Annotated, Union
+from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from supabase import Client
+from fastapi import Depends, FastAPI
 
-from projeto_aplicado.data.schemas import IconsResponse
-
-# from projeto_aplicado.data.utils import create_all
-from projeto_aplicado.ext.database.db import (
-    get_engine,
-)
-from projeto_aplicado.ext.supabase.client import get_supabase_client
-from projeto_aplicado.ext.supabase.storage import list_all_icons
-from projeto_aplicado.resources.category.api import router as category_router
-from projeto_aplicado.resources.product.api import router as item_router
+from projeto_aplicado.auth.security import get_current_user
+from projeto_aplicado.auth.token import router as token_router
+from projeto_aplicado.ext.database.db import get_engine
+from projeto_aplicado.resources.order.controller import router as order_router
+from projeto_aplicado.resources.product.controller import router as item_router
+from projeto_aplicado.resources.users.controller import router as user_router
+from projeto_aplicado.resources.users.model import User
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
-
 engine = get_engine()
 
-templates = Jinja2Templates(
-    directory='templates',
-    auto_reload=True,
-    cache_size=0,
-)
-
-Supabase = Annotated[Client, Depends(get_supabase_client)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 app = FastAPI(
     debug=settings.API_DEBUG,
     title='Projeto Aplicado SENAI 2025',
     version=settings.API_VERSION,
     description='API para o projeto aplicado do SENAI 2025',
-    # # Se deixar o lifespan, não é possível rodar os testes com pytest,
-    # pois ele tenta executar o lifespan antes da fixture que faz override
-    # do engine. Isso gera um erro, pois o engine não está configurado para
-    # o banco de dados correto. Ainda tentando descobrir como resolver isso.
-    # lifespan=create_all(engine),
-)
-
-app.mount(
-    '/static',
-    StaticFiles(directory=os.path.join(os.getcwd(), 'static')),
-    name='static',
 )
 
 
-@app.get('/', include_in_schema=False)
-async def home_page(request: Request):
+@app.get('/')
+async def home():
     """
-    Serve a página principal do projeto, retorna um HTML Response.
-
+    Root endpoint that returns API information.
     """
-    return templates.TemplateResponse(request, 'index.html')
+    return {
+        'name': 'Projeto Aplicado SENAI 2025',
+        'version': settings.API_VERSION,
+        'description': 'API para o projeto aplicado do SENAI 2025',
+    }
 
 
-@app.get('/menu', include_in_schema=False)
-async def menu_page(request: Request):
-    """
-    Serve a página de cardápio do projeto, retorna um HTML Response.
-
-    """
-    return templates.TemplateResponse(request, 'menu.html')
-
-
-@app.get('/icons', response_model=IconsResponse, include_in_schema=False)
-async def icons_page(
-    request: Request,
-    supabase: Supabase,
-    hx_request: Annotated[Union[str, None], Header()] = None,
-):
-    """
-    Serve a página de ícones de categorias do projeto,
-    retorna um HTML Response.
-
-    """
-    result = list_all_icons(supabase)
-    icons = IconsResponse.model_validate(result).icons
-
-    if hx_request:
-        return templates.TemplateResponse(
-            request, 'icons.html', context={'icons': icons}
-        )
-
-    return {'icons': icons}
-
-
+app.include_router(token_router)
+app.include_router(user_router)
 app.include_router(item_router)
-app.include_router(category_router)
+app.include_router(order_router)

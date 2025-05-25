@@ -1,41 +1,49 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class BaseAppSettings(BaseSettings):
+    """Base settings that are not sensitive and can be version controlled."""
+
+    # FastAPI settings
+    API_DEBUG: bool = False
+    API_VERSION: str = '1.0.0'
+    API_PREFIX: str = '/api/v1'
+
+    # Database settings
+    DB_ECHO: bool = False
+    POSTGRES_HOSTNAME: str = 'localhost'
+    POSTGRES_PORT: str = '5432'
+    POSTGRES_DB: str = 'foodtruck'
+
+    # Redis settings
+    REDIS_HOSTNAME: str = 'localhost'
+    REDIS_PORT: int = 6379
+    REDIS_EXPIRE_IN_SECONDS: int = 3600
+
+
+class SensitiveSettings(BaseSettings):
+    """Settings that contain sensitive data and should be in .env file."""
+
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding='utf-8',
     )
-    # Database
-    DB_ECHO: bool
+
+    # Database credentials
     POSTGRES_PASSWORD: str
     POSTGRES_USER: str
-    POSTGRES_DB: str
-    POSTGRES_HOSTNAME: str
-    POSTGRES_PORT: str
-    # Redis
-    REDIS_HOSTNAME: str
-    REDIS_PORT: int
-    REDIS_EXPIRE_IN_SECONDS: int
-    # Fastapi
-    API_DEBUG: bool
-    API_VERSION: str
-    API_PREFIX: str
-    # Supabase
-    SUPABASE_S3_ACCESS_KEY_ID: str
-    SUPABASE_S3_ACCESS_KEY_SECRET: str
-    SUPABASE_S3_ENDPOINT: str
-    SUPABASE_S3_REGION: str
-    SUPABASE_URL: str
-    SUPABASE_ANON_PUB: str
-    SUPABASE_SERVICE_SECRET: str
-    SUPABASE_JWT_SECRET: str
+
+
+class Settings(BaseAppSettings, SensitiveSettings):
+    """Combined settings class that inherits from both base and sensitive settings."""  # noqa: E501
+
+    pass
 
 
 def get_settings() -> Settings:
     """
-    Retorna as configurações do projeto.
+    Returns the project settings.
 
-    :return: Configurações do projeto.
+    :return: Project settings.
     """
     return Settings()  # type: ignore

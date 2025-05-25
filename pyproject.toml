@@ -1,27 +1,30 @@
 [project]
-name = "projeto-aplicado"
+name = "backend"
 version = "0.1.0"
-description = ""
-authors = [{ name = "bentoluizv", email = "bentoluizv@gmail.com" }]
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13, <4.0"
+requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.115.9,<0.116.0",
-    "sqlmodel>=0.0.22,<0.0.23",
-    "pydantic-settings>=2.8.1,<3.0.0",
-    "psycopg2-binary>=2.9.10,<3.0.0",
-    "python-ulid>=3.0.0,<4.0.0",
-    "redis>=5.2.1,<6.0.0",
-    "supabase>=2.15.0,<3.0.0",
-    "python-multipart>=0.0.20,<0.0.21",
+    "email-validator>=2.2.0",
+    "fastapi[standard]>=0.115.12",
+    "psycopg2-binary>=2.9.10",
+    "pwdlib[argon2]>=0.2.1",
+    "pydantic-settings>=2.9.1",
+    "pyjwt>=2.10.1",
+    "python-ulid>=3.0.0",
+    "redis>=6.1.0",
+    "sqlmodel>=0.0.24",
+    "uvicorn>=0.34.2",
 ]
 
-[tool.poetry.group.dev.dependencies]
-ignr = "^2.2"
-taskipy = "^1.14.1"
-ruff = "^0.9.9"
-pytest = "^8.3.4"
-pytest-cov = "^6.0.0"
+[dependency-groups]
+dev = [
+    "ignr>=2.2",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.11",
+    "taskipy>=1.14.1",
+]
 
 
 [tool.ruff]
@@ -47,20 +50,4 @@ format = 'ruff check . --fix && ruff format .'
 dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
-export = 'poetry export -f requirements.txt --output requirements.txt'
-
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
-dev = [
-    "ignr>=2.2",
-    "pytest>=8.3.5",
-    "pytest-cov>=6.1.1",
-    "ruff>=0.11.10",
-    "taskipy>=1.14.1",
-]
+export = 'uv pip compile pyproject.toml --output-file requirements.txt'
