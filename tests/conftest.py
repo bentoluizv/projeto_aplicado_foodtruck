@@ -6,6 +6,7 @@ from projeto_aplicado.app import app
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.product.model import Product
+from projeto_aplicado.resources.users.model import User, UserRole
 from projeto_aplicado.utils import create_all, drop_all
 
 
@@ -142,3 +143,25 @@ def order_items(session, orders, itens):
     session.add_all(order_items)
     session.commit()
     return order_items
+
+
+@pytest.fixture
+def users(session):
+    users = [
+        {
+            'name': 'John Doe',
+            'email': 'john.doe@example.com',
+            'password': 'password',
+            'role': UserRole.ATTENDANT,
+        },
+        {
+            'name': 'Jane Doe',
+            'email': 'jane.doe@example.com',
+            'password': 'password',
+            'role': UserRole.KITCHEN,
+        },
+    ]
+    users = [User(**user) for user in users]
+    session.add_all(users)
+    session.commit()
+    return users
