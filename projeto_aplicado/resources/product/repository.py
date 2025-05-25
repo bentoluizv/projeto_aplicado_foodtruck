@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends
 from sqlmodel import Session, func, select
@@ -39,20 +39,31 @@ class ProductRepository(BaseRepository[Product]):
         stmt = select(Product).where(Product.name == name)
         return self.session.exec(stmt).first()
 
-    def update(self, product: Product, dto: UpdateProductDTO) -> Product:
-        update_data = dto.model_dump(exclude_unset=True)
-        return super().update(product, update_data)
+    def get_count(self) -> int:
+        return len(self.session.exec(select(Product)).all())
 
-    def delete(self, item: Product):
-        """
-        Delete an item.
-        """
-        try:
-            self.session.delete(item)
+    def find_by_name(self, name: str) -> Optional[Product]:
+        return self.session.exec(
+            select(Product).where(Product.name == name)
+        ).first()
+
+    def update(
+        self, product_id: str, product_dto: UpdateProductDTO
+    ) -> Optional[Product]:
+        product = self.get_by_id(product_id)
+        if product:
+            product_data = product_dto.model_dump(exclude_unset=True)
+            for key, value in product_data.items():
+                setattr(product, key, value)
+            self.session.add(product)
             self.session.commit()
+            self.session.refresh(product)
+        return product
 
-            return item.id
-
-        except Exception as e:
-            self.session.rollback()
-            raise e
+    def delete(self, product_id: str) -> bool:
+        product = self.get_by_id(product_id)
+        if product:
+            self.session.delete(product)
+            self.session.commit()
+            return True
+        return False
