@@ -30,5 +30,4 @@ class OrderRepository(BaseRepository[Order]):
 
     def update(self, order: Order, dto: UpdateOrderDTO) -> Order:
         update_data = dto.model_dump(exclude_unset=True)
-        order.updated_at = datetime.now()
         return super().update(order, update_data)

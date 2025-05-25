@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Generic, List, Optional, Type, TypeVar
 
 from sqlmodel import Session, SQLModel, select
@@ -29,6 +30,10 @@ class BaseRepository(Generic[T]):
 
     def update(self, entity: T, update_data: dict) -> T:
         try:
+            # Set updated_at before applying other updates
+            if hasattr(entity, 'updated_at'):
+                setattr(entity, 'updated_at', datetime.now(timezone.utc))
+
             for key, value in update_data.items():
                 if value is not None:
                     setattr(entity, key, value)
