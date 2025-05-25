@@ -1,25 +1,35 @@
-FROM python:3.13.3-slim AS builder
+FROM python:3.12-slim-bookworm AS base
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
-WORKDIR /projeto_aplicado
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
 
-COPY requirements.txt ./
+RUN sh /uv-installer.sh && rm /uv-installer.sh
 
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+ENV PATH="/root/.local/bin/:$PATH"
 
-FROM python:3.13.3-slim
+FROM base AS builder
 
-WORKDIR /projeto_aplicado
+WORKDIR /app
 
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY pyproject.toml uv.lock ./
+
+RUN uv venv && . .venv/bin/activate && \
+    uv lock && \
+    uv sync
 
 COPY . .
 
-RUN useradd appuser
-USER appuser
+FROM base AS runner
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv .venv
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+COPY --from=builder /app/projeto_aplicado /app/projeto_aplicado
 
 EXPOSE 8000
+
+CMD ["uv", "run", "fastapi", "run", "projeto_aplicado/app.py"]
