@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 from pydantic import EmailStr, Field, field_validator
 from sqlmodel import SQLModel
 
-from projeto_aplicado.auth.security import get_password_hash
+from projeto_aplicado.auth.password import get_password_hash
 from projeto_aplicado.resources.shared.schemas import (
     BaseListResponse,
     BaseUserModel,
