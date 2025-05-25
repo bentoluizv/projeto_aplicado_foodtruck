@@ -38,7 +38,63 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
-@router.get('/', response_model=ProductList, status_code=HTTPStatus.OK)
+@router.get(
+    '/',
+    response_model=ProductList,
+    status_code=HTTPStatus.OK,
+    responses={
+        200: {
+            'description': 'Lista de produtos retornada com sucesso',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'items': [
+                            {
+                                'id': '1',
+                                'name': 'X-Burger',
+                                'description': 'Hambúrguer artesanal com queijo',
+                                'price': 25.90,
+                                'category': 'burger',
+                                'image_url': 'https://example.com/x-burger.jpg',
+                                'is_available': True,
+                                'created_at': '2024-03-20T10:00:00',
+                                'updated_at': '2024-03-20T10:00:00',
+                            },
+                            {
+                                'id': '2',
+                                'name': 'Batata Frita',
+                                'description': 'Porção de batata frita crocante',
+                                'price': 15.90,
+                                'category': 'side',
+                                'image_url': 'https://example.com/fries.jpg',
+                                'is_available': True,
+                                'created_at': '2024-03-20T10:00:00',
+                                'updated_at': '2024-03-20T10:00:00',
+                            },
+                        ],
+                        'pagination': {
+                            'offset': 0,
+                            'limit': 100,
+                            'total_count': 2,
+                            'total_pages': 1,
+                            'page': 1,
+                        },
+                    }
+                }
+            },
+        },
+        401: {
+            'description': 'Não autorizado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Not authenticated',
+                    }
+                }
+            },
+        },
+    },
+)
 def fetch_products(
     offset: int = 0,
     limit: int = 100,
@@ -46,7 +102,49 @@ def fetch_products(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Fetch a list of products with pagination.
+    Retorna a lista de produtos do sistema.
+
+    Args:
+        offset (int, optional): Número de registros para pular. Padrão: 0.
+        limit (int, optional): Limite de registros por página. Padrão: 100.
+        session (Session): Sessão do banco de dados.
+        current_user (User): Usuário autenticado.
+
+    Returns:
+        ProductList: Lista de produtos com informações de paginação.
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.get(
+            '/api/v1/products',
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (200 OK)
+        {
+            'items': [
+                {
+                    'id': '1',
+                    'name': 'X-Burger',
+                    'description': 'Hambúrguer artesanal com queijo',
+                    'price': 25.90,
+                    'category': 'burger',
+                    'image_url': 'https://example.com/x-burger.jpg',
+                    'is_available': True,
+                    'created_at': '2024-03-20T10:00:00',
+                    'updated_at': '2024-03-20T10:00:00'
+                }
+            ],
+            'pagination': {
+                'offset': 0,
+                'limit': 100,
+                'total_count': 1,
+                'total_pages': 1,
+                'page': 1
+            }
+        }
+        ```
     """
     repository = ProductRepository(session)
     return repository.get_all(offset=offset, limit=limit)
@@ -72,7 +170,71 @@ def get_product_by_id(
 
 
 @router.post(
-    '/', response_model=BaseResponse, status_code=status.HTTP_201_CREATED
+    '/',
+    response_model=BaseResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {
+            'description': 'Produto criado com sucesso',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'id': '3',
+                        'action': 'created',
+                    }
+                }
+            },
+        },
+        400: {
+            'description': 'Dados inválidos',
+            'content': {
+                'application/json': {
+                    'examples': {
+                        'invalid_price': {
+                            'value': {
+                                'detail': 'Price must be greater than zero'
+                            },
+                            'summary': 'Preço inválido',
+                        },
+                        'invalid_category': {
+                            'value': {'detail': 'Invalid category'},
+                            'summary': 'Categoria inválida',
+                        },
+                    }
+                }
+            },
+        },
+        401: {
+            'description': 'Não autorizado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Not authenticated',
+                    }
+                }
+            },
+        },
+        403: {
+            'description': 'Acesso negado',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Only admin users can perform this action',
+                    }
+                }
+            },
+        },
+        409: {
+            'description': 'Conflito',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Product already exists',
+                    }
+                }
+            },
+        },
+    },
 )
 def create_product(
     product_dto: CreateProductDTO,
@@ -80,7 +242,45 @@ def create_product(
     current_user: User = Depends(get_admin_user),
 ):
     """
-    Create a new product.
+    Cria um novo produto no sistema.
+
+    Args:
+        product_dto (CreateProductDTO): Dados do produto a ser criado.
+        session (Session): Sessão do banco de dados.
+        current_user (User): Usuário autenticado.
+
+    Returns:
+        BaseResponse: Resposta indicando o resultado da operação.
+
+    Raises:
+        HTTPException:
+            - Se os dados forem inválidos (400)
+            - Se o usuário não estiver autenticado (401)
+            - Se o usuário não tiver permissão (403)
+            - Se o produto já existir (409)
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.post(
+            '/api/v1/products',
+            json={
+                'name': 'X-Bacon',
+                'description': 'Hambúrguer com bacon e queijo',
+                'price': 29.90,
+                'category': 'burger',
+                'image_url': 'https://example.com/x-bacon.jpg',
+                'is_available': True
+            },
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (201 Created)
+        {
+            'id': '3',
+            'action': 'created'
+        }
+        ```
     """
     repository = ProductRepository(session)
     existing_product = repository.find_by_name(product_dto.name)
