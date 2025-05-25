@@ -9,6 +9,7 @@ from projeto_aplicado.ext.supabase.storage import list_all_icons
 from projeto_aplicado.resources.order.controller import router as order_router
 from projeto_aplicado.resources.product.controller import router as item_router
 from projeto_aplicado.resources.shared.schemas import IconsResponse
+from projeto_aplicado.resources.users.controller import router as user_router
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
@@ -47,3 +48,4 @@ async def get_icons(supabase: Supabase):
 
 app.include_router(item_router)
 app.include_router(order_router)
+app.include_router(user_router)
