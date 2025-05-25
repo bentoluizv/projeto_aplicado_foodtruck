@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Optional, Sequence
 
-from pydantic import EmailStr
-from sqlmodel import Field, SQLModel
+from pydantic import EmailStr, Field, field_validator
+from sqlmodel import SQLModel
 
+from projeto_aplicado.auth.security import get_password_hash
 from projeto_aplicado.resources.shared.schemas import (
     BaseListResponse,
     BaseUserModel,
@@ -11,14 +12,22 @@ from projeto_aplicado.resources.shared.schemas import (
 from projeto_aplicado.resources.users.model import UserRole
 
 
-class CreateUserDTO(SQLModel):
+class PasswordHashMixin:
+    @field_validator('password', mode='after')
+    def hash_password(cls, v):
+        if v:
+            return get_password_hash(v)
+        return v
+
+
+class CreateUserDTO(SQLModel, PasswordHashMixin):
     name: str
     email: EmailStr
     password: str = Field(min_length=6)
     role: UserRole
 
 
-class UpdateUserDTO(SQLModel):
+class UpdateUserDTO(SQLModel, PasswordHashMixin):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(default=None, min_length=6)
