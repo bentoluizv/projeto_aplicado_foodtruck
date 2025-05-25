@@ -25,6 +25,9 @@ router = APIRouter(tags=['User'], prefix=f'{settings.API_PREFIX}/users')
 @router.get('/', response_model=UserList, status_code=HTTPStatus.OK)
 def fetch_users(repository: UserRepo, offset: int = 0, limit: int = 100):
     users = repository.get_all(offset=offset, limit=limit)
+    total_count = repository.get_total_count()
+    total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
+    page = (offset // limit) + 1 if limit > 0 else 1
     return UserList(
         items=[  # type: ignore
             UserOut(
@@ -40,9 +43,9 @@ def fetch_users(repository: UserRepo, offset: int = 0, limit: int = 100):
         pagination=Pagination(
             offset=offset,
             limit=limit,
-            total_count=len(users),
-            total_pages=len(users) // limit if limit > 0 else 0,
-            page=offset // limit + 1 if limit > 0 else 1,
+            total_count=total_count,
+            total_pages=total_pages,
+            page=page,
         ),
     )
 
