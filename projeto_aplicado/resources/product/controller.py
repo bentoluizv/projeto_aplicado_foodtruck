@@ -26,7 +26,7 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
-router = APIRouter(tags=['Product'], prefix=f'{settings.API_PREFIX}/products')
+router = APIRouter(tags=['Produtos'], prefix=f'{settings.API_PREFIX}/products')
 
 
 def get_admin_user(current_user: User = Depends(get_current_user)) -> User:

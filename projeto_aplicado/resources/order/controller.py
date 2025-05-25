@@ -33,7 +33,7 @@ settings = get_settings()
 
 OrderRepo = Annotated[OrderRepository, Depends(get_order_repository)]
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
-router = APIRouter(tags=['Order'], prefix=f'{settings.API_PREFIX}/orders')
+router = APIRouter(tags=['Pedidos'], prefix=f'{settings.API_PREFIX}/orders')
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 

@@ -20,7 +20,7 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 UserRepo = Annotated[UserRepository, Depends(get_user_repository)]
-router = APIRouter(tags=['User'], prefix=f'{settings.API_PREFIX}/users')
+router = APIRouter(tags=['Usuários'], prefix=f'{settings.API_PREFIX}/users')
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
