@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends
@@ -103,7 +104,7 @@ class OrderRepository:
         """
         try:
             order.sqlmodel_update(update_data)
-
+            order.updated_at = datetime.utcnow()
             self.session.commit()
             self.session.refresh(order)
 
