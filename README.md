@@ -2,9 +2,25 @@
 
 O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Análise e Desenvolvimento de Sistemas do SENAI SC em Florianópolis. Trata-se de uma aplicação web escrita em Python, utilizando o framework FastAPI para o backend e HTMX para a interação dinâmica no frontend. O objetivo do projeto é integrar os conhecimentos adquiridos ao longo do curso, promovendo a aplicação prática de conceitos como desenvolvimento de APIs, gerenciamento de dependências, versionamento de código e implantação de aplicações em ambientes de produção.
 
+## 📋 Índice
+
+- [Requisitos](#requisitos)
+- [Ambiente de Desenvolvimento](#ambiente-de-desenvolvimento)
+  - [Instalação do Python e uv](#instale-o-python-e-o-uv)
+  - [Download e Instalação do Projeto](#download-do-projeto-e-instalação)
+  - [Instalação do Docker](#instalação-do-docker)
+  - [Uso do Docker Compose](#uso-do-docker-compose)
+- [Documentação da API](#documentação-da-api)
+  - [Visão Geral](#visão-geral)
+  - [Mapa de Endpoints](#mapa-de-endpoints)
+  - [Detalhes dos Endpoints](#detalhes-dos-endpoints)
+  - [Padrões Comuns](#padrões-comuns)
+
 ## Requisitos
 
 - Python 3.12
+- Docker e Docker Compose
+- Git
 
 ## Ambiente de Desenvolvimento
 
@@ -18,38 +34,30 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
 
     ***Linux***
 
-    - Baixe o Pyenv
-
     ```sh
+    # Baixe o Pyenv
     curl -fsSL https://pyenv.run | bash
-    ```
 
-    - Adicione o Pyenv ao PATH
-
-    ```sh
+    # Adicione o Pyenv ao PATH
     echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
     echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
     echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
     exec "$SHELL"
-    ```
 
-    - Instale o Python
-
-    ```sh
+    # Instale o Python
     pyenv install 3.12.0
     ```
 
     ***Windows***
 
     ```powershell
+    # Instale o Pyenv
     Invoke-WebRequest -UseBasicParsing https://pyenv-win.github.io/pyenv-win/install.ps1 | Invoke-Expression
-    ```
-    - Para atualizar o Pyenv pelo  Power Shell:
-    ```
+
+    # Atualize o Pyenv
     &"${env:PYENV_HOME}\install-pyenv-win.ps1"
-    ```
-     - Instalação:
-    ```
+
+    # Instale o Python
     pyenv install 3.12.0
     ```
 
@@ -76,71 +84,122 @@ O Projeto Aplicado é desenvolvido pelos alunos da quarta fase do curso de Anál
     cd projeto_aplicado
     ```
 
-2. Crie um ambiente virtual e instale as dependências:
+2. Configure o ambiente:
 
     ```sh
-    uv venv # Cria um ambiente virtual
-    source .venv/bin/activate # Ativa o venv (Linux/macOS)
+    # Crie e ative o ambiente virtual
+    uv venv
+    source .venv/bin/activate  # Linux/macOS
     # ou
-    .venv\Scripts\activate # Ativa o venv (Windows)
-    uv pip install -e . # Instala o projeto em modo de desenvolvimento
-    ```
+    .venv\Scripts\activate     # Windows
 
-3. Crie um arquivo requirements.txt a partir do uv:
-
-    ```sh
-    uv pip freeze > requirements.txt
+    # Instale o projeto
+    uv pip install -e .
     ```
 
 ### Instalação do Docker
 
-1. Instale o Docker seguindo as instruções oficiais para o seu sistema operacional:
+1. Instale o Docker seguindo as instruções oficiais:
     - [Docker para Linux](https://docs.docker.com/engine/install/)
     - [Docker para Windows](https://docs.docker.com/desktop/install/windows-install/)
     - [Docker para macOS](https://docs.docker.com/desktop/install/mac-install/)
-2. Após a instalação, verifique se o Docker está funcionando corretamente:
+
+2. Verifique a instalação:
 
     ```sh
     docker --version
-    ```
-
-3. Instale o Docker Compose, caso ele não venha incluído na instalação do Docker:
-    - [Instruções para instalar o Docker Compose](https://docs.docker.com/compose/install/)
-4. Verifique a instalação do Docker Compose:
-
-    ```sh
     docker-compose --version
     ```
 
-5. Certifique-se de que o serviço do Docker está em execução antes de usar os comandos do Docker Compose.
-
 ### Uso do Docker Compose
 
-1. Construa e inicie os containers:
+1. Inicie os containers:
 
     ```sh
     docker-compose up --build
     ```
-    Certifique-se de que o banco de dados foi inicializado corretamente antes de prosseguir.
 
-### Próximos Passos
-
-Após configurar o ambiente e inicializar o banco de dados, você pode explorar a documentação interativa da API fornecida pelo FastAPI. A aplicação disponibiliza duas rotas principais para documentação:
-
-1. **Swagger UI**: Acesse a rota `/docs` para visualizar e testar os endpoints da API de forma interativa.
-    - URL: `http://localhost:8000/docs`
-2. **ReDoc**: Acesse a rota `/redoc` para uma documentação mais detalhada e estruturada.
-    - URL: `http://localhost:8000/redoc`
-
-Certifique-se de que a aplicação está em execução antes de acessar as rotas de documentação.
+2. Acesse a documentação:
+    - Swagger UI: `http://localhost:8000/docs`
+    - ReDoc: `http://localhost:8000/redoc`
 
 ## Documentação da API
 
+### Visão Geral
+
 A API do FoodTruck é organizada em quatro módulos principais:
 
-### 🔐 Autenticação
+- 🔐 **Autenticação**: Gerenciamento de tokens JWT
+- 👥 **Usuários**: Gerenciamento de contas e perfis
+- 🍔 **Produtos**: Catálogo de itens disponíveis
+- 🛍️ **Pedidos**: Sistema de comandas
 
-O módulo de autenticação gerencia o acesso à API através de tokens JWT.
+### Mapa de Endpoints
+
+| Método | Endpoint | Descrição | Autenticação | Permissões |
+|--------|----------|-----------|--------------|------------|
+| **🔐 Autenticação** |
+| `POST` | `/api/v1/token` | Gera token JWT | Não | Público |
+| **👥 Usuários** |
+| `GET` | `/api/v1/users` | Lista usuários | Sim | Admin |
+| `GET` | `/api/v1/users/{id}` | Obtém usuário | Sim | Admin |
+| `POST` | `/api/v1/users` | Cria usuário | Sim | Admin |
+| `PATCH` | `/api/v1/users/{id}` | Atualiza usuário | Sim | Admin |
+| `DELETE` | `/api/v1/users/{id}` | Remove usuário | Sim | Admin |
+| **🍔 Produtos** |
+| `GET` | `/api/v1/products` | Lista produtos | Sim | Todos |
+| `GET` | `/api/v1/products/{id}` | Obtém produto | Sim | Todos |
+| `POST` | `/api/v1/products` | Cria produto | Sim | Admin |
+| `PUT` | `/api/v1/products/{id}` | Atualiza produto | Sim | Admin |
+| `PATCH` | `/api/v1/products/{id}` | Atualiza parcialmente | Sim | Admin |
+| `DELETE` | `/api/v1/products/{id}` | Remove produto | Sim | Admin |
+| **🛍️ Pedidos** |
+| `GET` | `/api/v1/orders` | Lista pedidos | Sim | Todos |
+| `GET` | `/api/v1/orders/{id}` | Obtém pedido | Sim | Todos |
+| `GET` | `/api/v1/orders/{id}/items` | Lista itens do pedido | Sim | Todos |
+| `POST` | `/api/v1/orders` | Cria pedido | Sim | Admin, Atendente |
+| `PATCH` | `/api/v1/orders/{id}` | Atualiza pedido | Sim | Admin, Atendente |
+| `DELETE` | `/api/v1/orders/{id}` | Remove pedido | Sim | Admin, Atendente |
+
+### Padrões Comuns
+
+#### Autenticação
+
+Todas as requisições (exceto login) devem incluir o token JWT:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Paginação
+
+Endpoints de listagem suportam paginação:
+
+```http
+GET /api/v1/products?offset=0&limit=10
+```
+
+Parâmetros:
+- `offset`: Registros para pular (padrão: 0)
+- `limit`: Registros por página (padrão: 100)
+
+#### Códigos de Status
+
+| Código | Descrição |
+|--------|-----------|
+| `200` | Requisição bem-sucedida |
+| `201` | Recurso criado |
+| `400` | Dados inválidos |
+| `401` | Não autenticado |
+| `403` | Sem permissão |
+| `404` | Recurso não encontrado |
+| `409` | Conflito de dados |
+| `422` | Entidade não processável |
+| `429` | Muitas requisições |
+
+### Detalhes dos Endpoints
+
+#### 🔐 Autenticação
 
 ```http
 POST /api/v1/token
@@ -157,11 +216,9 @@ username=user@example.com&password=secure_password123
 }
 ```
 
-### 👥 Usuários
+#### 👥 Usuários
 
-O módulo de usuários permite gerenciar contas e perfis do sistema.
-
-#### Listar Usuários
+**Listar Usuários**
 ```http
 GET /api/v1/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -190,7 +247,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
-#### Criar Usuário
+**Criar Usuário**
 ```http
 POST /api/v1/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -204,11 +261,9 @@ Content-Type: application/json
 }
 ```
 
-### 🍔 Produtos
+#### 🍔 Produtos
 
-O módulo de produtos gerencia o catálogo de itens disponíveis.
-
-#### Listar Produtos
+**Listar Produtos**
 ```http
 GET /api/v1/products
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -240,7 +295,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
-#### Criar Produto
+**Criar Produto**
 ```http
 POST /api/v1/products
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -256,11 +311,9 @@ Content-Type: application/json
 }
 ```
 
-### 🛍️ Pedidos
+#### 🛍️ Pedidos
 
-O módulo de pedidos gerencia as comandas e itens solicitados.
-
-#### Listar Pedidos
+**Listar Pedidos**
 ```http
 GET /api/v1/orders
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -290,7 +343,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
-#### Criar Pedido
+**Criar Pedido**
 ```http
 POST /api/v1/orders
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -309,38 +362,4 @@ Content-Type: application/json
     ],
     "notes": "Sem cebola"
 }
-```
-
-### Códigos de Status
-
-A API utiliza os seguintes códigos de status HTTP:
-
-- `200 OK`: Requisição bem-sucedida
-- `201 Created`: Recurso criado com sucesso
-- `400 Bad Request`: Dados inválidos
-- `401 Unauthorized`: Não autenticado
-- `403 Forbidden`: Sem permissão
-- `404 Not Found`: Recurso não encontrado
-- `409 Conflict`: Conflito de dados
-- `422 Unprocessable Entity`: Entidade não processável
-- `429 Too Many Requests`: Muitas requisições
-
-### Autenticação
-
-Todas as requisições à API (exceto login) devem incluir o token JWT no header:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### Paginação
-
-Os endpoints de listagem suportam paginação através dos parâmetros:
-
-- `offset`: Número de registros para pular (padrão: 0)
-- `limit`: Limite de registros por página (padrão: 100)
-
-Exemplo:
-```http
-GET /api/v1/products?offset=0&limit=10
 ```
