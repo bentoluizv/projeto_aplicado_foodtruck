@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from projeto_aplicado.auth.security import get_current_user
 from projeto_aplicado.auth.token import router as token_router
@@ -53,6 +54,15 @@ app = FastAPI(
             'description': 'Sistema de pedidos e gerenciamento de comandas',
         },
     ],
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['http://localhost:8080'],
+    allow_credentials=True,
+    allow_methods=['GET', 'POST', 'PATCH', 'DELETE'],
+    allow_headers=['*'],
 )
 
 
