@@ -12,6 +12,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./migrations:/app/migrations
 
   postgres:
     image: postgres:16
