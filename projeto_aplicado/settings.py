@@ -11,12 +11,12 @@ class BaseAppSettings(BaseSettings):
 
     # Database settings
     DB_ECHO: bool = False
-    POSTGRES_HOSTNAME: str = 'localhost'
+    POSTGRES_HOSTNAME: str = 'postgres'
     POSTGRES_PORT: str = '5432'
     POSTGRES_DB: str = 'foodtruck'
 
     # Redis settings
-    REDIS_HOSTNAME: str = 'localhost'
+    REDIS_HOSTNAME: str = 'redis'
     REDIS_PORT: int = 6379
     REDIS_EXPIRE_IN_SECONDS: int = 3600
 
