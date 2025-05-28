@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, StaticPool, create_engine
+from testcontainers.postgres import PostgresContainer
 
 from projeto_aplicado.app import app
 from projeto_aplicado.auth.password import get_password_hash
@@ -16,10 +17,25 @@ settings = get_settings()
 
 
 @pytest.fixture(scope='session')
-def engine():
+def postgres_container():
+    """Start the Postgres test container."""
+    container = PostgresContainer(
+        'postgres:16',
+        username=settings.POSTGRES_USER,
+        password=settings.POSTGRES_PASSWORD,
+        dbname=settings.POSTGRES_DB,
+        driver='psycopg2',
+    )
+    container.start()
+    yield container
+    container.stop()
+
+
+@pytest.fixture(scope='session')
+def engine(postgres_container):
     engine = create_engine(
-        'sqlite+pysqlite://',
-        connect_args={'check_same_thread': False},
+        postgres_container.get_connection_url(),
+        echo=settings.DB_ECHO,
         poolclass=StaticPool,
     )
     return engine
