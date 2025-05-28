@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiosqlite>=0.21.0",
     "alembic>=1.16.1",
     "asyncpg>=0.30.0",
     "email-validator>=2.2.0",
@@ -13,9 +14,12 @@ dependencies = [
     "pwdlib[argon2]>=0.2.1",
     "pydantic-settings>=2.9.1",
     "pyjwt>=2.10.1",
+    "pytest-asyncio>=1.0.0",
     "python-ulid>=3.0.0",
     "redis>=6.1.0",
+    "sqlalchemy[asyncio]>=2.0.41",
     "sqlmodel>=0.0.24",
+    "testcontainers[postgres]>=4.10.0",
     "uvicorn>=0.34.2",
 ]
 
@@ -45,6 +49,7 @@ quote-style = 'single'
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = '-p no:warnings'
+asyncio_default_fixture_loop_scope = 'function'
 
 [tool.taskipy.tasks]
 lint = 'ruff check . && ruff check . --diff'
@@ -53,3 +58,8 @@ dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
 export = 'uv pip compile pyproject.toml --output-file requirements.txt'
+migrate-create = 'alembic revision --autogenerate -m'
+migrate-upgrade = 'alembic upgrade'
+migrate-downgrade = 'alembic downgrade'
+migrate-current = 'alembic current'
+migrate-history = 'alembic history'
