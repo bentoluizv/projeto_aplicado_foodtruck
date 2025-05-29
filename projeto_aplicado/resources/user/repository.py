@@ -25,6 +25,10 @@ class UserRepository(BaseRepository[User]):
         stmt = select(User).where(User.email == email)
         return self.session.exec(stmt).first()
 
+    def get_by_username(self, username: str) -> User | None:
+        stmt = select(User).where(User.username == username)
+        return self.session.exec(stmt).first()
+
     def update(self, user: User, dto: UpdateUserDTO) -> User:
         update_data = dto.model_dump(exclude_unset=True)
         return super().update(user, update_data)
