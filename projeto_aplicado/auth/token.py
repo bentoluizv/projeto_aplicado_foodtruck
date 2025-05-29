@@ -18,19 +18,21 @@ router = APIRouter(tags=['Token'], prefix=f'{settings.API_PREFIX}/token')
 user_repository_dep = Annotated[UserRepository, Depends(get_user_repository)]
 
 
-def validate_user_credentials(user_repository, username, password):
-    user = user_repository.get_by_email(username)
+def validate_user_credentials(
+    user_repository: UserRepository, username: str, password: str
+):
+    user = user_repository.get_by_username(username)
 
     if not user:
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Incorrect email or password',
+            detail='Incorrect username or password',
         )
 
     if not verify_password(password, user.password):
         raise HTTPException(
             status_code=HTTPStatus.UNAUTHORIZED,
-            detail='Incorrect email or password',
+            detail='Incorrect username or password',
         )
 
     return user
@@ -55,7 +57,17 @@ def validate_user_credentials(user_repository, username, password):
             'content': {
                 'application/json': {
                     'example': {
-                        'detail': 'Incorrect email or password',
+                        'detail': 'Incorrect username or password',
+                    }
+                }
+            },
+        },
+        422: {
+            'description': 'Dados inválidos',
+            'content': {
+                'application/json': {
+                    'example': {
+                        'detail': 'Username and password cannot be empty',
                     }
                 }
             },
@@ -86,7 +98,7 @@ async def create_token(
     Gera um token de acesso JWT para autenticação.
 
     Args:
-        form_data (OAuth2PasswordRequestForm): Dados de login (email e senha).
+        form_data (OAuth2PasswordRequestForm): Dados de login (username e senha).
         user_repository (UserRepository): Repositório de usuários.
 
     Returns:
@@ -95,6 +107,7 @@ async def create_token(
     Raises:
         HTTPException:
             - Se as credenciais forem inválidas (401)
+            - Se os dados forem inválidos (422)
             - Se houver muitas tentativas de login (429)
 
     Examples:
@@ -103,7 +116,7 @@ async def create_token(
         response = await client.post(
             '/api/v1/token',
             data={
-                'username': 'user@example.com',
+                'username': 'admin',
                 'password': 'secure_password123'
             }
         )
@@ -116,7 +129,12 @@ async def create_token(
 
         # Exemplo de resposta (401 Unauthorized)
         {
-            'detail': 'Incorrect email or password'
+            'detail': 'Incorrect username or password'
+        }
+
+        # Exemplo de resposta (422 Unprocessable Entity)
+        {
+            'detail': 'Username and password cannot be empty'
         }
 
         # Exemplo de resposta (429 Too Many Requests)
@@ -125,11 +143,31 @@ async def create_token(
         }
         ```
     """
-    user = validate_user_credentials(
-        user_repository, form_data.username, form_data.password
-    )
-    access_token = create_access_token(data={'sub': user.email})
-    return {
-        'access_token': access_token,
-        'token_type': 'bearer',
-    }
+    if not form_data.username or not form_data.username.strip():
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail='Username cannot be empty',
+        )
+
+    if not form_data.password or not form_data.password.strip():
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail='Password cannot be empty',
+        )
+
+    try:
+        user = validate_user_credentials(
+            user_repository, form_data.username, form_data.password
+        )
+        access_token = create_access_token(data={'sub': user.username})
+        return {
+            'access_token': access_token,
+            'token_type': 'bearer',
+        }
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Incorrect username or password',
+        )
