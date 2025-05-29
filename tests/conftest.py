@@ -9,7 +9,7 @@ from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.order.model import Order, OrderItem
 from projeto_aplicado.resources.product.enums import ProductCategory
 from projeto_aplicado.resources.product.model import Product
-from projeto_aplicado.resources.users.model import User, UserRole
+from projeto_aplicado.resources.user.model import User, UserRole
 from projeto_aplicado.settings import get_settings
 from projeto_aplicado.utils import create_all, drop_all
 

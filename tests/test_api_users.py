@@ -4,8 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from projeto_aplicado.auth.password import verify_password
-from projeto_aplicado.resources.users.model import User, UserRole
-from projeto_aplicado.resources.users.schemas import (
+from projeto_aplicado.resources.user.model import User, UserRole
+from projeto_aplicado.resources.user.schemas import (
     CreateUserDTO,
     UpdateUserDTO,
 )

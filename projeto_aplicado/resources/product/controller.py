@@ -21,7 +21,7 @@ from projeto_aplicado.resources.product.schemas import (
     UpdateProductDTO,
 )
 from projeto_aplicado.resources.shared.schemas import BaseResponse
-from projeto_aplicado.resources.users.model import User, UserRole
+from projeto_aplicado.resources.user.model import User, UserRole
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()

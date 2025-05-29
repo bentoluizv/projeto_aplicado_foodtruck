@@ -9,7 +9,7 @@ from projeto_aplicado.resources.shared.schemas import (
     BaseListResponse,
     BaseUserModel,
 )
-from projeto_aplicado.resources.users.model import UserRole
+from projeto_aplicado.resources.user.model import UserRole
 
 
 class PasswordHashMixin:

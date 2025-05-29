@@ -26,7 +26,7 @@ from projeto_aplicado.resources.product.repository import (
     get_product_repository,
 )
 from projeto_aplicado.resources.shared.schemas import BaseResponse, Pagination
-from projeto_aplicado.resources.users.model import User, UserRole
+from projeto_aplicado.resources.user.model import User, UserRole
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()

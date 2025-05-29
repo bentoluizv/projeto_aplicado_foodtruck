@@ -5,12 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from projeto_aplicado.auth.security import get_current_user
 from projeto_aplicado.resources.shared.schemas import Pagination
-from projeto_aplicado.resources.users.model import User, UserRole
-from projeto_aplicado.resources.users.repository import (
+from projeto_aplicado.resources.user.model import User, UserRole
+from projeto_aplicado.resources.user.repository import (
     UserRepository,
     get_user_repository,
 )
-from projeto_aplicado.resources.users.schemas import (
+from projeto_aplicado.resources.user.schemas import (
     CreateUserDTO,
     UpdateUserDTO,
     UserList,

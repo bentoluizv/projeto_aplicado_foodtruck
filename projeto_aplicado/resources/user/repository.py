@@ -5,8 +5,8 @@ from sqlmodel import Session, func, select
 
 from projeto_aplicado.ext.database.db import get_session
 from projeto_aplicado.resources.shared.repository import BaseRepository
-from projeto_aplicado.resources.users.model import User
-from projeto_aplicado.resources.users.schemas import UpdateUserDTO
+from projeto_aplicado.resources.user.model import User
+from projeto_aplicado.resources.user.schemas import UpdateUserDTO
 
 
 def get_user_repository(session: Annotated[Session, Depends(get_session)]):
