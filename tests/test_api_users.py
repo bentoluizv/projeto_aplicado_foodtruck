@@ -23,7 +23,8 @@ def test_get_users(client: TestClient, users: list[User], admin_headers):
     assert response.json()['users'] == [
         {
             'id': user.id,
-            'name': user.name,
+            'username': user.username,
+            'full_name': user.full_name,
             'email': user.email,
             'role': user.role.value,
             'created_at': user.created_at.isoformat(),
@@ -48,7 +49,8 @@ def test_get_user_by_id(client: TestClient, users: list[User], admin_headers):
     assert response.headers['Content-Type'] == 'application/json'
     assert response.json() == {
         'id': users[0].id,
-        'name': users[0].name,
+        'username': users[0].username,
+        'full_name': users[0].full_name,
         'email': users[0].email,
         'role': users[0].role.value,
         'created_at': users[0].created_at.isoformat(),
@@ -67,7 +69,8 @@ def test_get_user_by_id_not_found(client: TestClient, admin_headers):
 
 def test_create_user(client: TestClient, admin_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         'password': 'password123',
         'role': UserRole.KITCHEN,
@@ -77,14 +80,16 @@ def test_create_user(client: TestClient, admin_headers):
     )
     assert response.status_code == HTTPStatus.CREATED
     assert response.headers['Content-Type'] == 'application/json'
-    assert response.json()['name'] == data['name']
+    assert response.json()['username'] == data['username']
+    assert response.json()['full_name'] == data['full_name']
     assert response.json()['email'] == data['email']
     assert response.json()['role'] == data['role'].value
 
 
 def test_update_user(client: TestClient, users: list[User], admin_headers):
     data = {
-        'name': 'Updated User',
+        'username': users[0].username,
+        'full_name': 'Updated User',
         'email': 'updated@example.com',
         'role': UserRole.ATTENDANT,
     }
@@ -93,14 +98,15 @@ def test_update_user(client: TestClient, users: list[User], admin_headers):
     )
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
-    assert response.json()['name'] == data['name']
+    assert response.json()['username'] == data['username']
+    assert response.json()['full_name'] == data['full_name']
     assert response.json()['email'] == data['email']
     assert response.json()['role'] == data['role'].value
 
 
 def test_update_user_not_found(client: TestClient, admin_headers):
     data = {
-        'name': 'Updated User',
+        'username': 'Updated User',
         'email': 'updated@example.com',
         'role': UserRole.ATTENDANT,
     }
@@ -134,7 +140,8 @@ def test_create_user_dto_password_hashing():
     # Arrange
     password = 'test123'
     dto = CreateUserDTO(
-        name='Test User',
+        username='testuser',
+        full_name='Test User',
         email='test@example.com',
         password=password,
         role=UserRole.KITCHEN,
@@ -151,7 +158,7 @@ def test_update_user_dto_password_hashing():
     # Arrange
     password = 'newpass123'
     dto = UpdateUserDTO(
-        name='Updated User',
+        full_name='Updated User',
         email='updated@example.com',
         password=password,
         role=UserRole.KITCHEN,
@@ -168,7 +175,7 @@ def test_update_user_dto_password_hashing():
 def test_update_user_dto_password_optional():
     # Arrange
     dto = UpdateUserDTO(
-        name='Updated User',
+        full_name='Updated User',
         email='updated@example.com',
         role=UserRole.KITCHEN,
     )
@@ -183,7 +190,8 @@ def test_create_user_dto_password_min_length():
     # Arrange & Act & Assert
     with pytest.raises(ValueError):  # noqa: PT011
         CreateUserDTO(
-            name='Test User',
+            username='testuser',
+            full_name='Test User',
             email='test@example.com',
             password='12345',  # Too short
             role=UserRole.KITCHEN,
@@ -194,7 +202,7 @@ def test_update_user_dto_password_min_length():
     # Arrange & Act & Assert
     with pytest.raises(ValueError):  # noqa: PT011
         UpdateUserDTO(
-            name='Test User',
+            full_name='Test User',
             email='test@example.com',
             password='12345',  # Too short
             role=UserRole.KITCHEN,
@@ -228,7 +236,8 @@ def test_get_users_invalid_token(client: TestClient, users: list[User]):
 
 def test_create_user_with_invalid_email(client: TestClient, admin_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'invalid-email',
         'password': 'password123',
         'role': UserRole.KITCHEN,
@@ -241,7 +250,8 @@ def test_create_user_with_invalid_email(client: TestClient, admin_headers):
 
 def test_create_user_with_short_password(client: TestClient, admin_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         'password': '12345',  # Too short
         'role': UserRole.KITCHEN,
@@ -254,7 +264,8 @@ def test_create_user_with_short_password(client: TestClient, admin_headers):
 
 def test_create_user_with_invalid_role(client: TestClient, admin_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         'password': 'password123',
         'role': 'INVALID_ROLE',
@@ -269,7 +280,8 @@ def test_create_user_with_missing_required_fields(
     client: TestClient, admin_headers
 ):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         # Missing password and role
     }
@@ -283,7 +295,8 @@ def test_update_user_with_invalid_email(
     client: TestClient, users: list[User], admin_headers
 ):
     data = {
-        'name': 'Updated User',
+        'username': users[0].username,
+        'full_name': 'Updated User',
         'email': 'invalid-email',
         'role': UserRole.ATTENDANT,
     }
@@ -297,7 +310,8 @@ def test_update_user_with_invalid_role(
     client: TestClient, users: list[User], admin_headers
 ):
     data = {
-        'name': 'Updated User',
+        'username': users[0].username,
+        'full_name': 'Updated User',
         'email': 'updated@example.com',
         'role': 'INVALID_ROLE',
     }
@@ -311,7 +325,8 @@ def test_update_user_with_short_password(
     client: TestClient, users: list[User], admin_headers
 ):
     data = {
-        'name': 'Updated User',
+        'username': users[0].username,
+        'full_name': 'Updated User',
         'email': 'updated@example.com',
         'password': '12345',  # Too short
         'role': UserRole.ATTENDANT,
@@ -324,7 +339,8 @@ def test_update_user_with_short_password(
 
 def test_kitchen_cannot_create_user(client: TestClient, kitchen_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         'password': 'password123',
         'role': UserRole.KITCHEN,
@@ -337,7 +353,8 @@ def test_kitchen_cannot_create_user(client: TestClient, kitchen_headers):
 
 def test_attendant_cannot_create_user(client: TestClient, attendant_headers):
     data = {
-        'name': 'New User',
+        'username': 'newuser',
+        'full_name': 'New User',
         'email': 'newuser@example.com',
         'password': 'password123',
         'role': UserRole.KITCHEN,

@@ -182,18 +182,21 @@ def order_items(session, orders, itens):
 def users(session):
     users = [
         {
+            'username': 'johndoe',
             'name': 'John Doe',
             'email': 'john.doe@example.com',
             'password': get_password_hash('password'),
             'role': UserRole.ATTENDANT,
         },
         {
+            'username': 'janedoe',
             'name': 'Jane Doe',
             'email': 'jane.doe@example.com',
             'password': get_password_hash('password'),
             'role': UserRole.KITCHEN,
         },
         {
+            'username': 'admin',
             'name': 'Admin',
             'email': 'admin@example.com',
             'password': get_password_hash('password'),
@@ -210,7 +213,7 @@ def users(session):
 def admin_headers(client, users):
     response = client.post(
         f'{settings.API_PREFIX}/token/',
-        data={'username': users[2].email, 'password': 'password'},
+        data={'username': users[2].username, 'password': 'password'},
     )
     token = response.json()['access_token']
     headers = {'Authorization': f'Bearer {token}'}
@@ -221,7 +224,7 @@ def admin_headers(client, users):
 def kitchen_headers(client, users):
     response = client.post(
         f'{settings.API_PREFIX}/token/',
-        data={'username': users[1].email, 'password': 'password'},
+        data={'username': users[1].username, 'password': 'password'},
     )
     headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
     return headers
@@ -231,7 +234,7 @@ def kitchen_headers(client, users):
 def attendant_headers(client, users):
     response = client.post(
         f'{settings.API_PREFIX}/token/',
-        data={'username': users[0].email, 'password': 'password'},
+        data={'username': users[0].username, 'password': 'password'},
     )
     headers = {'Authorization': f'Bearer {response.json()["access_token"]}'}
     return headers
