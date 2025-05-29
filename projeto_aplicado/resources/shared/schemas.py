@@ -42,18 +42,3 @@ class BaseModel(SQLModel):
     id: str
     created_at: datetime
     updated_at: datetime
-
-
-class BaseUserModel(BaseModel):
-    name: str
-    email: EmailStr
-
-
-class Icon(SQLModel):
-    id: str
-    icon: str
-    url: str
-
-
-class IconsResponse(SQLModel):
-    icons: list[Icon]

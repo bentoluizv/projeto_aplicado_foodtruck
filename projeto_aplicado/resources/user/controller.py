@@ -37,7 +37,8 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
                         'items': [
                             {
                                 'id': '1',
-                                'name': 'Admin User',
+                                'username': 'admin',
+                                'full_name': 'Admin User',
                                 'email': 'admin@example.com',
                                 'role': 'admin',
                                 'created_at': '2024-03-20T10:00:00',
@@ -45,7 +46,8 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
                             },
                             {
                                 'id': '2',
-                                'name': 'Attendant User',
+                                'username': 'attendant',
+                                'full_name': 'Attendant User',
                                 'email': 'attendant@example.com',
                                 'role': 'attendant',
                                 'created_at': '2024-03-20T10:00:00',
@@ -121,7 +123,8 @@ def fetch_users(
             'items': [
                 {
                     'id': '1',
-                    'name': 'Admin User',
+                    'username': 'admin',
+                    'full_name': 'Admin User',
                     'email': 'admin@example.com',
                     'role': 'admin',
                     'created_at': '2024-03-20T10:00:00',
@@ -152,7 +155,8 @@ def fetch_users(
         items=[
             UserOut(
                 id=user.id,
-                name=user.name,
+                username=user.username,
+                full_name=user.full_name,
                 email=user.email,
                 role=user.role,
                 created_at=user.created_at,
@@ -189,7 +193,8 @@ def fetch_user_by_id(
         )
     return UserOut(
         id=user.id,
-        name=user.name,
+        username=user.username,
+        full_name=user.full_name,
         email=user.email,
         role=user.role,
         created_at=user.created_at,
@@ -208,7 +213,8 @@ def fetch_user_by_id(
                 'application/json': {
                     'example': {
                         'id': '3',
-                        'name': 'New User',
+                        'username': 'newuser',
+                        'full_name': 'New User',
                         'email': 'new@example.com',
                         'role': 'attendant',
                         'created_at': '2024-03-20T10:00:00',
@@ -295,7 +301,8 @@ def create_user(
         response = await client.post(
             '/api/v1/users',
             json={
-                'name': 'New User',
+                'username': 'newuser',
+                'full_name': 'New User',
                 'email': 'new@example.com',
                 'password': 'secure_password123',
                 'role': 'attendant'
@@ -306,7 +313,8 @@ def create_user(
         # Exemplo de resposta (201 Created)
         {
             'id': '3',
-            'name': 'New User',
+            'username': 'newuser',
+            'full_name': 'New User',
             'email': 'new@example.com',
             'role': 'attendant',
             'created_at': '2024-03-20T10:00:00',
@@ -324,7 +332,8 @@ def create_user(
     repository.create(user)
     return UserOut(
         id=user.id,
-        name=user.name,
+        username=user.username,
+        full_name=user.full_name,
         email=user.email,
         role=user.role,
         created_at=user.created_at,
@@ -353,7 +362,8 @@ def update_user(
     repository.update(user, dto)
     return UserOut(
         id=user.id,
-        name=user.name,
+        username=user.username,
+        full_name=user.full_name,
         email=user.email,
         role=user.role,
         created_at=user.created_at,

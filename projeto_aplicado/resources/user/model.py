@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from sqlmodel import Field
 
@@ -16,7 +17,10 @@ class User(BaseModel, table=True):
     User model representing a user in the system.
     """
 
-    name: str = Field(nullable=False, max_length=100)
+    username: str = Field(
+        nullable=False, unique=True, max_length=20, index=True
+    )
     email: str = Field(nullable=False, unique=True, max_length=255, index=True)
     password: str = Field(nullable=False, max_length=255)
+    full_name: Optional[str] = Field(max_length=100, nullable=True)
     role: UserRole = Field(nullable=False)
