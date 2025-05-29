@@ -2,24 +2,24 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import Engine
 
 from projeto_aplicado.auth.security import get_current_user
 from projeto_aplicado.auth.token import router as token_router
 from projeto_aplicado.ext.database.db import get_engine
 from projeto_aplicado.resources.order.controller import router as order_router
 from projeto_aplicado.resources.product.controller import router as item_router
-from projeto_aplicado.resources.users.controller import router as user_router
-from projeto_aplicado.resources.users.model import User
+from projeto_aplicado.resources.user.controller import router as user_router
+from projeto_aplicado.resources.user.model import User
 from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
-engine = get_engine()
+engine: Engine = get_engine()
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 app = FastAPI(
-    debug=settings.API_DEBUG,
-    title='FoodTruck API',
+    title='Food Truck API',
     version=settings.API_VERSION,
     description="""
     API do sistema de gerenciamento de FoodTruck desenvolvido para o Projeto Aplicado do SENAI 2025.
@@ -59,25 +59,13 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:8080'],
+    allow_origins=['*'],
     allow_credentials=True,
-    allow_methods=['GET', 'POST', 'PATCH', 'DELETE'],
+    allow_methods=['*'],
     allow_headers=['*'],
 )
 
-
-@app.get('/')
-async def home():
-    """
-    Endpoint raiz que retorna informações sobre a API.
-    """
-    return {
-        'name': 'FoodTruck API',
-        'version': settings.API_VERSION,
-        'description': 'API do sistema de gerenciamento de FoodTruck',
-    }
-
-
+# Include routers
 app.include_router(token_router)
 app.include_router(user_router)
 app.include_router(item_router)
