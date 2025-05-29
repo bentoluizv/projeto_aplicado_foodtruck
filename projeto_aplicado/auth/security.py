@@ -14,15 +14,7 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f'{settings.API_PREFIX}/token',
-    auto_error=True,
-    scopes={
-        'admin': 'Admin access',
-        'kitchen': 'Kitchen access',
-        'attendant': 'Attendant access',
-    },
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f'{settings.API_PREFIX}/token')
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
 
