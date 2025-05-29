@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError, decode, encode
 
-from projeto_aplicado.resources.users.repository import (
+from projeto_aplicado.resources.user.repository import (
     UserRepository,
     get_user_repository,
 )
@@ -14,13 +14,15 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
-# TODO: Move these to a settings/config module
-SECRET_KEY = 'your-secret-key'  # Isso é provisório, vamos ajustar!
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f'{settings.API_PREFIX}/token')
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f'{settings.API_PREFIX}/token',
+    auto_error=True,
+    scopes={
+        'admin': 'Admin access',
+        'kitchen': 'Kitchen access',
+        'attendant': 'Attendant access',
+    },
+)
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
 
 
@@ -36,10 +38,12 @@ def create_access_token(data: dict):
     """
     to_encode = data.copy()
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
     )
     to_encode.update({'exp': expire})
-    encoded_jwt = encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
     return encoded_jwt
 
 
@@ -53,7 +57,9 @@ def get_current_user(
         headers={'WWW-Authenticate': 'Bearer'},
     )
     try:
-        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
         email = payload.get('sub')
 
         if email is None:
