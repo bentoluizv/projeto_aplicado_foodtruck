@@ -48,6 +48,12 @@ def validate_user_credentials(
                     'example': {
                         'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                         'token_type': 'bearer',
+                        'user': {
+                            'id': 1,
+                            'username': 'johndoe',
+                            'email': 'john@example.com',
+                            'role': 'admin',
+                        },
                     }
                 }
             },
@@ -160,9 +166,16 @@ async def create_token(
             user_repository, form_data.username, form_data.password
         )
         access_token = create_access_token(data={'sub': user.username})
+
         return {
             'access_token': access_token,
             'token_type': 'bearer',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+            },
         }
     except HTTPException as e:
         raise e
