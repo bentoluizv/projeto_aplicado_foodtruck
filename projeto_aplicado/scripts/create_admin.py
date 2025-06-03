@@ -6,7 +6,6 @@ from typing import Optional
 import click
 from sqlmodel import Session, select
 
-from projeto_aplicado.auth.password import get_password_hash
 from projeto_aplicado.ext.database.db import get_engine
 from projeto_aplicado.resources.user.model import User, UserRole
 from projeto_aplicado.resources.user.schemas import CreateUserDTO
@@ -28,7 +27,7 @@ def create_admin_user(session: Session, dto: CreateUserDTO) -> Optional[User]:
     user = User(
         username=dto.username,
         email=dto.email,
-        password=get_password_hash(dto.password),
+        password=dto.password,
         role=UserRole.ADMIN,
         full_name=dto.full_name,
     )
