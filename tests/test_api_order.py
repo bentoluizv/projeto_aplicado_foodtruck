@@ -480,17 +480,28 @@ def test_kitchen_cannot_create_order(client, itens, kitchen_headers):
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_kitchen_cannot_update_order(client, orders, kitchen_headers):
+def test_kitchen_can_update_order(client, orders, kitchen_headers):
     data = {
         'status': 'COMPLETED',
-        'notes': 'Updated order',
+        'notes': 'Updated by kitchen',
     }
     response = client.patch(
         f'{API_PREFIX}/orders/{orders[0].id}',
         json=data,
         headers=kitchen_headers,
     )
-    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.status_code == HTTPStatus.OK
+    assert response.headers['Content-Type'] == 'application/json'
+    assert response.json()['action'] == 'updated'
+
+    # Verify the order was actually updated
+    get_response = client.get(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        headers=kitchen_headers,
+    )
+    assert get_response.status_code == HTTPStatus.OK
+    assert get_response.json()['status'] == 'COMPLETED'
+    assert get_response.json()['notes'] == 'Updated by kitchen'
 
 
 def test_kitchen_cannot_delete_order(client, orders, kitchen_headers):
