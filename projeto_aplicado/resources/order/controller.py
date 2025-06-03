@@ -388,7 +388,11 @@ def update_order(
     Raises:
         HTTPException: If the order with the specified ID is not found.
     """
-    if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
+    if current_user.role not in {
+        UserRole.ADMIN,
+        UserRole.ATTENDANT,
+        UserRole.KITCHEN,
+    }:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You are not allowed to update orders',
