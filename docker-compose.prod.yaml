@@ -25,9 +25,7 @@ services:
       - default_network
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`foodtruck.bentomachado.dev`)"
