@@ -3,32 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atendente - Menu</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <title>Menu - FoodTruck</title>
+    <link rel="stylesheet" href="../../assets/css/style.css"> 
 </head>
 <body>
     <header>
-        <h1>Visualizar Menu</h1>
+        <h1>Menu do FoodTruck</h1>
         <nav>
-            <a href="menu.html">Menu</a>
-            <a href="registrar_pedido.html">Registrar Pedido</a>
-            <a href="acompanhar_pedidos.html">Acompanhar Pedidos</a>
-            <a href="registrar_avaliacao.html">Registrar Avaliação</a>
-            <a href="../../index.html" id="logoutBtn">Sair</a>
+            <ul>
+                <li><a href="../dashboard.html">Dashboard</a></li>
+                <li><a href="menu.html">Menu (Registrar Pedido)</a></li>
+                <li><a href="acompanhar_pedidos.html">Acompanhar Pedidos</a></li>
+                <li><a href="../admin/gerenciar_produtos.html">Gerenciar Produtos</a></li>
+                <li><a href="#" id="logoutBtn">Sair</a></li>
+            </ul>
         </nav>
     </header>
+
     <main>
-        <section class="menu-list">
+        <section id="menu-section">
             <h2>Itens do Menu</h2>
             <ul id="menuItems">
                 <li>Carregando itens do menu...</li>
             </ul>
         </section>
+
+        <section id="current-order-section">
+            <h2>Pedido Atual</h2>
+            <div id="orderSummary">
+                <ul id="currentOrderList">
+                    <li>Nenhum item no pedido.</li>
+                </ul>
+                <p>Total: R$ <span id="orderTotal">0.00</span></p>
+            </div>
+            
+            <div class="order-details-form">
+                <label for="tableNumber">Número da Mesa:</label>
+                <input type="number" id="tableNumber" min="1" placeholder="Ex: 5" required>
+                
+                <label for="orderNotes">Observações:</label>
+                <textarea id="orderNotes" rows="3" placeholder="Ex: Sem cebola, pão sem glúten..."></textarea>
+                
+                <button id="finalizeOrderBtn" class="action-btn">Finalizar Pedido</button>
+                <button id="clearOrderBtn" class="secondary-btn">Limpar Pedido</button>
+            </div>
+        </section>
     </main>
+
     <footer>
-        <p>&copy; 2025 Food Truck App</p>
+        <p>&copy; 2025 FoodTruck. Todos os direitos reservados.</p>
     </footer>
-    <script src="../../assets/js/common.js"></script>
+
+    <script src="../../assets/js/common.js"></script> 
     <script src="./menu.js"></script>
 </body>
 </html>

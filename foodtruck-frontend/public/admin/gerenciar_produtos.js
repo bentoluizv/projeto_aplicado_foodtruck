@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!accessToken) {
         alert('Você precisa estar logado para acessar esta página.');
-        window.location.href = '../../index.html'; // Redirecionar para a página de login
+        window.location.href = '../index.html'; // Redirecionar para a página de login
         return; // Impede que o restante do script seja executado sem o token
     }
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.addEventListener('click', (event) => {
             event.preventDefault();
             localStorage.removeItem('accessToken'); // Limpa o token
-            window.location.href = '../../index.html'; // Redireciona para o login
+            window.location.href = '../index.html'; // Redireciona para o login
         });
     }
 
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (response.status === 401 || response.status === 403) {
             alert('Sessão expirada ou acesso negado. Faça login novamente.');
             localStorage.removeItem('accessToken'); // Limpa o token expirado/inválido
-            window.location.href = '../../index.html';
+            window.location.href = '../index.html';
             return true; // Indica que o erro de autenticação foi tratado
         }
         return false; // Indica que não foi um erro de autenticação/autorização

@@ -1,16 +1,17 @@
 // public/atendente/acompanhar_pedidos.js
-// Lógica para carregar e atualizar o status dos pedidos.
+// Lógica para carregar e exibir pedidos.
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const activeOrdersList = document.getElementById('activeOrdersList');
+    const ordersTableBody = document.querySelector('#ordersTable tbody');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const noOrdersMessage = document.getElementById('noOrdersMessage');
     const logoutBtn = document.getElementById('logoutBtn');
-    activeOrdersList.innerHTML = '<li>Carregando pedidos...</li>';
 
     const accessToken = localStorage.getItem('accessToken');
 
     if (!accessToken) {
         alert('Você precisa estar logado para acessar esta página.');
-        window.location.href = '../../index.html';
+        window.location.href = '../index.html'; // Redirecionar para a página de login
         return;
     }
 
@@ -18,103 +19,101 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.addEventListener('click', (event) => {
             event.preventDefault();
             localStorage.removeItem('accessToken');
-            window.location.href = '../../index.html';
+            localStorage.removeItem('currentOrder'); // Limpa qualquer pedido em andamento
+            window.location.href = '../index.html';
         });
     }
 
-    async function loadOrders() {
-        activeOrdersList.innerHTML = '<li>Carregando pedidos...</li>';
+    // --- Função auxiliar para lidar com respostas da API (401/403 - Autenticação/Autorização) ---
+    function handleAuthError(response) {
+        if (response.status === 401 || response.status === 403) {
+            alert('Sessão expirada ou acesso negado. Faça login novamente.');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('currentOrder');
+            window.location.href = '../index.html';
+            return true;
+        }
+        return false;
+    }
+
+    // --- FUNÇÃO PARA CARREGAR E EXIBIR OS PEDIDOS ---
+    async function fetchOrders() {
+        loadingMessage.style.display = 'block';
+        ordersTableBody.innerHTML = ''; // Limpa a tabela
+        noOrdersMessage.style.display = 'none';
+
         try {
-            const response = await fetch(`${API_BASE_URL}/api/pedidos`, { // Assumindo /api/pedidos para listar pedidos
+            const offset = 0; // Para paginação futura
+            const limit = 100; // Para paginação futura
+
+            const queryParams = new URLSearchParams({
+                offset: offset,
+                limit: limit
+            });
+
+            const response = await fetch(`${API_BASE_URL}/api/v1/orders/?${queryParams.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
+                    'accept': 'application/json'
                 }
             });
 
-            if (response.status === 401 || response.status === 403) {
-                alert('Sessão expirada ou acesso negado. Faça login novamente.');
-                localStorage.removeItem('accessToken');
-                window.location.href = '../../index.html';
-                return;
-            }
+            if (handleAuthError(response)) return;
 
-            const orders = await response.json();
+            const result = await response.json(); // <-- Renomeado para 'result' para clareza
 
             if (response.ok) {
-                activeOrdersList.innerHTML = ''; // Limpa o "Carregando..."
-                if (orders.length === 0) {
-                    activeOrdersList.innerHTML = '<li>Nenhum pedido ativo no momento.</li>';
-                } else {
-                    orders.forEach(order => {
-                        const listItem = document.createElement('li');
-                        // Ajuste para exibir os itens do pedido. Assumindo que 'items' é um array de objetos com 'name' e 'quantity'
-                        const itemsHtml = order.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+                // AQUI ESTÁ A MUDANÇA: acesse a propriedade 'orders'
+                const orders = result.orders; 
 
-                        listItem.innerHTML = `
-                            <h3>Pedido #${order.id}</h3>
-                            <p>Status: <span class="order-status">${order.status}</span></p>
-                            <p>Itens: ${itemsHtml}</p>
-                            ${order.status !== 'pronto para retirada' && order.status !== 'entregue' ? `
-                                <button class="update-status-btn" data-order-id="${order.id}" data-new-status="pronto para retirada">Marcar como Pronto para Retirada</button>
-                            ` : ''}
-                            ${order.status === 'pronto para retirada' ? `
-                                <button class="update-status-btn" data-order-id="${order.id}" data-new-status="entregue">Marcar como Entregue</button>
-                            ` : ''}
-                        `;
-                        activeOrdersList.appendChild(listItem);
-                    });
-                }
-            } else {
-                activeOrdersList.innerHTML = '<li>Erro ao carregar pedidos.</li>';
-                console.error('Erro ao carregar pedidos:', orders.message || response.statusText);
-            }
-        } catch (error) {
-            console.error('Erro na requisição de pedidos:', error);
-            activeOrdersList.innerHTML = '<li>Não foi possível conectar ao servidor para carregar pedidos.</li>';
-        }
-    }
-
-    // Carrega os pedidos ao carregar a página
-    loadOrders();
-
-    // Lógica para atualizar status de pedidos
-    activeOrdersList.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('update-status-btn')) {
-            const orderId = event.target.dataset.orderId;
-            const newStatus = event.target.dataset.newStatus;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/pedidos/${orderId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ status: newStatus }),
-                });
-
-                if (response.status === 401 || response.status === 403) {
-                    alert('Sessão expirada ou acesso negado. Faça login novamente.');
-                    localStorage.removeItem('accessToken');
-                    window.location.href = '../../index.html';
+                if (!orders || orders.length === 0) {
+                    noOrdersMessage.style.display = 'block';
+                    loadingMessage.style.display = 'none';
                     return;
                 }
 
-                const data = await response.json();
+                orders.forEach(order => { // <-- AGORA USAMOS 'orders.forEach'
+                    const row = ordersTableBody.insertRow();
+                    row.insertCell(0).textContent = order.id.substring(0, 8) + '...'; // Mostra apenas parte do ID
+                    row.insertCell(1).textContent = order.table_number;
+                    row.insertCell(2).textContent = `R$ ${order.total ? order.total.toFixed(2) : 'N/A'}`; // Use 'total' conforme o JSON
+                    row.insertCell(3).textContent = order.status;
+                    row.insertCell(4).textContent = new Date(order.created_at).toLocaleString();
+                    row.insertCell(5).textContent = order.notes || 'N/A';
+                    
+                    const actionsCell = row.insertCell(6);
+                    const detailsButton = document.createElement('button');
+                    detailsButton.textContent = 'Ver Detalhes';
+                    detailsButton.classList.add('details-btn');
+                    detailsButton.addEventListener('click', () => {
+                        // O JSON não inclui os itens do pedido diretamente no objeto 'order',
+                        // então 'order.items' será indefinido.
+                        // Se você quiser mostrar os itens, precisará modificar o endpoint GET do backend
+                        // para incluir os itens do pedido no 'OrderResponse'.
+                        alert(`Detalhes do Pedido ${order.id}:\n\nMesa: ${order.table_number}\nStatus: ${order.status}\nTotal: R$ ${order.total.toFixed(2)}\nObservações: ${order.notes || 'N/A'}`);
+                        console.log('Detalhes completos do pedido:', order);
+                    });
+                    actionsCell.appendChild(detailsButton);
 
-                if (response.ok) {
-                    alert(`Status do Pedido #${orderId} atualizado para "${newStatus}".`);
-                    loadOrders(); // Recarrega a lista para mostrar o status atualizado
-                } else {
-                    alert(data.message || 'Erro ao atualizar status do pedido.');
-                    console.error('Erro ao atualizar status:', data);
-                }
-            } catch (error) {
-                console.error('Erro na requisição de atualização de status:', error);
-                alert('Não foi possível conectar ao servidor para atualizar o status.');
+                    // Futuramente: Botões de ação como "Marcar como Pronto", "Cancelar", etc.
+                });
+                loadingMessage.style.display = 'none';
+
+            } else {
+                loadingMessage.style.display = 'none';
+                noOrdersMessage.textContent = `Erro ao carregar pedidos: ${result.detail || result.message || response.statusText}`;
+                noOrdersMessage.style.display = 'block';
+                console.error('Erro ao carregar pedidos:', result.detail || result.message || response.statusText);
             }
+        } catch (error) {
+            console.error('Erro na requisição dos pedidos:', error);
+            loadingMessage.style.display = 'none';
+            noOrdersMessage.textContent = 'Não foi possível conectar ao servidor para carregar os pedidos.';
+            noOrdersMessage.style.display = 'block';
         }
-    });
+    }
+
+    // Chama a função para carregar os pedidos quando a página é carregada
+    fetchOrders();
 });

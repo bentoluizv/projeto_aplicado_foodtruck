@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!accessToken) {
         alert('Você precisa estar logado para acessar esta página.');
-        window.location.href = '../../index.html';
+        window.location.href = '../index.html';
         return;
     }
 
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.addEventListener('click', (event) => {
             event.preventDefault();
             localStorage.removeItem('accessToken');
-            window.location.href = '../../index.html';
+            window.location.href = '../index.html';
         });
     }
 
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (response.status === 401 || response.status === 403) {
             alert('Sessão expirada ou acesso negado. Faça login novamente.');
             localStorage.removeItem('accessToken');
-            window.location.href = '../../index.html';
+            window.location.href = '../index.html';
             return;
         }
 
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.status === 401 || response.status === 403) {
                 alert('Sessão expirada ou acesso negado. Faça login novamente.');
                 localStorage.removeItem('accessToken');
-                window.location.href = '../../index.html';
+                window.location.href = '../index.html';
                 return;
             }
 
