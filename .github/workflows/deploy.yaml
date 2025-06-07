@@ -68,7 +68,7 @@ jobs:
           sparse-checkout: |
             docker-compose.prod.yaml
       - name: SSH Connection
-        uses: appleboy/ssh-action
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
