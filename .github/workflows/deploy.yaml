@@ -67,17 +67,13 @@ jobs:
         with:
           sparse-checkout: |
             docker-compose.prod.yaml
-      - name: Create env file
-        run: |
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-      - name: Copy docker-compose.prod.yaml and .env
+      - name: Copy docker-compose.prod.yaml
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ vars.HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: "docker-compose.prod.yaml,.env"
+          source: "docker-compose.prod.yaml"
           target: /app/
       - name: SSH Connection
         uses: appleboy/ssh-action@v1.0.3
@@ -86,6 +82,5 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.PRIVATE_KEY}}
           script: |
-            cd app/
-            docker compose -f docker-compose.prod.yaml up -d
+            docker compose -f /app/docker-compose.prod.yaml up -d
 
