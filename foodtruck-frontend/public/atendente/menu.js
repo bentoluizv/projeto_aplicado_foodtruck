@@ -24,11 +24,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/menu`, { // Assumindo /api/menu para obter o menu
+        // Defina os parâmetros de paginação
+        const offset = 0; // Começa do primeiro item
+        const limit = 100; // Limite de 100 itens por página (ajuste conforme necessário)
+
+        const queryParams = new URLSearchParams({
+            offset: offset,
+            limit: limit
+        });
+
+        // NOVO ENDPOINT: /api/v1/products/ com parâmetros de query
+        const response = await fetch(`${API_BASE_URL}/api/v1/products/?${queryParams.toString()}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+                'accept': 'application/json' // Conforme a documentação da API
             }
         });
 
@@ -39,27 +49,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const data = await response.json();
+        const data = await response.json(); // A resposta agora contém 'products' e 'pagination'
 
         if (response.ok) {
             menuItemsList.innerHTML = ''; // Limpa o "Carregando..."
-            if (data.length === 0) {
+            // CORREÇÃO: Acessa a lista de produtos dentro da propriedade 'products'
+            const items = data.products; 
+
+            if (!items || items.length === 0) {
                 menuItemsList.innerHTML = '<li>Nenhum item no menu disponível.</li>';
             } else {
-                data.forEach(item => {
+                items.forEach(item => {
                     const listItem = document.createElement('li');
                     listItem.innerHTML = `
                         <h3>${item.name}</h3>
                         <p>${item.description}</p>
-                        <p>Preço: R$ ${item.price.toFixed(2)}</p>
+                        <p>Preço: R$ ${item.price ? item.price.toFixed(2) : 'N/A'}</p>
+                        <p>Disponível: ${item.is_available ? 'Sim' : 'Não'}</p>
                         <button class="add-to-order-btn" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Adicionar ao Pedido</button>
                     `;
                     menuItemsList.appendChild(listItem);
                 });
             }
         } else {
+            // Se houver um erro, exiba a mensagem detalhada do backend ou o status
             menuItemsList.innerHTML = '<li>Erro ao carregar o menu.</li>';
-            console.error('Erro ao carregar menu:', data.message || response.statusText);
+            console.error('Erro ao carregar menu:', data.detail || data.message || response.statusText);
         }
     } catch (error) {
         console.error('Erro na requisição do menu:', error);
