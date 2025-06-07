@@ -19,7 +19,7 @@ services:
     image: traefik/whoami
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.bentomachado.dev`)"
+      - "traefik.http.routers.whoami.rule=Host(`bentomachado.dev`) || Host(`89.117.33.177`) || PathPrefix(`/whoami`)"
       - "traefik.http.routers.whoami.entrypoints=web"
     networks:
       - default_network
@@ -28,7 +28,7 @@ services:
     image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`foodtruck.bentomachado.dev`)"
+      - "traefik.http.routers.backend.rule=Host(`bentomachado.dev`) || PathPrefix(`/foodtruck`)"
       - "traefik.http.routers.backend.entrypoints=web"
     env_file:
       - .env
