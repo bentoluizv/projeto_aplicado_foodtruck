@@ -1,0 +1,100 @@
+services:
+  traefik:
+    image: traefik:v3.4.1
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default_network
+
+  whoami:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.bentomachado.dev`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+    networks:
+      - default_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`foodtruck.bentomachado.dev`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+    env_file:
+      - .env
+    networks:
+      - default_network
+    healthcheck:
+      test: curl -f http://localhost:8000/docs > /dev/null 2>&1 || exit 1
+      interval: 20s
+      timeout: 1s
+      retries: 3
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/app/migrations
+
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m projeto_aplicado.scripts.init_db
+    env_file:
+      - .env
+    networks:
+      - default_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 30s
+      timeout: 2s
+      retries: 5
+    networks:
+      - default_network
+
+  redis:
+    image: redis:7.4.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 2s
+      retries: 5
+    networks:
+      - default_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default_network:
