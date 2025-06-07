@@ -49,8 +49,7 @@ services:
 
   db-init:
     build:
-      context: .
-      dockerfile: Dockerfile
+      image: bentoluizv/projeto_aplicado:latest
     command: python -m projeto_aplicado.scripts.init_db
     env_file:
       - .env

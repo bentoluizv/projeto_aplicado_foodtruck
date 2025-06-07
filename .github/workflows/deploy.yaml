@@ -86,5 +86,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.PRIVATE_KEY}}
           script: |
-            docker compose -f /app/docker-compose.prod.yaml up -d
-
+            cd /app/
+            docker compose -f docker-compose.prod.yaml down
+            docker compose -f docker-compose.prod.yaml build
+            docker compose -f docker-compose.prod.yaml up -d
