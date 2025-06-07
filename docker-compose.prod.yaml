@@ -48,8 +48,7 @@ services:
       - ./migrations:/app/migrations
 
   db-init:
-    build:
-      image: bentoluizv/projeto_aplicado:latest
+    image: bentoluizv/projeto_aplicado:latest
     command: python -m projeto_aplicado.scripts.init_db
     env_file:
       - .env
