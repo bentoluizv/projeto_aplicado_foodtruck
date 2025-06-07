@@ -15,20 +15,11 @@ services:
     networks:
       - default_network
 
-  whoami:
-    image: traefik/whoami
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`89.117.33.177`) || PathPrefix(`/whoami`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
-    networks:
-      - default_network
-
   backend:
     image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`89.117.33.177`) && PathPrefix(`/foodtruck`)"
+      - "traefik.http.routers.backend.rule=Host(`89.117.33.177`)"
       - "traefik.http.routers.backend.entrypoints=web"
     env_file:
       - .env
