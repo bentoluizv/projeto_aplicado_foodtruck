@@ -148,8 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         orderCard.innerHTML = `
                             <div class="order-header">
-                                <h3>Pedido #${order.id.substring(0, 12)}</h3>
-                                <span class="order-locator">Mesa: ${order.locator || 'N/A'}</span>
+                                <h3>Pedido: ${order.locator || 'N/A'}</h3>
                             </div>
                             <p class="order-status-display">Status: <span class="status-badge ${displayStatus.toLowerCase()}">${displayStatus}</span></p>
                             <div class="order-details">
@@ -160,6 +159,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                             <div class="order-actions">
                                 ${statusOptionsHtml}
+                            </div>
+                            <div class="order-footer-id">
+                                <span class="order-id-display">ID: ${order.id}</span>
                             </div>
                         `;
 
@@ -208,7 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Event Listener para mudança no dropdown e clique no botão 'Atualizar' ---
     // Os listeners são anexados ao elemento pai 'orders-board' para delegar eventos
-    // Isso é mais eficiente do que anexar a cada 'pendingOrdersList', 'processingOrdersList', etc.
     const ordersBoard = document.querySelector('.orders-board'); // Obtenha o contêiner principal
 
     ordersBoard.addEventListener('change', (event) => {
@@ -236,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const selectElement = button.previousElementSibling;
             const newStatus = selectElement.value; // Pega o novo status do dropdown
 
-            const confirmUpdate = confirm(`Deseja realmente mudar o status do pedido #${orderId.substring(0, 8)} para "${newStatus}"?`);
+            const confirmUpdate = confirm(`Deseja realmente mudar o status do pedido #${orderId.substring(0, 12)} para "${newStatus}"?`);
             if (!confirmUpdate) {
                 return;
             }
@@ -257,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert(`Status do Pedido #${orderId.substring(0, 8)} atualizado para "${newStatus}".`);
+                    alert(`Status do Pedido #${orderId.substring(0, 12)} atualizado para "${newStatus}".`);
                     loadAllOrders(); // Recarrega TODOS os pedidos para que sejam redistribuídos corretamente
                 } else {
                     alert(result.detail || result.message || 'Erro ao atualizar status do pedido. Verifique as transições permitidas no backend.');

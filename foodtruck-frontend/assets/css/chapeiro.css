@@ -137,9 +137,10 @@ main {
     box-shadow: 0 6px 12px rgba(0,0,0,0.1);
 }
 
+/* Ajuste no order-header - agora só tem o H3 */
 .order-header {
-    display: flex;
-    justify-content: space-between;
+    display: flex; /* Mantém flex para centralização se quiser */
+    justify-content: center; /* Centraliza o título "Pedido: T120" */
     align-items: center;
     margin-bottom: 10px;
     padding-bottom: 10px;
@@ -148,17 +149,15 @@ main {
 
 .order-header h3 {
     margin: 0;
-    font-size: 1.2em;
-    color: #007bff;
-}
-
-.order-header .order-locator {
+    font-size: 1.3em;
+    color: #333; /* Cor do texto (preto ou um cinza escuro) */
     font-weight: bold;
-    color: #555;
-    background-color: #e9ecef;
-    padding: 5px 8px;
-    border-radius: 4px;
-    font-size: 0.85em;
+
+    /* NOVAS PROPRIEDADES PARA O FUNDO CINZA E ARREDONDAMENTO */
+    background-color: #e9ecef; /* Fundo cinza claro */
+    padding: 5px 10px; /* Espaçamento interno */
+    border-radius: 5px; /* Cantos levemente arredondados */
+    display: inline-block; /* Importante para que o padding e background funcionem corretamente */
 }
 
 .order-status-display {
@@ -321,6 +320,20 @@ main {
     opacity: 0.7;
 }
 
+/* NOVO ESTILO: Para o ID na parte inferior do card */
+.order-footer-id {
+    text-align: center; /* Centraliza o texto do ID */
+    margin-top: 15px; /* Espaçamento do conteúdo acima */
+    padding-top: 10px; /* Espaçamento interno */
+    border-top: 1px dashed #e0e0e0; /* Linha discreta para separar */
+    font-size: 0.75em; /* Bem pequeno e discreto */
+    color: #999; /* Cor cinza para discrição */
+    font-family: monospace; /* Fonte monoespaçada para o ID */
+}
+
+.order-footer-id .order-id-display {
+    opacity: 0.8; /* Torna um pouco transparente para ser discreto */
+}
 
 /* Rodapé */
 footer {
