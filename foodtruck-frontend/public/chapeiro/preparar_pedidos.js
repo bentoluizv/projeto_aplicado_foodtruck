@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const orderCard = document.createElement('div');
                         const displayStatus = order.status.toUpperCase();
                         orderCard.classList.add('order-card', displayStatus.toLowerCase());
-                        
+
                         const itemsHtml = order.items && order.items.length > 0
                             ? order.items.map(item => `
                                 <li>
@@ -130,41 +130,81 @@ document.addEventListener('DOMContentLoaded', async () => {
                         } else if (displayStatus === 'CANCELLED') {
                             allowedNextStatuses = ['PENDING']; // Exemplo: permite reabrir um cancelado
                         }
-                        
+
                         // Inclui o status atual como selecionado e desabilitado
                         // e adiciona os status permitidos como opções selecionáveis.
                         statusOptionsHtml = `
                             <select class="status-select" data-order-id="${order.id}">
                                 <option value="${displayStatus}" selected disabled>${displayStatus}</option>
                                 ${allowedNextStatuses.map(status => {
-                                    if (status !== displayStatus) { // Evita duplicar o status atual como opção selecionável
-                                        return `<option value="${status}">${status}</option>`;
-                                    }
-                                    return '';
-                                }).join('')}
+                            if (status !== displayStatus) { // Evita duplicar o status atual como opção selecionável
+                                return `<option value="${status}">${status}</option>`;
+                            }
+                            return '';
+                        }).join('')}
                             </select>
                             <button class="update-status-btn btn-primary" data-order-id="${order.id}" disabled>Atualizar</button>
                         `;
 
-                        orderCard.innerHTML = `
-                            <div class="order-header">
-                                <h3>Pedido: ${order.locator || 'N/A'}</h3>
-                            </div>
-                            <p class="order-status-display">Status: <span class="status-badge ${displayStatus.toLowerCase()}">${displayStatus}</span></p>
-                            <div class="order-details">
-                                <h4>Itens:</h4>
-                                <ul class="order-items-list">${itemsHtml}</ul>
-                                <p class="order-notes">Obs: ${order.notes || 'N/A'}</p>
-                                <p class="order-total">Total: <strong>R$ ${order.total ? order.total.toFixed(2) : '0.00'}</strong></p>
-                            </div>
-                            <div class="order-actions">
-                                ${statusOptionsHtml}
-                            </div>
-                            <div class="order-footer-id">
-                                <span class="order-id-display">ID: ${order.id}</span>
-                            </div>
-                        `;
+                        /// NOVO: Formata a data de criação para exibição
+                        const createdAtDate = new Date(order.created_at);
 
+                        // Opção 1: Formata para o fuso horário local do usuário
+                        // Adicionando timeZone: 'America/Sao_Paulo' ou 'America/Araguaina'
+                        // (Florianópolis está na zona de São Paulo/Brasília)
+                        const formattedCreatedAt = createdAtDate.toLocaleString('pt-BR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            // Adiciona a opção de fuso horário. 'America/Sao_Paulo' cobre a região de Brasília/Florianópolis.
+                            timeZone: 'America/Sao_Paulo'
+                        });
+
+                        orderCard.innerHTML = `
+                        <div class="order-header">
+                            <h3>Pedido: ${order.locator || 'N/A'}</h3>
+                        </div>
+                        <p class="order-status-display">Status: <span class="status-badge ${displayStatus.toLowerCase()}">${displayStatus}</span></p>
+                        <div class="order-details">
+                            <h4>Itens:</h4>
+                            <ul class="order-items-list">${itemsHtml}</ul>
+                            <p class="order-notes">Obs: ${order.notes || 'N/A'}</p>
+                            <p class="order-total">Total: <strong>R$ ${order.total ? order.total.toFixed(2) : '0.00'}</strong></p>
+                            <p class="order-created-at">Criado em: ${(() => {
+                                let createdAtDate = new Date(order.created_at);
+
+                                // Verifica se a string de data termina com 'Z' ou um offset.
+                                // Se não, é provável que seja interpretada como local.
+                                // Para forçar a correção de 3 horas (de 23:30 para 20:30, por exemplo)
+                                // Se a data já está sendo interpretada como local (ex: 23:30 local)
+                                // e você quer 20:30 local, subtraia 3 horas.
+                                // Se a data veio como 23:30 UTC e o navegador está exibindo como 23:30 local,
+                                // então ela deveria ser 20:30 local.
+
+                                // Subtrai 3 horas (3 * 60 minutos * 60 segundos * 1000 milissegundos)
+                                // Isso moverá o tempo para trás em 3 horas.
+                                createdAtDate.setTime(createdAtDate.getTime() - (3 * 60 * 60 * 1000));
+
+                                return createdAtDate.toLocaleString('pt-BR', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    // Removendo o timeZone explícito aqui para ver o efeito da subtração manual.
+                                    // Se ainda estiver errado, podemos reintroduzir o timeZone depois.
+                                });
+                            })()}</p>
+                        </div>
+                        <div class="order-actions">
+                            ${statusOptionsHtml}
+                        </div>
+                        <div class="order-footer-id">
+                            <span class="order-id-display">ID: ${order.id}</span>
+                        </div>
+                    `;
                         // Adiciona o card à coluna correta
                         switch (displayStatus) {
                             case 'PENDING':
