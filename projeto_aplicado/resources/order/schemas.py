@@ -56,6 +56,7 @@ class OrderOut(SQLModel):
     updated_at: str
     locator: str
     notes: Optional[str] = None
+    items: list[CreateOrderItemDTO]  
 
     class Config:
         json_encoders = {OrderStatus: lambda v: v.value.lower()}

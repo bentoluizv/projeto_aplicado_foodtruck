@@ -16,6 +16,7 @@ from projeto_aplicado.resources.order.repository import (
 )
 from projeto_aplicado.resources.order.schemas import (
     CreateOrderDTO,
+    CreateOrderItemDTO, # Importado para mapear os itens do pedido
     OrderItemList,
     OrderList,
     OrderOut,
@@ -31,6 +32,7 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
+# Definição dos tipos anotados para injeção de dependência via FastAPI.
 OrderRepo = Annotated[OrderRepository, Depends(get_order_repository)]
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
 router = APIRouter(tags=['Pedidos'], prefix=f'{settings.API_PREFIX}/orders')
@@ -56,6 +58,10 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
                                 'updated_at': '2024-03-20T10:00:00',
                                 'locator': 'A123',
                                 'notes': 'Sem cebola',
+                                'items': [ # Exemplo de como os itens serão retornados
+                                    {'quantity': 1, 'product_id': 'some_product_id_1', 'price': 20.0},
+                                    {'quantity': 2, 'product_id': 'some_product_id_2', 'price': 10.90},
+                                ],
                             },
                             {
                                 'id': '2',
@@ -65,6 +71,9 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
                                 'updated_at': '2024-03-20T10:00:00',
                                 'locator': 'B456',
                                 'notes': None,
+                                'items': [
+                                    {'quantity': 1, 'product_id': 'some_product_id_3', 'price': 25.90},
+                                ],
                             },
                         ],
                         'pagination': {
@@ -90,65 +99,55 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
         },
     },
 )
-def fetch_orders(
+async def fetch_orders( # A função agora é assíncrona
     repository: OrderRepo,
     current_user: CurrentUser,
     offset: int = 0,
     limit: int = 100,
 ):
     """
-    Retorna a lista de pedidos do sistema.
+    Retorna a lista de pedidos do sistema. Inclui paginação e os detalhes dos itens de cada pedido.
 
     Args:
-        repository (OrderRepository): Repositório de pedidos.
-        current_user (User): Usuário autenticado.
-        offset (int, optional): Número de registros para pular. Padrão: 0.
-        limit (int, optional): Limite de registros por página. Padrão: 100.
+        repository (OrderRepository): Repositório de pedidos para acesso aos dados.
+        current_user (User): Objeto do usuário autenticado.
+        offset (int, optional): Número de registros para pular (para paginação). Padrão: 0.
+        limit (int, optional): Limite de registros por página (para paginação). Padrão: 100.
 
     Returns:
-        OrderList: Lista de pedidos com informações de paginação.
-
-    Examples:
-        ```python
-        # Exemplo de requisição
-        response = await client.get(
-            '/api/v1/orders',
-            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
-        )
-
-        # Exemplo de resposta (200 OK)
-        {
-            'orders': [
-                {
-                    'id': '1',
-                    'status': 'pending',
-                    'total': 41.80,
-                    'created_at': '2024-03-20T10:00:00',
-                    'updated_at': '2024-03-20T10:00:00',
-                    'locator': 'A123',
-                    'notes': 'Sem cebola'
-                }
-            ],
-            'pagination': {
-                'offset': 0,
-                'limit': 100,
-                'total_count': 1,
-                'total_pages': 1,
-                'page': 1
-            }
-        }
-        ```
+        OrderList: Uma lista de objetos OrderOut (pedidos) com informações de paginação.
     """
-    orders = repository.get_all(offset=offset, limit=limit)
-    total_count = repository.get_total_count()
+    # Chama os métodos assíncronos do repositório para obter os pedidos e a contagem total.
+    # O método get_all agora carrega os itens do pedido automaticamente.
+    orders = await repository.get_all(offset=offset, limit=limit)
+    total_count = await repository.get_total_count()
+    
+    # Calcula informações de paginação
     total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
     page = (offset // limit) + 1 if limit > 0 else 1
-    return OrderList(
-        orders=[
+
+    orders_out = []
+    for order in orders:
+        items_out = []
+        # Itera sobre a relação 'products' do objeto Order (que são os OrderItems)
+        # e mapeia cada OrderItem para um CreateOrderItemDTO.
+        if order.products: # Garante que a lista de produtos não é None ou vazia
+            for item in order.products:
+                items_out.append(
+                    CreateOrderItemDTO(
+                        quantity=item.quantity,
+                        product_id=item.product_id,
+                        price=item.price,
+                    )
+                )
+
+        # Constrói o objeto OrderOut, preenchendo o campo 'items' com os DTOs dos itens.
+        orders_out.append(
             OrderOut(
                 id=order.id,
                 status=OrderStatus(order.status.upper()),
                 total=order.total,
+                # Formata as datas para o padrão ISO 8601, se possível.
                 created_at=order.created_at.isoformat()
                 if hasattr(order.created_at, 'isoformat')
                 else str(order.created_at),
@@ -157,9 +156,13 @@ def fetch_orders(
                 else str(order.updated_at),
                 locator=order.locator,
                 notes=order.notes,
+                items=items_out, # Campo 'items' agora é preenchido corretamente
             )
-            for order in orders
-        ],
+        )
+
+    # Retorna a lista de pedidos e as informações de paginação.
+    return OrderList(
+        orders=orders_out,
         pagination=Pagination(
             offset=offset,
             limit=limit,
@@ -170,23 +173,28 @@ def fetch_orders(
     )
 
 
-@router.get('/{order_id}', response_model=Order)
-def fetch_order_by_id(
+@router.get('/{order_id}', response_model=OrderOut) # O response_model agora é OrderOut
+async def fetch_order_by_id( # A função agora é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Get a order by ID.
+    Obtém um pedido específico pelo ID.
+
     Args:
-        order_id (str): The ID of the order to retrieve.
-        repository (OrderRepo): The order repository.
+        order_id (str): O ID único do pedido a ser recuperado.
+        repository (OrderRepo): Repositório de pedidos para acesso aos dados.
+        current_user (User): Objeto do usuário autenticado.
+
     Returns:
-        Order: The order with the specified ID.
+        OrderOut: O pedido com o ID especificado, incluindo todos os seus itens.
+
     Raises:
-        HTTPException: If the order with the specified ID is not found.
+        HTTPException: Se o pedido com o ID especificado não for encontrado (HTTP 404 NOT FOUND).
     """
-    order = repository.get_by_id(order_id)
+    # Busca o pedido pelo ID usando o repositório. O método get_by_id agora carrega os itens.
+    order = await repository.get_by_id(order_id)
 
     if not order:
         raise HTTPException(
@@ -194,11 +202,37 @@ def fetch_order_by_id(
             detail='Order not found',
         )
 
-    return order
+    items_out = []
+    # Mapeia os OrderItems da relação 'products' para CreateOrderItemDTOs.
+    if order.products:
+        for item in order.products:
+            items_out.append(
+                CreateOrderItemDTO(
+                    quantity=item.quantity,
+                    product_id=item.product_id,
+                    price=item.price,
+                )
+            )
+
+    # Retorna uma instância de OrderOut com todos os detalhes do pedido e seus itens.
+    return OrderOut(
+        id=order.id,
+        status=OrderStatus(order.status.upper()),
+        total=order.total,
+        created_at=order.created_at.isoformat()
+        if hasattr(order.created_at, 'isoformat')
+        else str(order.created_at),
+        updated_at=order.updated_at.isoformat()
+        if hasattr(order.updated_at, 'isoformat')
+        else str(order.updated_at),
+        locator=order.locator,
+        notes=order.notes,
+        items=items_out, # Preenchendo o campo 'items'
+    )
 
 
 @router.get('/{order_id}/items', response_model=OrderItemList)
-def fetch_order_items(
+async def fetch_order_items( # A função agora é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -206,9 +240,23 @@ def fetch_order_items(
     limit: int = 100,
 ):
     """
-    Get all items of an order.
+    Obtém todos os itens de um pedido específico.
+
+    Args:
+        order_id (str): O ID do pedido cujos itens serão recuperados.
+        repository (OrderRepo): Repositório de pedidos para acesso aos dados.
+        current_user (User): Objeto do usuário autenticado.
+        offset (int, optional): Número de registros para pular (para paginação). Padrão: 0.
+        limit (int, optional): Limite de registros por página (para paginação). Padrão: 100.
+
+    Returns:
+        OrderItemList: Uma lista de objetos OrderItem com informações de paginação.
+
+    Raises:
+        HTTPException: Se o pedido com o ID especificado não for encontrado (HTTP 404 NOT FOUND).
     """
-    order = repository.get_by_id(order_id)
+    # Busca o pedido pelo ID. Os itens (products) já são carregados.
+    order = await repository.get_by_id(order_id)
 
     if not order:
         raise HTTPException(
@@ -216,12 +264,18 @@ def fetch_order_items(
             detail='Order not found',
         )
 
+    # Acessa a lista de produtos diretamente do objeto Order carregado.
+    # A paginação é feita em memória para a lista de itens.
+    paginated_products = order.products[offset : offset + limit]
+    total_products = len(order.products)
+
+
     return OrderItemList(
-        order_items=order.products,
+        order_items=paginated_products,
         pagination=Pagination(
-            total_count=len(order.products),
-            page=offset // limit + 1,
-            total_pages=1,
+            total_count=total_products,
+            page=offset // limit + 1 if limit > 0 else 1,
+            total_pages=(total_products + limit - 1) // limit if limit > 0 else 0,
             offset=offset,
             limit=limit,
         ),
@@ -242,7 +296,7 @@ def fetch_order_items(
                         'action': 'created',
                     }
                 }
-            },
+            }
         },
         400: {
             'description': 'Dados inválidos',
@@ -263,7 +317,7 @@ def fetch_order_items(
                         },
                     }
                 }
-            },
+            }
         },
         401: {
             'description': 'Não autorizado',
@@ -273,7 +327,7 @@ def fetch_order_items(
                         'detail': 'Not authenticated',
                     }
                 }
-            },
+            }
         },
         403: {
             'description': 'Acesso negado',
@@ -283,7 +337,7 @@ def fetch_order_items(
                         'detail': 'You are not allowed to create orders',
                     }
                 }
-            },
+            }
         },
         422: {
             'description': 'Entidade não processável',
@@ -293,11 +347,11 @@ def fetch_order_items(
                         'detail': 'Product not found',
                     }
                 }
-            },
+            }
         },
     },
 )
-async def create_order(
+async def create_order( # A função agora é assíncrona
     dto: CreateOrderDTO,
     order_repository: OrderRepo,
     product_repository: ProductRepo,
@@ -307,59 +361,33 @@ async def create_order(
     Cria um novo pedido no sistema.
 
     Args:
-        dto (CreateOrderDTO): Dados do pedido a ser criado.
+        dto (CreateOrderDTO): Objeto de transferência de dados contendo os detalhes do pedido a ser criado.
         order_repository (OrderRepository): Repositório de pedidos.
-        product_repository (ProductRepository): Repositório de produtos.
-        current_user (User): Usuário autenticado.
+        product_repository (ProductRepository): Repositório de produtos para validação.
+        current_user (User): Objeto do usuário autenticado.
 
     Returns:
-        BaseResponse: Resposta indicando o resultado da operação.
+        BaseResponse: Resposta básica indicando o ID do pedido criado e a ação.
 
     Raises:
         HTTPException:
-            - Se os dados forem inválidos (400)
-            - Se o usuário não estiver autenticado (401)
-            - Se o usuário não tiver permissão (403)
-            - Se algum produto não for encontrado (422)
-
-    Examples:
-        ```python
-        # Exemplo de requisição
-        response = await client.post(
-            '/api/v1/orders',
-            json={
-                'items': [
-                    {
-                        'product_id': '1',
-                        'quantity': 1
-                    },
-                    {
-                        'product_id': '2',
-                        'quantity': 2
-                    }
-                ],
-                'notes': 'Sem cebola'
-            },
-            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
-        )
-
-        # Exemplo de resposta (201 Created)
-        {
-            'id': '3',
-            'action': 'created'
-        }
-        ```
+            - 403 Forbidden: Se o usuário não tiver permissão para criar pedidos.
+            - 422 Unprocessable Entity: Se algum produto no pedido não for encontrado.
     """
+    # Verifica a permissão do usuário para criar pedidos.
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You are not allowed to create orders',
         )
 
+    # Cria uma nova instância de Order a partir do DTO.
     new_order = Order.create(dto)
 
+    # Processa cada item do pedido, buscando o produto e adicionando-o ao pedido.
     for item in dto.items:
-        product = product_repository.get_by_id(item.product_id)
+        # Busca o produto pelo ID. Deve ser um método assíncrono no product_repository.
+        product = await product_repository.get_by_id(item.product_id)
 
         if not product:
             raise HTTPException(
@@ -367,27 +395,40 @@ async def create_order(
                 detail='Product not found',
             )
 
+        # Cria uma instância de OrderItem e a associa à lista de produtos do novo pedido.
         order_item = OrderItem.create(item)
-        new_order.products.append(order_item)
+        new_order.products.append(order_item) # Adiciona ao atributo 'products'
 
-    order_repository.create(new_order)
+    # Salva o novo pedido no banco de dados. O método create deve ser assíncrono.
+    await order_repository.create(new_order)
     return BaseResponse(id=new_order.id, action='created')
 
 
 @router.patch('/{order_id}', response_model=BaseResponse)
-def update_order(
+async def update_order( # A função agora é assíncrona
     order_id: str,
     dto: UpdateOrderDTO,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Update an order by ID.
+    Atualiza um pedido existente pelo ID.
+
+    Args:
+        order_id (str): O ID do pedido a ser atualizado.
+        dto (UpdateOrderDTO): Objeto de transferência de dados com as informações de atualização.
+        repository (OrderRepo): Repositório de pedidos.
+        current_user (User): Objeto do usuário autenticado.
+
     Returns:
-        BaseResponse: A response indicating the result of the operation.
+        BaseResponse: Resposta básica indicando o ID do pedido atualizado e a ação.
+
     Raises:
-        HTTPException: If the order with the specified ID is not found.
+        HTTPException:
+            - 403 Forbidden: Se o usuário não tiver permissão para atualizar pedidos.
+            - 404 Not Found: Se o pedido com o ID especificado não for encontrado.
     """
+    # Verifica as permissões do usuário para atualizar pedidos.
     if current_user.role not in {
         UserRole.ADMIN,
         UserRole.ATTENDANT,
@@ -398,7 +439,8 @@ def update_order(
             detail='You are not allowed to update orders',
         )
 
-    existing_order = repository.get_by_id(order_id)
+    # Busca o pedido existente pelo ID. O método get_by_id deve ser assíncrono.
+    existing_order = await repository.get_by_id(order_id)
 
     if not existing_order:
         raise HTTPException(
@@ -406,33 +448,42 @@ def update_order(
             detail='Order not found',
         )
 
-    repository.update(existing_order, dto)
+    # Atualiza o pedido no banco de dados. O método update deve ser assíncrono.
+    await repository.update(existing_order, dto)
     return BaseResponse(id=existing_order.id, action='updated')
 
 
 @router.delete('/{order_id}', response_model=BaseResponse)
-def delete_order(
+async def delete_order( # A função agora é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Delete an order by ID.
+    Exclui um pedido pelo ID.
+
     Args:
-        order_id (str): The ID of the order to delete.
-        repository (OrderRepo): The order repository.
+        order_id (str): O ID do pedido a ser excluído.
+        repository (OrderRepo): Repositório de pedidos.
+        current_user (User): Objeto do usuário autenticado.
+
     Returns:
-        BaseResponse: A response indicating the result of the operation.
+        BaseResponse: Resposta básica indicando o ID do pedido excluído e a ação.
+
     Raises:
-        HTTPException: If the order with the specified ID is not found.
+        HTTPException:
+            - 403 Forbidden: Se o usuário não tiver permissão para excluir pedidos.
+            - 404 Not Found: Se o pedido com o ID especificado não for encontrado.
     """
+    # Verifica as permissões do usuário para excluir pedidos.
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You are not allowed to delete orders',
         )
 
-    existing_order = repository.get_by_id(order_id)
+    # Busca o pedido existente pelo ID. O método get_by_id deve ser assíncrono.
+    existing_order = await repository.get_by_id(order_id)
 
     if not existing_order:
         raise HTTPException(
@@ -440,5 +491,6 @@ def delete_order(
             detail='Order not found',
         )
 
-    repository.delete(existing_order)
+    # Exclui o pedido do banco de dados. O método delete deve ser assíncrono.
+    await repository.delete(existing_order)
     return BaseResponse(id=existing_order.id, action='deleted')
