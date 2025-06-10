@@ -1,4 +1,6 @@
-FROM python:3.12-slim-bookworm AS base
+ARG BASE_IMAGE=python:3.12-slim-bookworm
+
+FROM ${BASE_IMAGE} AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
@@ -34,11 +36,11 @@ COPY --from=builder /app/pyproject.toml /app/pyproject.toml
 COPY --from=builder /app/uv.lock /app/uv.lock
 COPY --from=builder /app/alembic.ini /app/alembic.ini
 
-RUN echo '#!/bin/bash\n\
-echo "Starting application..."\n\
-uv run fastapi run projeto_aplicado/app.py --host 0.0.0.0 --port 8000\n\
-' > /app/start.sh && chmod +x /app/start.sh
-
 EXPOSE 8000
 
-CMD ["/app/start.sh"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/docs || exit 1
+
+ENTRYPOINT ["uvicorn"]
+
+CMD ["projeto_aplicado.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
