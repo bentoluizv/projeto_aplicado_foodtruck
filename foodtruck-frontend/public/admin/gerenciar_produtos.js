@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (response.ok) {
                 productsList.innerHTML = '';
-                // CORREÇÃO AQUI: Acessa 'data.products' em vez de 'data.items'
+                // Acessa 'data.products' para a listagem (conforme o formato JSON fornecido)
                 const items = data.products; 
 
                 if (!items || items.length === 0) {
@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         event.preventDefault();
         createProductMessage.innerText = ''; // Limpa mensagens anteriores
 
-        // Coleta os dados dos campos do formulário de criação (apenas os campos presentes no HTML)
-        const newProduct = {
+        // Coleta os dados dos campos do formulário de criação
+        const newProduct = { // <-- newProduct já contém o nome digitado!
             name: document.getElementById('createName').value,
             description: document.getElementById('createDescription').value,
             price: parseFloat(document.getElementById('createPrice').value),
@@ -151,11 +151,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (handleAuthError(response)) return;
 
-            const data = await response.json();
+            const data = await response.json(); // Data agora é {id: ..., action: ...}
 
             if (response.ok) { // Se a requisição foi bem-sucedida (status 2xx, ex: 201 Created)
                 createProductMessage.style.color = 'green';
-                createProductMessage.innerText = `Produto '${data.name}' (ID: ${data.id}) criado com sucesso!`;
+                
+                // --- DEBUG LOGS ---
+                console.log('Dados completos da resposta da API (POST create):', data); 
+                console.log('ID do produto retornado pela API:', data.id);
+                // --- FIM DEBUG LOGS ---
+
+                // *** CORREÇÃO AQUI: Usar newProduct.name (do formulário) e data.id (da resposta da API) ***
+                if (data.id) { // Verifica se o ID foi retornado
+                    // Usa o nome que foi digitado no formulário, já que a API não o retorna
+                    createProductMessage.innerText = `Produto '${newProduct.name}' (ID: ${data.id}) criado com sucesso!`;
+                } else {
+                    // Fallback caso nem o ID seja retornado (cenário improvável se o `response.ok` é true)
+                    createProductMessage.innerText = `Produto criado com sucesso! (ID não disponível na resposta da API)`;
+                    console.warn('Resposta da API de criação de produto não contém o ID esperado:', data);
+                }
+                
                 createProductForm.reset(); // Limpa o formulário após sucesso
                 fetchProducts(); // Recarrega a lista de produtos para exibir o recém-criado
             } else { // Se houve um erro na resposta (status 4xx ou 5xx)
