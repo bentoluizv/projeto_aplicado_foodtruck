@@ -99,7 +99,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
         },
     },
 )
-async def fetch_orders( # A função agora é assíncrona
+async def fetch_orders( # A função é assíncrona para ser um endpoint FastAPI
     repository: OrderRepo,
     current_user: CurrentUser,
     offset: int = 0,
@@ -117,10 +117,10 @@ async def fetch_orders( # A função agora é assíncrona
     Returns:
         OrderList: Uma lista de objetos OrderOut (pedidos) com informações de paginação.
     """
-    # Chama os métodos assíncronos do repositório para obter os pedidos e a contagem total.
-    # O método get_all agora carrega os itens do pedido automaticamente.
-    orders = await repository.get_all(offset=offset, limit=limit)
-    total_count = await repository.get_total_count()
+    # Chama os métodos do repositório de forma síncrona.
+    # FastAPI gerencia a execução em um worker thread para que a aplicação não bloqueie.
+    orders = repository.get_all(offset=offset, limit=limit)
+    total_count = repository.get_total_count()
     
     # Calcula informações de paginação
     total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
@@ -131,7 +131,7 @@ async def fetch_orders( # A função agora é assíncrona
         items_out = []
         # Itera sobre a relação 'products' do objeto Order (que são os OrderItems)
         # e mapeia cada OrderItem para um CreateOrderItemDTO.
-        if order.products: # Garante que a lista de produtos não é None ou vazia
+        if order.products:
             for item in order.products:
                 items_out.append(
                     CreateOrderItemDTO(
@@ -147,7 +147,6 @@ async def fetch_orders( # A função agora é assíncrona
                 id=order.id,
                 status=OrderStatus(order.status.upper()),
                 total=order.total,
-                # Formata as datas para o padrão ISO 8601, se possível.
                 created_at=order.created_at.isoformat()
                 if hasattr(order.created_at, 'isoformat')
                 else str(order.created_at),
@@ -156,7 +155,7 @@ async def fetch_orders( # A função agora é assíncrona
                 else str(order.updated_at),
                 locator=order.locator,
                 notes=order.notes,
-                items=items_out, # Campo 'items' agora é preenchido corretamente
+                items=items_out,
             )
         )
 
@@ -173,8 +172,8 @@ async def fetch_orders( # A função agora é assíncrona
     )
 
 
-@router.get('/{order_id}', response_model=OrderOut) # O response_model agora é OrderOut
-async def fetch_order_by_id( # A função agora é assíncrona
+@router.get('/{order_id}', response_model=OrderOut)
+async def fetch_order_by_id( # A função é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -193,8 +192,8 @@ async def fetch_order_by_id( # A função agora é assíncrona
     Raises:
         HTTPException: Se o pedido com o ID especificado não for encontrado (HTTP 404 NOT FOUND).
     """
-    # Busca o pedido pelo ID usando o repositório. O método get_by_id agora carrega os itens.
-    order = await repository.get_by_id(order_id)
+    # Busca o pedido pelo ID usando o repositório de forma síncrona.
+    order = repository.get_by_id(order_id)
 
     if not order:
         raise HTTPException(
@@ -227,12 +226,12 @@ async def fetch_order_by_id( # A função agora é assíncrona
         else str(order.updated_at),
         locator=order.locator,
         notes=order.notes,
-        items=items_out, # Preenchendo o campo 'items'
+        items=items_out,
     )
 
 
 @router.get('/{order_id}/items', response_model=OrderItemList)
-async def fetch_order_items( # A função agora é assíncrona
+async def fetch_order_items( # A função é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -256,7 +255,7 @@ async def fetch_order_items( # A função agora é assíncrona
         HTTPException: Se o pedido com o ID especificado não for encontrado (HTTP 404 NOT FOUND).
     """
     # Busca o pedido pelo ID. Os itens (products) já são carregados.
-    order = await repository.get_by_id(order_id)
+    order = repository.get_by_id(order_id)
 
     if not order:
         raise HTTPException(
@@ -351,7 +350,7 @@ async def fetch_order_items( # A função agora é assíncrona
         },
     },
 )
-async def create_order( # A função agora é assíncrona
+async def create_order( # A função é assíncrona
     dto: CreateOrderDTO,
     order_repository: OrderRepo,
     product_repository: ProductRepo,
@@ -374,20 +373,17 @@ async def create_order( # A função agora é assíncrona
             - 403 Forbidden: Se o usuário não tiver permissão para criar pedidos.
             - 422 Unprocessable Entity: Se algum produto no pedido não for encontrado.
     """
-    # Verifica a permissão do usuário para criar pedidos.
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You are not allowed to create orders',
         )
 
-    # Cria uma nova instância de Order a partir do DTO.
     new_order = Order.create(dto)
 
-    # Processa cada item do pedido, buscando o produto e adicionando-o ao pedido.
     for item in dto.items:
-        # Busca o produto pelo ID. Deve ser um método assíncrono no product_repository.
-        product = await product_repository.get_by_id(item.product_id)
+        # Busca o produto pelo ID de forma síncrona.
+        product = product_repository.get_by_id(item.product_id)
 
         if not product:
             raise HTTPException(
@@ -395,17 +391,16 @@ async def create_order( # A função agora é assíncrona
                 detail='Product not found',
             )
 
-        # Cria uma instância de OrderItem e a associa à lista de produtos do novo pedido.
         order_item = OrderItem.create(item)
-        new_order.products.append(order_item) # Adiciona ao atributo 'products'
+        new_order.products.append(order_item)
 
-    # Salva o novo pedido no banco de dados. O método create deve ser assíncrono.
-    await order_repository.create(new_order)
+    # Salva o novo pedido no banco de dados de forma síncrona.
+    order_repository.create(new_order)
     return BaseResponse(id=new_order.id, action='created')
 
 
 @router.patch('/{order_id}', response_model=BaseResponse)
-async def update_order( # A função agora é assíncrona
+async def update_order( # A função é assíncrona
     order_id: str,
     dto: UpdateOrderDTO,
     repository: OrderRepo,
@@ -428,7 +423,6 @@ async def update_order( # A função agora é assíncrona
             - 403 Forbidden: Se o usuário não tiver permissão para atualizar pedidos.
             - 404 Not Found: Se o pedido com o ID especificado não for encontrado.
     """
-    # Verifica as permissões do usuário para atualizar pedidos.
     if current_user.role not in {
         UserRole.ADMIN,
         UserRole.ATTENDANT,
@@ -439,8 +433,8 @@ async def update_order( # A função agora é assíncrona
             detail='You are not allowed to update orders',
         )
 
-    # Busca o pedido existente pelo ID. O método get_by_id deve ser assíncrono.
-    existing_order = await repository.get_by_id(order_id)
+    # Busca o pedido existente pelo ID de forma síncrona.
+    existing_order = repository.get_by_id(order_id)
 
     if not existing_order:
         raise HTTPException(
@@ -448,13 +442,13 @@ async def update_order( # A função agora é assíncrona
             detail='Order not found',
         )
 
-    # Atualiza o pedido no banco de dados. O método update deve ser assíncrono.
-    await repository.update(existing_order, dto)
+    # Atualiza o pedido no banco de dados de forma síncrona.
+    repository.update(existing_order, dto)
     return BaseResponse(id=existing_order.id, action='updated')
 
 
 @router.delete('/{order_id}', response_model=BaseResponse)
-async def delete_order( # A função agora é assíncrona
+async def delete_order( # A função é assíncrona
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -475,15 +469,14 @@ async def delete_order( # A função agora é assíncrona
             - 403 Forbidden: Se o usuário não tiver permissão para excluir pedidos.
             - 404 Not Found: Se o pedido com o ID especificado não for encontrado.
     """
-    # Verifica as permissões do usuário para excluir pedidos.
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
             detail='You are not allowed to delete orders',
         )
 
-    # Busca o pedido existente pelo ID. O método get_by_id deve ser assíncrono.
-    existing_order = await repository.get_by_id(order_id)
+    # Busca o pedido existente pelo ID de forma síncrona.
+    existing_order = repository.get_by_id(order_id)
 
     if not existing_order:
         raise HTTPException(
@@ -491,6 +484,6 @@ async def delete_order( # A função agora é assíncrona
             detail='Order not found',
         )
 
-    # Exclui o pedido do banco de dados. O método delete deve ser assíncrono.
-    await repository.delete(existing_order)
+    # Exclui o pedido do banco de dados de forma síncrona.
+    repository.delete(existing_order)
     return BaseResponse(id=existing_order.id, action='deleted')
