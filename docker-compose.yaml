@@ -1,10 +1,30 @@
 services:
+  traefik:
+    container_name: traefik
+    image: traefik:v3.4.1
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default_network
+
   backend:
+    container_name: backend
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`foodtruck.docker.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=web"
     env_file:
       - .env
     networks:
@@ -18,6 +38,7 @@ services:
       - ./migrations:/app/migrations
 
   db-init:
+    container_name: db-init
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,6 +52,7 @@ services:
         condition: service_healthy
 
   postgres:
+    container_name: postgres
     image: postgres:16
     env_file:
       - .env
@@ -47,6 +69,7 @@ services:
       - default_network
 
   redis:
+    container_name: redis
     image: redis:7.4.2
     ports:
       - "6379:6379"
@@ -59,6 +82,7 @@ services:
       retries: 5
     networks:
       - default_network
+
 
 volumes:
   postgres_data:
