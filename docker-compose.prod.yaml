@@ -1,9 +1,8 @@
 services:
   traefik:
-    container_name: traefik
     image: traefik:v3.4.1
     command:
-      - "--log.level=DEBUG"
+      # - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -17,31 +16,28 @@ services:
       - default_network
 
   backend:
-    container_name: backend
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`foodtruck.docker.localhost`)"
+      - "traefik.http.routers.backend.rule=Host(`89.117.33.177`)"
       - "traefik.http.routers.backend.entrypoints=web"
     env_file:
       - .env
     networks:
       - default_network
+    healthcheck:
+      test: curl http://localhost:8000/docs || exit 1
+      interval: 20s
+      timeout: 1s
+      retries: 3
     depends_on:
       db-init:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-    volumes:
-      - ./migrations:/app/migrations
 
   db-init:
-    container_name: db-init
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: bentoluizv/projeto_aplicado:latest
     command: python -m projeto_aplicado.scripts.init_db
     env_file:
       - .env
@@ -52,7 +48,6 @@ services:
         condition: service_healthy
 
   postgres:
-    container_name: postgres
     image: postgres:16
     env_file:
       - .env
@@ -62,14 +57,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres
-      interval: 10s
-      timeout: 10s
+      interval: 30s
+      timeout: 2s
       retries: 5
     networks:
       - default_network
 
   redis:
-    container_name: redis
     image: redis:7.4.2
     ports:
       - "6379:6379"
@@ -77,12 +71,11 @@ services:
       - redis_data:/data
     healthcheck:
       test: redis-cli ping
-      interval: 10s
-      timeout: 10s
+      interval: 30s
+      timeout: 2s
       retries: 5
     networks:
       - default_network
-
 
 volumes:
   postgres_data:
