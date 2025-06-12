@@ -129,16 +129,19 @@ def orders(session):
             'status': 'pending',
             'total': 0.0,
             'notes': 'First order',
+            'rating': 3,
         },
         {
             'status': 'completed',
             'total': 0.0,
             'notes': 'Second order',
+            'rating': 4,
         },
         {
             'status': 'cancelled',
             'total': 0.0,
             'notes': 'Third order',
+            'rating': 5,
         },
     ]
     orders = [Order(**order) for order in orders]
