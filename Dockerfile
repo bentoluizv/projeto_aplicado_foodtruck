@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=python:3.12-slim-bookworm
 
-FROM ${BASE_IMAGE} AS base
+FROM ${BASE_IMAGE} AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
@@ -9,8 +9,6 @@ ADD https://astral.sh/uv/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 
 ENV PATH="/root/.local/bin/:$PATH"
-
-FROM base AS builder
 
 WORKDIR /app
 
@@ -22,7 +20,7 @@ RUN uv venv && . .venv/bin/activate && \
 
 COPY . .
 
-FROM base AS runner
+FROM ${BASE_IMAGE} AS runner
 
 WORKDIR /app
 
@@ -38,7 +36,7 @@ COPY --from=builder /app/alembic.ini /app/alembic.ini
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/docs || exit 1
 
 ENTRYPOINT ["uvicorn"]
