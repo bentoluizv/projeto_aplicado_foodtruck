@@ -31,20 +31,7 @@ services:
       timeout: 1s
       retries: 3
     depends_on:
-      db-init:
-        condition: service_completed_successfully
       redis:
-        condition: service_healthy
-
-  db-init:
-    image: bentoluizv/projeto_aplicado:latest
-    command: python -m projeto_aplicado.scripts.init_db
-    env_file:
-      - .env
-    networks:
-      - default_network
-    depends_on:
-      postgres:
         condition: service_healthy
 
   postgres:
