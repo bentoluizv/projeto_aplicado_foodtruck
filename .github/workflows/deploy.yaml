@@ -37,3 +37,4 @@ jobs:
             docker compose -f docker-compose.prod.yaml down
             docker compose -f docker-compose.prod.yaml build
             docker compose -f docker-compose.prod.yaml up -d
+            docker exec -it backend python -m projeto_aplicado.scripts.init_db
