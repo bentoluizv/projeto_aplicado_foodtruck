@@ -90,10 +90,10 @@ jobs:
             cd /app/
             docker compose -f docker-compose.prod.yaml up -d --remove-orphans
             exit 0
-    migrate:
+  migrate:
     runs-on: ubuntu-latest
     needs: deploy
-     steps:
+    steps:
       - name: SSH Connection
         uses: appleboy/ssh-action@v1.0.3
         with:
