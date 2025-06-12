@@ -16,14 +16,14 @@ def test_get_orders(client, orders, admin_headers):
     assert response.json()['orders'] == [
         {
             'id': order.id,
-            'status': order.status,
+            'status': order.status.upper(),
             'total': order.total,
             'created_at': order.created_at.isoformat(),
             'updated_at': order.updated_at.isoformat(),
             'locator': order.locator,
             'products': [],
             'notes': order.notes,
-            'rating': None,
+            'rating': order.rating,
         }
         for order in orders
     ]
@@ -36,21 +36,38 @@ def test_get_orders(client, orders, admin_headers):
     }
 
 
-def test_get_order_by_id(client, orders, admin_headers):
+def test_get_order_by_id(client, orders, order_items, admin_headers):
     response = client.get(
         f'{API_PREFIX}/orders/{orders[0].id}', headers=admin_headers
     )
     assert response.status_code == HTTPStatus.OK
     assert response.headers['Content-Type'] == 'application/json'
+    assert response.json()['products']
     assert response.json() == {
         'id': orders[0].id,
-        'status': orders[0].status,
+        'status': orders[0].status.upper(),
         'total': orders[0].total,
         'created_at': orders[0].created_at.isoformat(),
         'updated_at': orders[0].updated_at.isoformat(),
         'locator': orders[0].locator,
         'notes': orders[0].notes,
-        'rating': None,
+        'rating': orders[0].rating,
+        'products': [
+            {
+                'id': order_items[0].id,
+                'quantity': order_items[0].quantity,
+                'price': order_items[0].price,
+                'product_id': order_items[0].product_id,
+                'order_id': order_items[0].order_id,
+            },
+            {
+                'id': order_items[1].id,
+                'quantity': order_items[1].quantity,
+                'price': order_items[1].price,
+                'product_id': order_items[1].product_id,
+                'order_id': order_items[1].order_id,
+            },
+        ],
     }
 
 
