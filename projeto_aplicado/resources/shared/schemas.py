@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Generic, Sequence, TypeVar
 
-from pydantic import EmailStr
 from sqlmodel import SQLModel
 
 T = TypeVar('T')
