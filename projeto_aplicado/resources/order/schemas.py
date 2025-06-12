@@ -56,12 +56,17 @@ class OrderOut(SQLModel):
     created_at: str
     updated_at: str
     locator: str
-    products: list[OrderItem]
+    products: list['OrderItemOut']
     notes: Optional[str] = None
     rating: Optional[int] = None
 
-    class Config:
-        json_encoders = {OrderStatus: lambda v: v.value.lower()}
+
+class OrderItemOut(SQLModel):
+    id: str
+    quantity: int
+    price: float
+    product_id: str
+    order_id: str
 
 
 class OrderList(SQLModel):
