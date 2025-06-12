@@ -29,7 +29,6 @@ class Order(BaseModel, table=True):
         Create an Order instance from a DTO.
         """
         order = cls(**dto.model_dump())
-        order.total = sum(item.calculate_total() for item in order.products)
         return order
 
 
