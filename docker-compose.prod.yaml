@@ -1,5 +1,6 @@
 services:
   traefik:
+    container_name: traefik
     image: traefik:v3.4.1
     command:
       # - "--log.level=DEBUG"
@@ -16,6 +17,7 @@ services:
       - default_network
 
   backend:
+    container_name: backend
     image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
@@ -27,14 +29,15 @@ services:
       - default_network
     healthcheck:
       test: curl http://localhost:8000/docs || exit 1
-      interval: 20s
-      timeout: 1s
+      interval: 15s
+      timeout: 2s
       retries: 3
     depends_on:
       redis:
         condition: service_healthy
 
   postgres:
+    container_name: postgres
     image: postgres:16
     env_file:
       - .env
@@ -44,13 +47,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres
-      interval: 30s
+      interval: 15s
       timeout: 2s
-      retries: 5
+      retries: 3
     networks:
       - default_network
 
   redis:
+    container_name: redis
     image: redis:7.4.2
     ports:
       - "6379:6379"
@@ -58,9 +62,9 @@ services:
       - redis_data:/data
     healthcheck:
       test: redis-cli ping
-      interval: 30s
+      interval: 10s
       timeout: 2s
-      retries: 5
+      retries: 3
     networks:
       - default_network
 
