@@ -21,7 +21,7 @@ services:
     image: bentoluizv/projeto_aplicado:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`89.117.33.177` || Host(`bentomachado.dev`))"
+      - "traefik.http.routers.backend.rule=Host(`89.117.33.177`)"
       - "traefik.http.routers.backend.entrypoints=web"
     env_file:
       - .env
