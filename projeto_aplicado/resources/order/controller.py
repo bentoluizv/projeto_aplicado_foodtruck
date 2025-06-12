@@ -6,8 +6,6 @@ from fastapi import (
     Depends,
     HTTPException,
 )
-from sqlmodel import Session # Importe Session aqui
-from projeto_aplicado.ext.database.db import get_session # Importe get_session aqui
 
 from projeto_aplicado.auth.security import get_current_user
 from projeto_aplicado.resources.order.enums import OrderStatus
@@ -18,7 +16,6 @@ from projeto_aplicado.resources.order.repository import (
 )
 from projeto_aplicado.resources.order.schemas import (
     CreateOrderDTO,
-    CreateOrderItemDTO,
     OrderItemList,
     OrderList,
     OrderOut,
@@ -34,12 +31,10 @@ from projeto_aplicado.settings import get_settings
 
 settings = get_settings()
 
-# Definição dos tipos anotados para injeção de dependência via FastAPI.
 OrderRepo = Annotated[OrderRepository, Depends(get_order_repository)]
 ProductRepo = Annotated[ProductRepository, Depends(get_product_repository)]
 router = APIRouter(tags=['Pedidos'], prefix=f'{settings.API_PREFIX}/orders')
 CurrentUser = Annotated[User, Depends(get_current_user)]
-DBSession = Annotated[Session, Depends(get_session)] # Novo tipo para a sessão do banco de dados
 
 
 @router.get(
@@ -61,10 +56,6 @@ DBSession = Annotated[Session, Depends(get_session)] # Novo tipo para a sessão 
                                 'updated_at': '2024-03-20T10:00:00',
                                 'locator': 'A123',
                                 'notes': 'Sem cebola',
-                                'items': [
-                                    {'quantity': 1, 'product_id': 'some_product_id_1', 'price': 20.0},
-                                    {'quantity': 2, 'product_id': 'some_product_id_2', 'price': 10.90},
-                                ],
                             },
                             {
                                 'id': '2',
@@ -74,9 +65,6 @@ DBSession = Annotated[Session, Depends(get_session)] # Novo tipo para a sessão 
                                 'updated_at': '2024-03-20T10:00:00',
                                 'locator': 'B456',
                                 'notes': None,
-                                'items': [
-                                    {'quantity': 1, 'product_id': 'some_product_id_3', 'price': 25.90},
-                                ],
                             },
                         ],
                         'pagination': {
@@ -102,53 +90,80 @@ DBSession = Annotated[Session, Depends(get_session)] # Novo tipo para a sessão 
         },
     },
 )
-async def fetch_orders(
+def fetch_orders(
     repository: OrderRepo,
     current_user: CurrentUser,
     offset: int = 0,
     limit: int = 100,
 ):
     """
-    Retorna a lista de pedidos do sistema. Inclui paginação e os detalhes dos itens de cada pedido.
-    """
+    Retorna a lista de pedidos do sistema.
+
+    Args:
+        repository (OrderRepository): Repositório de pedidos.
+        current_user (User): Usuário autenticado.
+        offset (int, optional): Número de registros para pular. Padrão: 0.
+        limit (int, optional): Limite de registros por página. Padrão: 100.
+
+    Returns:
+        OrderList: Lista de pedidos com informações de paginação.
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.get(
+            '/api/v1/orders',
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (200 OK)
+        {
+            'orders': [
+                {
+                    'id': '1',
+                    'status': 'pending',
+                    'total': 41.80,
+                    'created_at': '2024-03-20T10:00:00',
+                    'updated_at': '2024-03-20T10:00:00',
+                    'locator': 'A123',
+                    'notes': 'Sem cebola'
+                }
+            ],
+            'pagination': {
+                'offset': 0,
+                'limit': 100,
+                'total_count': 1,
+                'total_pages': 1,
+                'page': 1
+            }
+        }
+        ```
+    """  # noqa: E501
     orders = repository.get_all(offset=offset, limit=limit)
     total_count = repository.get_total_count()
-    
     total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
     page = (offset // limit) + 1 if limit > 0 else 1
 
-    orders_out = []
-    for order in orders:
-        items_out = []
-        if order.products:
-            for item in order.products:
-                items_out.append(
-                    CreateOrderItemDTO(
-                        quantity=item.quantity,
-                        product_id=item.product_id,
-                        price=item.price,
-                    )
-                )
-
-        orders_out.append(
-            OrderOut(
-                id=order.id,
-                status=OrderStatus(order.status.upper()),
-                total=order.total,
-                created_at=order.created_at.isoformat()
-                if hasattr(order.created_at, 'isoformat')
-                else str(order.created_at),
-                updated_at=order.updated_at.isoformat()
-                if hasattr(order.updated_at, 'isoformat')
-                else str(order.updated_at),
-                locator=order.locator,
-                notes=order.notes,
-                items=items_out,
-            )
+    order_list = [
+        OrderOut(
+            id=order.id,
+            products=order.products,  # type: ignore
+            status=OrderStatus(order.status.upper()),
+            total=order.total,
+            rating=order.rating,
+            created_at=order.created_at.isoformat()
+            if hasattr(order.created_at, 'isoformat')
+            else str(order.created_at),
+            updated_at=order.updated_at.isoformat()
+            if hasattr(order.updated_at, 'isoformat')
+            else str(order.updated_at),
+            locator=order.locator,
+            notes=order.notes,
         )
-
+        for order in orders
+    ]
     return OrderList(
-        orders=orders_out,
+        orders=order_list,
         pagination=Pagination(
             offset=offset,
             limit=limit,
@@ -160,14 +175,22 @@ async def fetch_orders(
 
 
 @router.get('/{order_id}', response_model=OrderOut)
-async def fetch_order_by_id(
+def fetch_order_by_id(
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Obtém um pedido específico pelo ID.
+    Get a order by ID.
+    Args:
+        order_id (str): The ID of the order to retrieve.
+        repository (OrderRepo): The order repository.
+    Returns:
+        Order: The order with the specified ID.
+    Raises:
+        HTTPException: If the order with the specified ID is not found.
     """
+
     order = repository.get_by_id(order_id)
 
     if not order:
@@ -175,19 +198,7 @@ async def fetch_order_by_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Order not found',
         )
-
-    items_out = []
-    if order.products:
-        for item in order.products:
-            items_out.append(
-                CreateOrderItemDTO(
-                    quantity=item.quantity,
-                    product_id=item.product_id,
-                    price=item.price,
-                )
-            )
-
-    return OrderOut(
+    order_out = OrderOut(
         id=order.id,
         status=OrderStatus(order.status.upper()),
         total=order.total,
@@ -198,13 +209,16 @@ async def fetch_order_by_id(
         if hasattr(order.updated_at, 'isoformat')
         else str(order.updated_at),
         locator=order.locator,
+        products=order.products,  # type: ignore
         notes=order.notes,
-        items=items_out,
+        rating=order.rating,
     )
+
+    return order_out
 
 
 @router.get('/{order_id}/items', response_model=OrderItemList)
-async def fetch_order_items(
+def fetch_order_items(
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
@@ -212,7 +226,7 @@ async def fetch_order_items(
     limit: int = 100,
 ):
     """
-    Obtém todos os itens de um pedido específico.
+    Get all items of an order.
     """
     order = repository.get_by_id(order_id)
 
@@ -222,16 +236,12 @@ async def fetch_order_items(
             detail='Order not found',
         )
 
-    paginated_products = order.products[offset : offset + limit]
-    total_products = len(order.products)
-
-
     return OrderItemList(
-        order_items=paginated_products,
+        order_items=order.products,
         pagination=Pagination(
-            total_count=total_products,
-            page=offset // limit + 1 if limit > 0 else 1,
-            total_pages=(total_products + limit - 1) // limit if limit > 0 else 0,
+            total_count=len(order.products),
+            page=offset // limit + 1,
+            total_pages=1,
             offset=offset,
             limit=limit,
         ),
@@ -252,7 +262,7 @@ async def fetch_order_items(
                         'action': 'created',
                     }
                 }
-            }
+            },
         },
         400: {
             'description': 'Dados inválidos',
@@ -273,7 +283,7 @@ async def fetch_order_items(
                         },
                     }
                 }
-            }
+            },
         },
         401: {
             'description': 'Não autorizado',
@@ -283,7 +293,7 @@ async def fetch_order_items(
                         'detail': 'Not authenticated',
                     }
                 }
-            }
+            },
         },
         403: {
             'description': 'Acesso negado',
@@ -293,7 +303,7 @@ async def fetch_order_items(
                         'detail': 'You are not allowed to create orders',
                     }
                 }
-            }
+            },
         },
         422: {
             'description': 'Entidade não processável',
@@ -303,19 +313,63 @@ async def fetch_order_items(
                         'detail': 'Product not found',
                     }
                 }
-            }
+            },
         },
     },
 )
 async def create_order(
     dto: CreateOrderDTO,
+    order_repository: OrderRepo,
     product_repository: ProductRepo,
     current_user: CurrentUser,
-    session: DBSession, # Injeta a sessão do banco de dados
 ):
     """
     Cria um novo pedido no sistema.
-    """
+
+    Args:
+        dto (CreateOrderDTO): Dados do pedido a ser criado.
+        order_repository (OrderRepository): Repositório de pedidos.
+        product_repository (ProductRepository): Repositório de produtos.
+        current_user (User): Usuário autenticado.
+
+    Returns:
+        BaseResponse: Resposta indicando o resultado da operação.
+
+    Raises:
+        HTTPException:
+            - Se os dados forem inválidos (400)
+            - Se o usuário não estiver autenticado (401)
+            - Se o usuário não tiver permissão (403)
+            - Se algum produto não for encontrado (422)
+
+    Examples:
+        ```python
+        # Exemplo de requisição
+        response = await client.post(
+            '/api/v1/orders',
+            json={
+                'items': [
+                    {
+                        'product_id': '1',
+                        'quantity': 1
+                    },
+                    {
+                        'product_id': '2',
+                        'quantity': 2
+                    }
+                ],
+                'notes': 'Sem cebola'
+            },
+            headers={'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}
+        )
+
+        # Exemplo de resposta (201 Created)
+        {
+            'id': '3',
+            'action': 'created'
+        }
+        ```
+    """  # noqa: E501
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
@@ -323,15 +377,9 @@ async def create_order(
         )
 
     new_order = Order.create(dto)
-    
-    session.add(new_order)
-    # Removido 'await' de session.flush() pois pode ser síncrono.
-    # Se get_session fornece AsyncSession, 'await' é necessário.
-    # Mas dado os erros anteriores, presumimos que a sessão é síncrona.
-    session.flush() 
 
-    for item_dto in dto.items:
-        product = product_repository.get_by_id(item_dto.product_id)
+    for item in dto.items:
+        product = product_repository.get_by_id(item.product_id)
 
         if not product:
             raise HTTPException(
@@ -339,33 +387,29 @@ async def create_order(
                 detail='Product not found',
             )
 
-        order_item = OrderItem.create(item_dto)
-        order_item.order_id = new_order.id 
-        
+        order_item = OrderItem.create(item)
         new_order.products.append(order_item)
 
-    new_order.total = sum(item.calculate_total() for item in new_order.products)
-
-    # Removido 'session.add_all(items_to_persist)' pois new_order.products.append()
-    # já os adiciona à sessão via relação, e o session.add(new_order) já os inclui na transação.
-    
-    # Removido 'await' de session.commit() pois pode ser síncrono.
-    session.commit()
-    # Removido 'await' de session.refresh() pois pode ser síncrono.
-    session.refresh(new_order) 
-
+    new_order.total = sum(
+        item.calculate_total() for item in new_order.products
+    )
+    order_repository.create(new_order)
     return BaseResponse(id=new_order.id, action='created')
 
 
 @router.patch('/{order_id}', response_model=BaseResponse)
-async def update_order(
+def update_order(
     order_id: str,
     dto: UpdateOrderDTO,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Atualiza um pedido existente pelo ID.
+    Update an order by ID.
+    Returns:
+        BaseResponse: A response indicating the result of the operation.
+    Raises:
+        HTTPException: If the order with the specified ID is not found.
     """
     if current_user.role not in {
         UserRole.ADMIN,
@@ -390,13 +434,20 @@ async def update_order(
 
 
 @router.delete('/{order_id}', response_model=BaseResponse)
-async def delete_order(
+def delete_order(
     order_id: str,
     repository: OrderRepo,
     current_user: CurrentUser,
 ):
     """
-    Exclui um pedido pelo ID.
+    Delete an order by ID.
+    Args:
+        order_id (str): The ID of the order to delete.
+        repository (OrderRepo): The order repository.
+    Returns:
+        BaseResponse: A response indicating the result of the operation.
+    Raises:
+        HTTPException: If the order with the specified ID is not found.
     """
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
@@ -410,6 +461,12 @@ async def delete_order(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Order not found',
+        )
+
+    if existing_order.status != OrderStatus.PENDING:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Order is not pending',
         )
 
     repository.delete(existing_order)

@@ -1,6 +1,5 @@
-from typing import List, Self
+from typing import List
 
-from pydantic import model_validator
 from sqlmodel import Field, Relationship
 
 from projeto_aplicado.resources.order.enums import OrderStatus
@@ -21,19 +20,16 @@ class Order(BaseModel, table=True):
         default_factory=generate_locator, index=True, nullable=False
     )
     notes: str | None = Field(default=None, nullable=True, max_length=255)
-    products: List['OrderItem'] = Relationship()
+    products: List['OrderItem'] = Relationship(cascade_delete=True)
+    rating: int | None = Field(default=None, nullable=True, ge=1, le=5)
 
     @classmethod
     def create(cls, dto: 'CreateOrderDTO'):  # type: ignore # noqa: F821
         """
         Create an Order instance from a DTO.
         """
-        return cls(**dto.model_dump())
-
-    @model_validator(mode='after')
-    def calculate_total(self) -> Self:
-        self.total = sum(item.calculate_total() for item in self.products)
-        return self
+        order = cls(**dto.model_dump())
+        return order
 
 
 class OrderItem(BaseModel, table=True):
@@ -43,7 +39,9 @@ class OrderItem(BaseModel, table=True):
 
     quantity: int = Field(nullable=False, gt=0)
     price: float = Field(nullable=False, gt=0.0)
-    order_id: str = Field(foreign_key='order.id', nullable=False)
+    order_id: str = Field(
+        foreign_key='order.id', nullable=False, ondelete='CASCADE'
+    )
     product_id: str = Field(foreign_key='product.id', nullable=False)
 
     @classmethod
