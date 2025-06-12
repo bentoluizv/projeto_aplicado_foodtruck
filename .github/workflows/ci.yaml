@@ -20,11 +20,6 @@ jobs:
       - name: Set up Python
         run: uv python install
 
-      - name: Create .env file
-        run: |
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-
       - name: Update Lockfile
         run: uv lock
 
