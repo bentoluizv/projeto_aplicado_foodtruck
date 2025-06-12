@@ -138,28 +138,32 @@ def fetch_orders(
             }
         }
         ```
-    """
+    """  # noqa: E501
     orders = repository.get_all(offset=offset, limit=limit)
     total_count = repository.get_total_count()
     total_pages = (total_count + limit - 1) // limit if limit > 0 else 0
     page = (offset // limit) + 1 if limit > 0 else 1
+
+    order_list = [
+        OrderOut(
+            id=order.id,
+            products=order.products,
+            status=OrderStatus(order.status.upper()),
+            total=order.total,
+            rating=order.rating,
+            created_at=order.created_at.isoformat()
+            if hasattr(order.created_at, 'isoformat')
+            else str(order.created_at),
+            updated_at=order.updated_at.isoformat()
+            if hasattr(order.updated_at, 'isoformat')
+            else str(order.updated_at),
+            locator=order.locator,
+            notes=order.notes,
+        )
+        for order in orders
+    ]
     return OrderList(
-        orders=[
-            OrderOut(
-                id=order.id,
-                status=OrderStatus(order.status.upper()),
-                total=order.total,
-                created_at=order.created_at.isoformat()
-                if hasattr(order.created_at, 'isoformat')
-                else str(order.created_at),
-                updated_at=order.updated_at.isoformat()
-                if hasattr(order.updated_at, 'isoformat')
-                else str(order.updated_at),
-                locator=order.locator,
-                notes=order.notes,
-            )
-            for order in orders
-        ],
+        orders=order_list,
         pagination=Pagination(
             offset=offset,
             limit=limit,
@@ -370,6 +374,9 @@ async def create_order(
         order_item = OrderItem.create(item)
         new_order.products.append(order_item)
 
+    new_order.total = sum(
+        item.calculate_total() for item in new_order.products
+    )
     order_repository.create(new_order)
     return BaseResponse(id=new_order.id, action='created')
 
@@ -438,6 +445,12 @@ def delete_order(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Order not found',
+        )
+
+    if existing_order.status != OrderStatus.PENDING:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Order is not pending',
         )
 
     repository.delete(existing_order)
