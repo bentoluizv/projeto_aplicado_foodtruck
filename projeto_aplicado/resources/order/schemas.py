@@ -24,6 +24,7 @@ class UpdateOrderDTO(SQLModel):
     """
 
     status: Optional[OrderStatus] = None
+    rating: Optional[int] = None
     notes: Optional[str] = None
 
 
@@ -55,7 +56,9 @@ class OrderOut(SQLModel):
     created_at: str
     updated_at: str
     locator: str
+    products: list[OrderItem]
     notes: Optional[str] = None
+    rating: Optional[int] = None
 
     class Config:
         json_encoders = {OrderStatus: lambda v: v.value.lower()}
