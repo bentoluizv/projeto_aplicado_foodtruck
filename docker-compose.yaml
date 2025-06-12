@@ -30,26 +30,10 @@ services:
     networks:
       - default_network
     depends_on:
-      db-init:
-        condition: service_completed_successfully
       redis:
         condition: service_healthy
     volumes:
       - ./migrations:/app/migrations
-
-  db-init:
-    container_name: db-init
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python -m projeto_aplicado.scripts.init_db
-    env_file:
-      - .env
-    networks:
-      - default_network
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   postgres:
     container_name: postgres
