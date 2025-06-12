@@ -21,7 +21,9 @@ def test_get_orders(client, orders, admin_headers):
             'created_at': order.created_at.isoformat(),
             'updated_at': order.updated_at.isoformat(),
             'locator': order.locator,
+            'products': [],
             'notes': order.notes,
+            'rating': None,
         }
         for order in orders
     ]
@@ -48,6 +50,7 @@ def test_get_order_by_id(client, orders, admin_headers):
         'updated_at': orders[0].updated_at.isoformat(),
         'locator': orders[0].locator,
         'notes': orders[0].notes,
+        'rating': None,
     }
 
 
@@ -147,6 +150,16 @@ def test_update_order_not_found(client, attendant_headers):
 
 
 def test_delete_order(client, orders, attendant_headers):
+    # Ensure the order is pending before deletion
+    data = {
+        'status': 'PENDING',
+        'notes': orders[0].notes,
+    }
+    client.patch(
+        f'{API_PREFIX}/orders/{orders[0].id}',
+        json=data,
+        headers=attendant_headers,
+    )
     response = client.delete(
         f'{API_PREFIX}/orders/{orders[0].id}', headers=attendant_headers
     )
