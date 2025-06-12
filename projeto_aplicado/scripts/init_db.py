@@ -48,7 +48,7 @@ def create_database(conn):
             with conn.cursor() as cur:
                 cur.execute(f'CREATE DATABASE "{settings.POSTGRES_DB}"')
 
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -60,7 +60,7 @@ def run_migrations():
 
         # Run migrations
         command.upgrade(alembic_cfg, 'head')
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -71,7 +71,7 @@ def init_database():
             create_database(sys_conn)
             run_migrations()
 
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -81,7 +81,7 @@ def main(verbose):
     """Initialize the database with all required tables and migrations."""
     try:
         init_database()
-    except Exception as e:
+    except Exception:
         sys.exit(1)
 
 
