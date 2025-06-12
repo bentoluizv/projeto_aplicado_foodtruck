@@ -158,21 +158,18 @@ def order_items(session, orders, itens):
             'product_id': itens[0].id,
             'quantity': 2,
             'price': itens[0].price,
-            'subtotal': itens[0].price * 2,
         },
         {
             'order_id': orders[0].id,
             'product_id': itens[2].id,
             'quantity': 1,
             'price': itens[2].price,
-            'subtotal': itens[2].price,
         },
         {
             'order_id': orders[1].id,
             'product_id': itens[1].id,
             'quantity': 3,
             'price': itens[1].price,
-            'subtotal': itens[1].price * 3,
         },
     ]
     order_items = [OrderItem(**item) for item in order_items]
