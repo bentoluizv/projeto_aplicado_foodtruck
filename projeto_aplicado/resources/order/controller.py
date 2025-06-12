@@ -147,7 +147,7 @@ def fetch_orders(
     order_list = [
         OrderOut(
             id=order.id,
-            products=order.products,
+            products=order.products,  # type: ignore
             status=OrderStatus(order.status.upper()),
             total=order.total,
             rating=order.rating,
@@ -174,7 +174,7 @@ def fetch_orders(
     )
 
 
-@router.get('/{order_id}', response_model=Order)
+@router.get('/{order_id}', response_model=OrderOut)
 def fetch_order_by_id(
     order_id: str,
     repository: OrderRepo,
@@ -190,6 +190,7 @@ def fetch_order_by_id(
     Raises:
         HTTPException: If the order with the specified ID is not found.
     """
+
     order = repository.get_by_id(order_id)
 
     if not order:
@@ -197,8 +198,23 @@ def fetch_order_by_id(
             status_code=HTTPStatus.NOT_FOUND,
             detail='Order not found',
         )
+    order_out = OrderOut(
+        id=order.id,
+        status=OrderStatus(order.status.upper()),
+        total=order.total,
+        created_at=order.created_at.isoformat()
+        if hasattr(order.created_at, 'isoformat')
+        else str(order.created_at),
+        updated_at=order.updated_at.isoformat()
+        if hasattr(order.updated_at, 'isoformat')
+        else str(order.updated_at),
+        locator=order.locator,
+        products=order.products,  # type: ignore
+        notes=order.notes,
+        rating=order.rating,
+    )
 
-    return order
+    return order_out
 
 
 @router.get('/{order_id}/items', response_model=OrderItemList)
@@ -353,7 +369,7 @@ async def create_order(
             'action': 'created'
         }
         ```
-    """
+    """  # noqa: E501
     if current_user.role not in [UserRole.ADMIN, UserRole.ATTENDANT]:
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN,
