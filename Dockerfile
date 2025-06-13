@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=python:3.12-slim-bookworm
 
-FROM ${BASE_IMAGE} AS builder
+FROM ${BASE_IMAGE} AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
@@ -9,6 +9,8 @@ ADD https://astral.sh/uv/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 
 ENV PATH="/root/.local/bin/:$PATH"
+
+FROM base AS builder
 
 WORKDIR /app
 
@@ -20,7 +22,7 @@ RUN uv venv && . .venv/bin/activate && \
 
 COPY . .
 
-FROM ${BASE_IMAGE} AS runner
+FROM base AS runner
 
 WORKDIR /app
 
