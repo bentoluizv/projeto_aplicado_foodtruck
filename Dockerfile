@@ -43,4 +43,4 @@ HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=3 \
 
 ENTRYPOINT ["uvicorn"]
 
-CMD ["projeto_aplicado.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["projeto_aplicado.app:app", "--host", "0.0.0.0", "--port", "8000"]
