@@ -23,6 +23,7 @@ dependencies = [
     "sqlmodel>=0.0.24,<0.0.25",
     "testcontainers[postgres]>=4.10.0,<5.0.0",
     "uvicorn[standard]>=0.34.2,<0.35.0",
+    "argcomplete>=3.0.0,<4.0.0",
 ]
 
 [dependency-groups]
@@ -83,14 +84,14 @@ cli = 'python -m projeto_aplicado.cli.app'
 cli-health = 'python -m projeto_aplicado.cli.app health'
 cli-admin = 'python -m projeto_aplicado.cli.app admin'
 cli-database = 'python -m projeto_aplicado.cli.app database'
-cli-install = 'python -m projeto_aplicado.cli.app install'
+cli-setup = 'python -m projeto_aplicado.cli.app setup'
 
 # Setup and initialization commands
-cli-setup = 'python -m projeto_aplicado.cli.app admin create admin admin@foodtruck.com admin123 "System Administrator" --force'
+cli-init = 'python -m projeto_aplicado.cli.app admin create admin admin@foodtruck.com admin123 "System Administrator" --force'
 cli-db-init = 'python -m projeto_aplicado.cli.app database init'
 cli-db-status = 'python -m projeto_aplicado.cli.app database status'
-cli-install-check = 'python -m projeto_aplicado.cli.app install check'
-cli-install-setup = 'python -m projeto_aplicado.cli.app install setup'
+cli-setup-path = 'python -m projeto_aplicado.cli.app setup path'
+cli-setup-install = 'python -m projeto_aplicado.cli.app setup install'
 
 # Legacy commands (deprecated - use cli-* equivalents)
 create-admin = 'python -m projeto_aplicado.cli.app admin create'
