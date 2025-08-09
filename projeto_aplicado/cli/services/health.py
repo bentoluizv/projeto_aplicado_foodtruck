@@ -9,14 +9,16 @@ from projeto_aplicado.cli.services.user import UserService
 
 class HealthService(BaseService):
     """Health service that performs system health checks.
-    
+
     Follows Single Responsibility Principle: only handles health checking.
     Follows Open/Closed Principle: easily extensible with new health checks.
     """
 
-    def __init__(self, database_service: DatabaseService, user_service: UserService):
+    def __init__(
+        self, database_service: DatabaseService, user_service: UserService
+    ):
         """Initialize the health service.
-        
+
         Args:
             database_service: Database service for connection checks
             user_service: User service for admin user checks
@@ -26,10 +28,10 @@ class HealthService(BaseService):
 
     def validate_input(self, **kwargs) -> bool:
         """Validate health check parameters.
-        
+
         Args:
             **kwargs: Parameters to validate
-            
+
         Returns:
             Always True for health checks
         """
@@ -37,10 +39,10 @@ class HealthService(BaseService):
 
     def execute_operation(self, **kwargs) -> Dict[str, any]:
         """Execute health check operation.
-        
+
         Args:
             **kwargs: Additional parameters
-            
+
         Returns:
             Health check results
         """
@@ -70,12 +72,12 @@ class HealthService(BaseService):
             'total': total,
             'success': passed == total,
             'details': details,
-            'database_info': self.database_service.get_database_info()
+            'database_info': self.database_service.get_database_info(),
         }
 
     def _check_database_connection(self) -> Tuple[bool, str]:
         """Check database connection health.
-        
+
         Returns:
             Tuple of (success, message)
         """
@@ -86,7 +88,7 @@ class HealthService(BaseService):
 
     def _check_admin_users(self) -> Tuple[bool, str]:
         """Check if admin users exist.
-        
+
         Returns:
             Tuple of (success, message)
         """
@@ -101,12 +103,12 @@ class HealthService(BaseService):
 
     def _check_settings(self) -> Tuple[bool, str]:
         """Check settings configuration.
-        
+
         Returns:
             Tuple of (success, message)
         """
         try:
             db_info = self.database_service.get_database_info()
-            return True, "Settings loaded: OK"
+            return True, 'Settings loaded: OK'
         except Exception as e:
             return False, f'Settings: FAILED ({e})'
