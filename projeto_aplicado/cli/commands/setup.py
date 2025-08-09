@@ -1,8 +1,5 @@
 """Shell setup commands for foodtruck-cli."""
 
-import os
-import sys
-from pathlib import Path
 from typing import Optional
 
 import cyclopts
