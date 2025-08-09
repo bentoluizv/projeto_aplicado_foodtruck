@@ -268,6 +268,8 @@ volumes:
 
 O sistema inclui uma ferramenta de linha de comando moderna construída com **Cyclopts** seguindo **arquitetura limpa** e princípios **SOLID**.
 
+📚 **[Documentação Completa do CLI](docs/CLI.md)** | 🚀 **[Guia Rápido](docs/CLI_QUICK_REFERENCE.md)** | 🛠️ **[Desenvolvimento](docs/CLI_DEVELOPMENT.md)**
+
 ### 🏗️ Arquitetura CLI
 
 - **🎯 Clean Architecture**: Separação clara entre comandos, serviços e infraestrutura
