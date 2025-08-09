@@ -160,15 +160,18 @@ class ShellService(BaseService):
             shell = self._get_current_shell()
 
         paths = self._get_project_paths()
-        cli_path = paths['cli_path']
+        project_root = paths['project_root']
         config_file = self._get_shell_config_file(shell)
 
-        # Generate common aliases
+        # Generate uv run based aliases (simpler approach)
+        base_cmd = f'cd {project_root} && uv run python -m projeto_aplicado.cli.app'
         aliases = {
-            'ftcli': cli_path,
-            'ft-health': f'{cli_path} health',
-            'ft-admin': f'{cli_path} admin',
-            'ft-db': f'{cli_path} database',
+            'ftcli': base_cmd,
+            'ft-health': f'{base_cmd} health',
+            'ft-admin': f'{base_cmd} admin',
+            'ft-db': f'{base_cmd} database',
+            'ft-setup': f'{base_cmd} setup',
+            'ft-completions': f'{base_cmd} completions',
         }
 
         return {
@@ -195,10 +198,12 @@ class ShellService(BaseService):
         paths = self._get_project_paths()
         config_file = self._get_shell_config_file(shell)
 
-        if not paths['cli_exists']:
+        # With uv run approach, we don't need to check for CLI binary existence
+        # Just check if we're in a valid project directory
+        if not paths['project_root'] or not Path(paths['project_root']).exists():
             return {
                 'success': False,
-                'error': f'foodtruck-cli not found at {paths["cli_path"]}',
+                'error': f'Project root not found at {paths["project_root"]}',
             }
 
         # Create backup if file exists
@@ -213,17 +218,18 @@ class ShellService(BaseService):
                     'error': f'Failed to create backup: {str(e)}',
                 }
 
-        # Generate configuration
-        venv_bin = paths['venv_bin_path']
+        # Generate aliases using uv run approach
+        aliases_result = self._generate_aliases(shell)
+        aliases = aliases_result['aliases']
+        
         config_lines = [
-            '\n# Food Truck CLI configuration (auto-generated)',
-            f'export PATH="{venv_bin}:$PATH"',
-            f'alias ftcli="{paths["cli_path"]}"',
-            f'alias ft-health="{paths["cli_path"]} health"',
-            f'alias ft-admin="{paths["cli_path"]} admin"',
-            f'alias ft-db="{paths["cli_path"]} database"',
-            '# End Food Truck CLI configuration\n',
+            '\n# Food Truck CLI aliases (auto-generated)',
         ]
+        
+        for alias_name, alias_command in aliases.items():
+            config_lines.append(f'alias {alias_name}="{alias_command}"')
+        
+        config_lines.append('# End Food Truck CLI aliases\n')
 
         try:
             # Append to config file
