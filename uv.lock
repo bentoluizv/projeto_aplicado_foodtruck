@@ -556,7 +556,6 @@ name = "projeto-aplicado"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "aiosqlite" },
     { name = "alembic" },
     { name = "argcomplete" },
     { name = "asyncpg" },
@@ -568,12 +567,10 @@ dependencies = [
     { name = "pwdlib", extra = ["argon2"] },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
-    { name = "pytest-asyncio" },
     { name = "python-ulid" },
     { name = "redis" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "sqlmodel" },
-    { name = "testcontainers" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -581,14 +578,18 @@ dependencies = [
 dev = [
     { name = "ignr" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "taskipy" },
 ]
+test = [
+    { name = "aiosqlite" },
+    { name = "testcontainers" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "aiosqlite", specifier = ">=0.21.0,<0.22.0" },
     { name = "alembic", specifier = ">=1.16.1,<1.17.0" },
     { name = "argcomplete", specifier = ">=3.0.0,<4.0.0" },
     { name = "asyncpg", specifier = ">=0.30.0,<0.31.0" },
@@ -600,12 +601,10 @@ requires-dist = [
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.2.1,<0.3.0" },
     { name = "pydantic-settings", specifier = ">=2.9.1,<2.10.0" },
     { name = "pyjwt", specifier = ">=2.10.1,<2.11.0" },
-    { name = "pytest-asyncio", specifier = ">=1.0.0,<1.1.0" },
     { name = "python-ulid", specifier = ">=3.0.0,<4.0.0" },
     { name = "redis", specifier = ">=6.1.0,<7.0.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.41,<2.1.0" },
     { name = "sqlmodel", specifier = ">=0.0.24,<0.0.25" },
-    { name = "testcontainers", extras = ["postgres"], specifier = ">=4.10.0,<5.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.2,<0.35.0" },
 ]
 
@@ -613,9 +612,14 @@ requires-dist = [
 dev = [
     { name = "ignr", specifier = ">=2.2" },
     { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-asyncio", specifier = ">=1.0.0,<1.1.0" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
     { name = "ruff", specifier = ">=0.11.11" },
     { name = "taskipy", specifier = ">=1.14.1" },
+]
+test = [
+    { name = "aiosqlite", specifier = ">=0.21.0,<0.22.0" },
+    { name = "testcontainers", extras = ["postgres"], specifier = ">=4.10.0,<5.0.0" },
 ]
 
 [[package]]
