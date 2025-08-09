@@ -6,9 +6,10 @@ from cyclopts import App
 from rich.console import Console
 
 from projeto_aplicado.cli.commands.admin import admin_app
+from projeto_aplicado.cli.commands.completions import completions_app
 from projeto_aplicado.cli.commands.database import database_app
 from projeto_aplicado.cli.commands.health import health_app
-from projeto_aplicado.cli.commands.install import install_app
+from projeto_aplicado.cli.commands.setup import setup_app
 
 
 def create_cli_app() -> App:
@@ -35,7 +36,8 @@ def create_cli_app() -> App:
     app.command(health_app, name='health')
     app.command(admin_app, name='admin')
     app.command(database_app, name='database')
-    app.command(install_app, name='install')
+    app.command(setup_app, name='setup')
+    app.command(completions_app, name='completions')
 
     @app.command
     def version() -> None:
@@ -79,7 +81,10 @@ def create_cli_app() -> App:
             '  • [cyan]database[/cyan]  - Database and migration management'
         )
         app.console.print(
-            '  • [cyan]install[/cyan]   - Installation and environment setup'
+            '  • [cyan]setup[/cyan]     - Shell setup and configuration'
+        )
+        app.console.print(
+            '  • [cyan]completions[/cyan] - Shell completion management'
         )
         app.console.print(
             '  • [cyan]version[/cyan]   - Show version information'
