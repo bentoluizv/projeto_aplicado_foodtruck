@@ -35,6 +35,7 @@ The Food Truck CLI is a comprehensive command-line interface for managing the Fo
 - 🐚 **Shell Integration** - Native completion support for major shells
 - 🔒 **Secure** - Safe database operations with validation and error handling
 - ⚡ **Fast** - Optimized for quick operations and minimal startup time
+- 🎯 **Auto-Setup** - Automatically configures convenient aliases on first use
 
 ## 🚀 Quick Start
 
@@ -47,55 +48,93 @@ The Food Truck CLI is a comprehensive command-line interface for managing the Fo
 ### Basic Usage
 
 ```bash
-# Show all available commands
-foodtruck-cli
+# First time: Auto-sets up convenient aliases
+uv run python -m projeto_aplicado.cli.app
 
-# Get help for any command
-foodtruck-cli --help
-foodtruck-cli <command> --help
+# After setup, use short aliases
+source ~/.zshrc  # or ~/.bashrc
+ftcli health
+ft-admin list-admins
+ft-db status
 
-# Check system health
-foodtruck-cli health
-
-# Initialize database
-foodtruck-cli database init
-
-# Create admin user
-foodtruck-cli admin create admin admin@foodtruck.com admin123 "System Administrator"
+# Or continue using full commands
+uv run python -m projeto_aplicado.cli.app health
+uv run python -m projeto_aplicado.cli.app database init
+uv run python -m projeto_aplicado.cli.app admin create admin admin@foodtruck.com admin123 "System Administrator"
 ```
 
 ## 📦 Installation
 
-### Option 1: Using the Project Environment
+### 🚀 Quick Setup (Recommended)
 
 ```bash
-# From project root
+# 1. From project root
 cd /path/to/foodtruck
 source .venv/bin/activate
-foodtruck-cli --help
+
+# 2. First run auto-configures aliases
+uv run python -m projeto_aplicado.cli.app
+
+# 3. Reload shell to use short commands
+source ~/.zshrc  # or ~/.bashrc
+
+# 4. Now use convenient aliases
+ftcli health
+ft-admin list-admins
 ```
 
-### Option 2: Permanent Shell Access
+### 🔧 Alternative: Global CLI Access
 
 ```bash
-# Auto-configure your shell
-foodtruck-cli setup install
-
-# Restart shell or reload config
-source ~/.zshrc  # or ~/.bashrc for bash
+# Install globally with uv tool
+uv tool install --editable .
 
 # Now available globally
 foodtruck-cli --help
+
+# Auto-configure your shell (if needed)
+foodtruck-cli setup install
 ```
 
-### Option 3: Shell Completions
+## 🎯 Auto-Setup Feature
+
+The CLI automatically configures convenient aliases on first use to improve your productivity:
+
+### What Happens on First Use
+
+1. **Detection** - Checks if aliases are already configured
+2. **Shell Detection** - Identifies your shell (bash, zsh, fish)
+3. **Auto-Configuration** - Adds aliases to your shell config
+4. **Success Feedback** - Shows what was configured
+
+### Auto-Generated Aliases
+
+| Alias | Full Command | Description |
+|-------|-------------|-------------|
+| `ftcli` | `cd /project && uv run python -m projeto_aplicado.cli.app` | Main CLI |
+| `ft-health` | `ftcli health` | Quick health check |
+| `ft-admin` | `ftcli admin` | Admin commands |
+| `ft-db` | `ftcli database` | Database operations |
+| `ft-setup` | `ftcli setup` | Setup commands |
+| `ft-completions` | `ftcli completions` | Completion management |
+
+### Benefits
+
+- ✅ **Works from anywhere** - Aliases include `cd` to project directory
+- ✅ **No manual setup** - Configured automatically on first use
+- ✅ **Shell-aware** - Detects and configures the right shell
+- ✅ **One-time only** - Won't duplicate configuration on subsequent uses
+- ✅ **Pure uv workflow** - Uses `uv run` for maximum compatibility
+
+### Manual Control
 
 ```bash
-# Install tab completions
-foodtruck-cli completions install
+# Skip auto-setup by using setup commands directly
+uv run python -m projeto_aplicado.cli.app setup install --help
+uv run python -m projeto_aplicado.cli.app setup alias
 
-# Test completions
-foodtruck-cli <TAB><TAB>
+# Remove aliases (manual)
+# Edit ~/.zshrc or ~/.bashrc and remove "Food Truck CLI aliases" section
 ```
 
 ## 🛠️ Commands Reference
@@ -105,11 +144,14 @@ foodtruck-cli <TAB><TAB>
 Check system health and connectivity.
 
 ```bash
-# Basic health check
-foodtruck-cli health
+# Basic health check (with aliases)
+ft-health
+
+# Using full command
+uv run python -m projeto_aplicado.cli.app health
 
 # Check with custom database host
-foodtruck-cli health --db-host mydb.example.com
+ftcli health --db-host mydb.example.com
 ```
 
 **What it checks:**
@@ -141,11 +183,14 @@ foodtruck-cli admin create <username> <email> <password> <full_name> [--force]
 
 **Examples:**
 ```bash
-# Create basic admin
-foodtruck-cli admin create admin admin@foodtruck.com admin123 "System Administrator"
+# Create basic admin (with aliases)
+ft-admin create admin admin@foodtruck.com admin123 "System Administrator"
 
 # Force create (overwrite existing)
-foodtruck-cli admin create superadmin admin@company.com secret123 "Super Admin" --force
+ft-admin create superadmin admin@company.com secret123 "Super Admin" --force
+
+# Using full command
+uv run python -m projeto_aplicado.cli.app admin create admin admin@foodtruck.com admin123 "System Administrator"
 ```
 
 #### Check Admin User
@@ -405,23 +450,26 @@ projeto_aplicado/cli/
 ### Complete Setup Workflow
 
 ```bash
-# 1. Check system health
-foodtruck-cli health
+# 1. First run (auto-configures aliases)
+uv run python -m projeto_aplicado.cli.app
 
-# 2. Initialize database
-foodtruck-cli database init
+# 2. Reload shell
+source ~/.zshrc  # or ~/.bashrc
 
-# 3. Create admin user
-foodtruck-cli admin create admin admin@foodtruck.com admin123 "System Administrator"
+# 3. Check system health (using aliases)
+ft-health
 
-# 4. Verify admin creation
-foodtruck-cli admin check admin@foodtruck.com
+# 4. Initialize database
+ft-db init
 
-# 5. Install shell completions
-foodtruck-cli completions install
+# 5. Create admin user
+ft-admin create admin admin@foodtruck.com admin123 "System Administrator"
 
-# 6. Configure shell for direct access
-foodtruck-cli setup install
+# 6. Verify admin creation
+ft-admin check admin@foodtruck.com
+
+# 7. Install shell completions (optional)
+ft-completions install
 ```
 
 ### Database Migration Workflow
