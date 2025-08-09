@@ -5,34 +5,52 @@ description = "Backend for the Food Truck project"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "aiosqlite>=0.21.0,<0.22.0",
+    # Web Framework
+    "fastapi[standard]>=0.115.12,<0.116.0",
+    "uvicorn[standard]>=0.34.2,<0.35.0",
+    "pydantic-settings>=2.9.1,<2.10.0",
+    
+    # Database
+    "sqlmodel>=0.0.24,<0.0.25",
+    "sqlalchemy[asyncio]>=2.0.41,<2.1.0",
     "alembic>=1.16.1,<1.17.0",
     "asyncpg>=0.30.0,<0.31.0",
-    "cyclopts>=3.22.5",
-    "email-validator>=2.2.0,<2.3.0",
-    "fastapi[standard]>=0.115.12,<0.116.0",
-    "passlib[argon2]>=1.7.4,<1.8.0",
     "psycopg2-binary>=2.9.10,<2.10.0",
-    "pwdlib[argon2]>=0.2.1,<0.3.0",
-    "pydantic-settings>=2.9.1,<2.10.0",
+    
+    # Authentication & Security
     "pyjwt>=2.10.1,<2.11.0",
-    "pytest-asyncio>=1.0.0,<1.1.0",
+    "passlib[argon2]>=1.7.4,<1.8.0",
+    "pwdlib[argon2]>=0.2.1,<0.3.0",
+    "email-validator>=2.2.0,<2.3.0",
+    
+    # CLI Framework
+    "cyclopts>=3.22.5",
+    "argcomplete>=3.0.0,<4.0.0",
+    
+    # Utilities
     "python-ulid>=3.0.0,<4.0.0",
     "redis>=6.1.0,<7.0.0",
-    "sqlalchemy[asyncio]>=2.0.41,<2.1.0",
-    "sqlmodel>=0.0.24,<0.0.25",
-    "testcontainers[postgres]>=4.10.0,<5.0.0",
-    "uvicorn[standard]>=0.34.2,<0.35.0",
-    "argcomplete>=3.0.0,<4.0.0",
 ]
 
 [dependency-groups]
 dev = [
+    # Development Tools
+    "taskipy>=1.14.1",
     "ignr>=2.2",
+    
+    # Code Quality
+    "ruff>=0.11.11",
+    
+    # Testing
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
-    "ruff>=0.11.11",
-    "taskipy>=1.14.1",
+    "pytest-asyncio>=1.0.0,<1.1.0",
+]
+
+test = [
+    # Testing Infrastructure
+    "aiosqlite>=0.21.0,<0.22.0",
+    "testcontainers[postgres]>=4.10.0,<5.0.0",
 ]
 
 [tool.setuptools.packages.find]
