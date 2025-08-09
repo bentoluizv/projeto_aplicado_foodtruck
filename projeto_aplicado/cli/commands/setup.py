@@ -38,9 +38,7 @@ class SetupCommand(BaseCommand):
         self.console.print(
             '  • [cyan]path[/cyan]    - Show PATH configuration for foodtruck-cli'
         )
-        self.console.print(
-            '  • [cyan]alias[/cyan]   - Generate shell aliases'
-        )
+        self.console.print('  • [cyan]alias[/cyan]   - Generate shell aliases')
         self.console.print(
             '  • [cyan]install[/cyan] - Auto-configure shell (bash/zsh)'
         )
@@ -88,8 +86,12 @@ class ShowPathCommand(BaseCommand):
             self.console.print()
 
             # Instructions
-            self.console.print('[bold blue]Manual Setup Instructions:[/bold blue]')
-            self.console.print('[yellow]Option 1: Activate virtual environment[/yellow]')
+            self.console.print(
+                '[bold blue]Manual Setup Instructions:[/bold blue]'
+            )
+            self.console.print(
+                '[yellow]Option 1: Activate virtual environment[/yellow]'
+            )
             self.console.print(f'  source {result["activation_script"]}')
             self.console.print('  foodtruck-cli --help')
             self.console.print()
@@ -98,9 +100,13 @@ class ShowPathCommand(BaseCommand):
             self.console.print(f'  {result["cli_path"]} --help')
             self.console.print()
 
-            self.console.print('[yellow]Option 3: Add to PATH permanently[/yellow]')
+            self.console.print(
+                '[yellow]Option 3: Add to PATH permanently[/yellow]'
+            )
             shell_config = result['shell_config_file']
-            self.console.print(f'  echo \'export PATH="{result["venv_bin_path"]}:$PATH"\' >> {shell_config}')
+            self.console.print(
+                f'  echo \'export PATH="{result["venv_bin_path"]}:$PATH"\' >> {shell_config}'
+            )
             self.console.print(f'  source {shell_config}')
             self.console.print()
 
@@ -131,25 +137,37 @@ class GenerateAliasCommand(BaseCommand):
         self.print_header('Shell Aliases', '🔗')
 
         try:
-            result = self.shell_service.execute_operation('generate_aliases', shell=shell)
+            result = self.shell_service.execute_operation(
+                'generate_aliases', shell=shell
+            )
 
-            self.console.print(f'[bold blue]Generated aliases for {result["shell"]}:[/bold blue]')
+            self.console.print(
+                f'[bold blue]Generated aliases for {result["shell"]}:[/bold blue]'
+            )
             self.console.print()
 
             # Show aliases
             for alias, command in result['aliases'].items():
-                self.console.print(f'[cyan]{alias}[/cyan] = [yellow]{command}[/yellow]')
+                self.console.print(
+                    f'[cyan]{alias}[/cyan] = [yellow]{command}[/yellow]'
+                )
 
             self.console.print()
 
             # Show how to apply
-            self.console.print('[bold blue]To apply these aliases:[/bold blue]')
+            self.console.print(
+                '[bold blue]To apply these aliases:[/bold blue]'
+            )
             config_file = result['config_file']
-            
+
             self.console.print('[yellow]1. Add to your shell config:[/yellow]')
-            self.console.print(f'   echo "# Food Truck CLI aliases" >> {config_file}')
+            self.console.print(
+                f'   echo "# Food Truck CLI aliases" >> {config_file}'
+            )
             for alias, command in result['aliases'].items():
-                self.console.print(f'   echo "alias {alias}=\\"{command}\\"" >> {config_file}')
+                self.console.print(
+                    f'   echo "alias {alias}=\\"{command}\\"" >> {config_file}'
+                )
 
             self.console.print()
             self.console.print('[yellow]2. Reload your shell:[/yellow]')
@@ -189,17 +207,23 @@ class AutoInstallCommand(BaseCommand):
             )
 
             if result['success']:
-                self.print_success(f'✅ Configured {result["shell"]} successfully!')
+                self.print_success(
+                    f'✅ Configured {result["shell"]} successfully!'
+                )
                 self.print_info(f'📁 Modified: {result["config_file"]}')
-                
+
                 if result.get('backup_created'):
                     self.print_info(f'💾 Backup: {result["backup_file"]}')
 
                 self.console.print()
                 self.console.print('[bold blue]Next steps:[/bold blue]')
-                self.console.print(f'1. Reload shell: [cyan]source {result["config_file"]}[/cyan]')
-                self.console.print('2. Test command: [cyan]foodtruck-cli --help[/cyan]')
-                
+                self.console.print(
+                    f'1. Reload shell: [cyan]source {result["config_file"]}[/cyan]'
+                )
+                self.console.print(
+                    '2. Test command: [cyan]foodtruck-cli --help[/cyan]'
+                )
+
                 return 0
             else:
                 self.print_error('❌ Failed to configure shell')
@@ -208,7 +232,9 @@ class AutoInstallCommand(BaseCommand):
                 return 1
 
         except Exception as e:
-            self.print_error(f'Failed to auto-install shell configuration: {str(e)}')
+            self.print_error(
+                f'Failed to auto-install shell configuration: {str(e)}'
+            )
             return 1
 
 
@@ -264,9 +290,13 @@ class CheckSetupCommand(BaseCommand):
 
             # Recommendations
             if not result['cli_in_path'] and not result['venv_active']:
-                self.print_info('💡 Run [cyan]setup install[/cyan] to auto-configure your shell')
+                self.print_info(
+                    '💡 Run [cyan]setup install[/cyan] to auto-configure your shell'
+                )
             elif not aliases:
-                self.print_info('💡 Run [cyan]setup alias[/cyan] to create convenient aliases')
+                self.print_info(
+                    '💡 Run [cyan]setup alias[/cyan] to create convenient aliases'
+                )
 
             return 0
 
