@@ -34,10 +34,21 @@ class TestDatabaseService:
 
     @patch('projeto_aplicado.cli.services.database.Session')
     @patch('importlib.reload')
+    @patch('projeto_aplicado.settings.get_settings')
     def test_get_session_context_manager(
-        self, mock_reload, mock_session_class
+        self, mock_get_settings, mock_reload, mock_session_class
     ):
         """Test database session context manager."""
+        # Mock settings to avoid environment variable requirements
+        mock_settings = Mock()
+        mock_settings.POSTGRES_USER = 'test_user'
+        mock_settings.POSTGRES_PASSWORD = 'test_password'
+        mock_settings.POSTGRES_HOSTNAME = 'test-host'
+        mock_settings.POSTGRES_PORT = '5432'
+        mock_settings.POSTGRES_DB = 'test_db'
+        mock_settings.DB_ECHO = False
+        mock_get_settings.return_value = mock_settings
+        
         service = DatabaseService(db_host='test-host')
         mock_session = Mock()
         mock_session_class.return_value.__enter__.return_value = mock_session
@@ -62,8 +73,19 @@ class TestDatabaseService:
 
     @patch('projeto_aplicado.cli.services.database.Session')
     @patch('importlib.reload')
-    def test_test_connection_success(self, mock_reload, mock_session_class):
+    @patch('projeto_aplicado.settings.get_settings')
+    def test_test_connection_success(self, mock_get_settings, mock_reload, mock_session_class):
         """Test successful database connection test."""
+        # Mock settings to avoid environment variable requirements
+        mock_settings = Mock()
+        mock_settings.POSTGRES_USER = 'test_user'
+        mock_settings.POSTGRES_PASSWORD = 'test_password'
+        mock_settings.POSTGRES_HOSTNAME = 'localhost'
+        mock_settings.POSTGRES_PORT = '5432'
+        mock_settings.POSTGRES_DB = 'test_db'
+        mock_settings.DB_ECHO = False
+        mock_get_settings.return_value = mock_settings
+        
         service = DatabaseService()
         mock_session = Mock()
         mock_session_class.return_value.__enter__.return_value = mock_session
@@ -76,8 +98,19 @@ class TestDatabaseService:
 
     @patch('projeto_aplicado.cli.services.database.Session')
     @patch('importlib.reload')
-    def test_test_connection_failure(self, mock_reload, mock_session_class):
+    @patch('projeto_aplicado.settings.get_settings')
+    def test_test_connection_failure(self, mock_get_settings, mock_reload, mock_session_class):
         """Test failed database connection test."""
+        # Mock settings to avoid environment variable requirements
+        mock_settings = Mock()
+        mock_settings.POSTGRES_USER = 'test_user'
+        mock_settings.POSTGRES_PASSWORD = 'test_password'
+        mock_settings.POSTGRES_HOSTNAME = 'localhost'
+        mock_settings.POSTGRES_PORT = '5432'
+        mock_settings.POSTGRES_DB = 'test_db'
+        mock_settings.DB_ECHO = False
+        mock_get_settings.return_value = mock_settings
+        
         service = DatabaseService()
         mock_session_class.side_effect = Exception('Connection failed')
 
