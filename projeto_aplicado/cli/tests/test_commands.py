@@ -9,7 +9,21 @@ from projeto_aplicado.cli.commands.admin import (
     CreateAdminCommand,
     ListAdminsCommand,
 )
+from projeto_aplicado.cli.commands.completions import (
+    CompletionsCommand,
+    GenerateCompletionsCommand,
+    InstallCompletionsCommand,
+    StatusCompletionsCommand,
+    UninstallCompletionsCommand,
+)
 from projeto_aplicado.cli.commands.health import HealthCommand
+from projeto_aplicado.cli.commands.setup import (
+    AutoInstallCommand,
+    CheckSetupCommand,
+    GenerateAliasCommand,
+    SetupCommand,
+    ShowPathCommand,
+)
 from projeto_aplicado.resources.user.model import UserRole
 
 
@@ -52,11 +66,15 @@ class TestHealthCommand:
             'database_info': {
                 'database': 'foodtruck',
                 'host': 'localhost',
-                'port': '5432'
-            }
+                'port': '5432',
+            },
         }
 
-        with patch.object(command.health_service, 'execute_operation', return_value=mock_result):
+        with patch.object(
+            command.health_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
             exit_code = command.execute()
 
             assert exit_code == 0  # Success
@@ -78,11 +96,15 @@ class TestHealthCommand:
             'database_info': {
                 'database': 'foodtruck',
                 'host': 'localhost',
-                'port': '5432'
-            }
+                'port': '5432',
+            },
         }
 
-        with patch.object(command.health_service, 'execute_operation', return_value=mock_result):
+        with patch.object(
+            command.health_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
             exit_code = command.execute()
 
             assert exit_code == 1  # Failure
@@ -112,16 +134,23 @@ class TestCreateAdminCommand:
         mock_user.username = 'testuser'
         mock_user.id = 'test-id-123'
 
-        with patch.object(command.user_service, 'validate_input', return_value=True), \
-             patch.object(command.user_service, 'execute_operation', return_value=mock_user), \
-             patch.object(command, '_confirm_creation', return_value=True):
-
+        with (
+            patch.object(
+                command.user_service, 'validate_input', return_value=True
+            ),
+            patch.object(
+                command.user_service,
+                'execute_operation',
+                return_value=mock_user,
+            ),
+            patch.object(command, '_confirm_creation', return_value=True),
+        ):
             exit_code = command.execute(
                 username='testuser',
                 email='test@example.com',
                 password='password123',
                 full_name='Test User',
-                force=False
+                force=False,
             )
 
             assert exit_code == 0
@@ -130,13 +159,15 @@ class TestCreateAdminCommand:
         """Test execute method with validation failure."""
         command = CreateAdminCommand()
 
-        with patch.object(command.user_service, 'validate_input', return_value=False):
+        with patch.object(
+            command.user_service, 'validate_input', return_value=False
+        ):
             exit_code = command.execute(
                 username='',  # Invalid username
                 email='test@example.com',
                 password='password123',
                 full_name='Test User',
-                force=True
+                force=True,
             )
 
             assert exit_code == 1
@@ -145,15 +176,20 @@ class TestCreateAdminCommand:
         """Test execute method when user already exists."""
         command = CreateAdminCommand()
 
-        with patch.object(command.user_service, 'validate_input', return_value=True), \
-             patch.object(command.user_service, 'execute_operation', return_value=None):  # None = already exists
-
+        with (
+            patch.object(
+                command.user_service, 'validate_input', return_value=True
+            ),
+            patch.object(
+                command.user_service, 'execute_operation', return_value=None
+            ),
+        ):  # None = already exists
             exit_code = command.execute(
                 username='testuser',
                 email='existing@example.com',
                 password='password123',
                 full_name='Test User',
-                force=True
+                force=True,
             )
 
             assert exit_code == 1
@@ -162,15 +198,22 @@ class TestCreateAdminCommand:
         """Test execute method with unexpected exception."""
         command = CreateAdminCommand()
 
-        with patch.object(command.user_service, 'validate_input', return_value=True), \
-             patch.object(command.user_service, 'execute_operation', side_effect=Exception("Database error")):
-
+        with (
+            patch.object(
+                command.user_service, 'validate_input', return_value=True
+            ),
+            patch.object(
+                command.user_service,
+                'execute_operation',
+                side_effect=Exception('Database error'),
+            ),
+        ):
             exit_code = command.execute(
                 username='testuser',
                 email='test@example.com',
                 password='password123',
                 full_name='Test User',
-                force=True
+                force=True,
             )
 
             assert exit_code == 1
@@ -179,15 +222,18 @@ class TestCreateAdminCommand:
         """Test execute method when user cancels operation."""
         command = CreateAdminCommand()
 
-        with patch.object(command.user_service, 'validate_input', return_value=True), \
-             patch.object(command, '_confirm_creation', return_value=False):  # User cancels
-
+        with (
+            patch.object(
+                command.user_service, 'validate_input', return_value=True
+            ),
+            patch.object(command, '_confirm_creation', return_value=False),
+        ):  # User cancels
             exit_code = command.execute(
                 username='testuser',
                 email='test@example.com',
                 password='password123',
                 full_name='Test User',
-                force=False  # Not forced, so confirmation is required
+                force=False,  # Not forced, so confirmation is required
             )
 
             assert exit_code == 0  # Cancel is successful exit
@@ -197,7 +243,9 @@ class TestCreateAdminCommand:
         command = CreateAdminCommand()
 
         with patch.object(command.console, 'input', return_value='y'):
-            result = command._confirm_creation('testuser', 'test@example.com', 'Test User')
+            result = command._confirm_creation(
+                'testuser', 'test@example.com', 'Test User'
+            )
             assert result is True
 
     def test_confirm_creation_no(self):
@@ -205,7 +253,9 @@ class TestCreateAdminCommand:
         command = CreateAdminCommand()
 
         with patch.object(command.console, 'input', return_value='n'):
-            result = command._confirm_creation('testuser', 'test@example.com', 'Test User')
+            result = command._confirm_creation(
+                'testuser', 'test@example.com', 'Test User'
+            )
             assert result is False
 
     def test_confirm_creation_default_no(self):
@@ -213,7 +263,9 @@ class TestCreateAdminCommand:
         command = CreateAdminCommand()
 
         with patch.object(command.console, 'input', return_value=''):
-            result = command._confirm_creation('testuser', 'test@example.com', 'Test User')
+            result = command._confirm_creation(
+                'testuser', 'test@example.com', 'Test User'
+            )
             assert result is False
 
 
@@ -239,7 +291,9 @@ class TestCheckUserCommand:
         mock_user.full_name = 'Test User'
         mock_user.created_at = '2023-01-01 00:00:00'
 
-        with patch.object(command.user_service, 'execute_operation', return_value=mock_user):
+        with patch.object(
+            command.user_service, 'execute_operation', return_value=mock_user
+        ):
             exit_code = command.execute(email='test@example.com')
             assert exit_code == 0
 
@@ -247,7 +301,9 @@ class TestCheckUserCommand:
         """Test execute method when user is not found."""
         command = CheckUserCommand()
 
-        with patch.object(command.user_service, 'execute_operation', return_value=None):
+        with patch.object(
+            command.user_service, 'execute_operation', return_value=None
+        ):
             exit_code = command.execute(email='notfound@example.com')
             assert exit_code == 1
 
@@ -262,7 +318,11 @@ class TestCheckUserCommand:
         """Test execute method with unexpected exception."""
         command = CheckUserCommand()
 
-        with patch.object(command.user_service, 'execute_operation', side_effect=Exception("Database error")):
+        with patch.object(
+            command.user_service,
+            'execute_operation',
+            side_effect=Exception('Database error'),
+        ):
             exit_code = command.execute(email='test@example.com')
             assert exit_code == 1
 
@@ -294,7 +354,9 @@ class TestListAdminsCommand:
 
         mock_admins = [mock_admin1, mock_admin2]
 
-        with patch.object(command.user_service, 'execute_operation', return_value=mock_admins):
+        with patch.object(
+            command.user_service, 'execute_operation', return_value=mock_admins
+        ):
             exit_code = command.execute()
             assert exit_code == 0
 
@@ -302,7 +364,9 @@ class TestListAdminsCommand:
         """Test execute method when no admin users are found."""
         command = ListAdminsCommand()
 
-        with patch.object(command.user_service, 'execute_operation', return_value=[]):
+        with patch.object(
+            command.user_service, 'execute_operation', return_value=[]
+        ):
             exit_code = command.execute()
             assert exit_code == 0  # No admins is not an error, just a warning
 
@@ -310,7 +374,11 @@ class TestListAdminsCommand:
         """Test execute method with unexpected exception."""
         command = ListAdminsCommand()
 
-        with patch.object(command.user_service, 'execute_operation', side_effect=Exception("Database error")):
+        with patch.object(
+            command.user_service,
+            'execute_operation',
+            side_effect=Exception('Database error'),
+        ):
             exit_code = command.execute()
             assert exit_code == 1
 
@@ -326,17 +394,650 @@ class TestBaseCommandFeatures:
         mock_console = Mock()
         command.console = mock_console
 
-        command.print_success("Test success")
+        command.print_success('Test success')
         mock_console.print.assert_called_with('[green]✓ Test success[/green]')
 
-        command.print_error("Test error")
+        command.print_error('Test error')
         mock_console.print.assert_called_with('[red]✗ Test error[/red]')
 
-        command.print_warning("Test warning")
-        mock_console.print.assert_called_with('[yellow]⚠ Test warning[/yellow]')
+        command.print_warning('Test warning')
+        mock_console.print.assert_called_with(
+            '[yellow]⚠ Test warning[/yellow]'
+        )
 
-        command.print_info("Test info")
+        command.print_info('Test info')
         mock_console.print.assert_called_with('[blue]ℹ Test info[/blue]')
 
-        command.print_header("Test Header", "🎯")
-        mock_console.print.assert_called_with('[bold blue]🎯 Test Header[/bold blue]')
+        command.print_header('Test Header', '🎯')
+        mock_console.print.assert_called_with(
+            '[bold blue]🎯 Test Header[/bold blue]'
+        )
+
+
+class TestSetupCommand:
+    """Test SetupCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test SetupCommand initialization."""
+        command = SetupCommand()
+        assert command.console is not None
+        assert hasattr(command, 'shell_service')
+
+    def test_initialization_with_custom_console(self):
+        """Test SetupCommand initialization with custom console."""
+        console = Console()
+        command = SetupCommand(console=console)
+        assert command.console == console
+
+    def test_execute(self):
+        """Test execute method shows help information."""
+        command = SetupCommand()
+        exit_code = command.execute()
+        assert exit_code == 0
+
+
+class TestShowPathCommand:
+    """Test ShowPathCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test ShowPathCommand initialization."""
+        command = ShowPathCommand()
+        assert command.console is not None
+        assert hasattr(command, 'shell_service')
+
+    def test_execute_success(self):
+        """Test execute method with successful path check."""
+        command = ShowPathCommand()
+
+        mock_result = {
+            'project_root': '/home/user/foodtruck',
+            'venv_path': '/home/user/foodtruck/.venv',
+            'cli_path': '/home/user/foodtruck/.venv/bin/foodtruck-cli',
+            'cli_in_path': True,
+            'activation_script': '/home/user/foodtruck/.venv/bin/activate',
+            'venv_bin_path': '/home/user/foodtruck/.venv/bin',
+            'shell_config_file': '/home/user/.bashrc',  # Added missing field
+        }
+
+        with patch.object(command.shell_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failed path check."""
+        command = ShowPathCommand()
+
+        with patch.object(command.shell_service, 'execute_operation', side_effect=Exception("Service error")):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestGenerateAliasCommand:
+    """Test GenerateAliasCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test GenerateAliasCommand initialization."""
+        command = GenerateAliasCommand()
+        assert command.console is not None
+        assert hasattr(command, 'shell_service')
+
+    def test_execute_auto_shell(self):
+        """Test execute method with auto shell detection."""
+        command = GenerateAliasCommand()
+
+        mock_result = {
+            'success': True,
+            'aliases': {
+                'ftcli': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app',
+                'ft-health': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app health',
+                'ft-admin': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app admin',
+                'ft-db': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app database',
+            },
+            'shell': 'zsh',
+            'config_file': '/home/user/.zshrc',
+        }
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='auto')
+            assert exit_code == 0
+
+    def test_execute_specific_shell(self):
+        """Test execute method with specific shell."""
+        command = GenerateAliasCommand()
+
+        mock_result = {
+            'success': True,
+            'aliases': {
+                'ftcli': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app',
+                'ft-health': 'cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app health',
+            },
+            'shell': 'bash',
+            'config_file': '/home/user/.bashrc',
+        }
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='bash')
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = GenerateAliasCommand()
+
+        mock_result = {'success': False, 'error': 'Failed to generate aliases'}
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestAutoInstallCommand:
+    """Test AutoInstallCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test AutoInstallCommand initialization."""
+        command = AutoInstallCommand()
+        assert command.console is not None
+        assert hasattr(command, 'shell_service')
+
+    def test_execute_auto_shell_success(self):
+        """Test execute method with auto shell detection and success."""
+        command = AutoInstallCommand()
+
+        mock_result = {
+            'success': True,
+            'config_file': '/home/user/.zshrc',
+            'aliases_installed': True,
+            'shell': 'zsh',
+        }
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='auto')
+            assert exit_code == 0
+
+    def test_execute_specific_shell_success(self):
+        """Test execute method with specific shell and success."""
+        command = AutoInstallCommand()
+
+        mock_result = {
+            'success': True,
+            'config_file': '/home/user/.bashrc',
+            'aliases_installed': True,
+            'shell': 'bash',
+        }
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='bash')
+            assert exit_code == 0
+
+    def test_execute_with_force(self):
+        """Test execute method with force flag."""
+        command = AutoInstallCommand()
+
+        mock_result = {
+            'success': True,
+            'config_file': '/home/user/.zshrc',
+            'aliases_installed': True,
+            'shell': 'zsh',
+        }
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='auto', force=True)
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = AutoInstallCommand()
+
+        mock_result = {'success': False, 'error': 'Failed to install aliases'}
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestCheckSetupCommand:
+    """Test CheckSetupCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test CheckSetupCommand initialization."""
+        command = CheckSetupCommand()
+        assert command.console is not None
+        assert hasattr(command, 'shell_service')
+
+    def test_execute_all_good(self):
+        """Test execute method with all checks passing."""
+        command = CheckSetupCommand()
+
+        mock_result = {
+            'cli_in_path': True,
+            'venv_active': True,
+            'aliases_found': ['alias ftcli="cd /home/user/foodtruck && uv run python -m projeto_aplicado.cli.app"'],
+            'current_shell': 'zsh',  # Changed from 'shell' to 'current_shell'
+            'config_file': '/home/user/.zshrc',
+            'project_root': '/home/user/foodtruck',
+            'venv_path': '/home/user/foodtruck/.venv',
+        }
+
+        with patch.object(command.shell_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_partial_setup(self):
+        """Test execute method with partial setup."""
+        command = CheckSetupCommand()
+
+        mock_result = {
+            'cli_in_path': False,
+            'venv_active': True,
+            'aliases_found': [],  # Changed from 'aliases_configured' to 'aliases_found'
+            'current_shell': 'bash',  # Changed from 'shell' to 'current_shell'
+            'config_file': '/home/user/.bashrc',
+            'project_root': '/home/user/foodtruck',
+            'venv_path': '/home/user/foodtruck/.venv',
+        }
+
+        with patch.object(command.shell_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_no_setup(self):
+        """Test execute method with no setup."""
+        command = CheckSetupCommand()
+
+        mock_result = {
+            'cli_in_path': False,
+            'venv_active': False,
+            'aliases_found': [],  # Changed from 'aliases_configured' to 'aliases_found'
+            'current_shell': 'unknown',  # Changed from 'shell' to 'current_shell'
+            'config_file': '/home/user/.profile',
+            'project_root': None,
+            'venv_path': None,
+        }
+
+        with patch.object(command.shell_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = CheckSetupCommand()
+
+        with patch.object(
+            command.shell_service,
+            'execute_operation',
+            side_effect=Exception('Service error'),
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestCompletionsCommand:
+    """Test CompletionsCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test CompletionsCommand initialization."""
+        command = CompletionsCommand()
+        assert command.console is not None
+        assert hasattr(command, 'completions_service')
+
+    def test_initialization_with_custom_console(self):
+        """Test CompletionsCommand initialization with custom console."""
+        console = Console()
+        command = CompletionsCommand(console=console)
+        assert command.console == console
+
+    def test_execute(self):
+        """Test execute method shows help information."""
+        command = CompletionsCommand()
+        exit_code = command.execute()
+        assert exit_code == 0
+
+
+class TestGenerateCompletionsCommand:
+    """Test GenerateCompletionsCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test GenerateCompletionsCommand initialization."""
+        command = GenerateCompletionsCommand()
+        assert command.console is not None
+        assert hasattr(command, 'completions_service')
+
+    def test_execute_bash_success(self):
+        """Test execute method with bash shell and success."""
+        command = GenerateCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'script': 'complete -W "health admin database" foodtruck-cli',
+            'shell': 'bash',
+            'install_instructions': [
+                'source ~/.bashrc',
+                'Add to ~/.bash_completion',
+            ],
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='bash')
+            assert exit_code == 0
+
+    def test_execute_zsh_success(self):
+        """Test execute method with zsh shell and success."""
+        command = GenerateCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'script': '_foodtruck_cli() { _arguments "1: :(health admin database)" }',
+            'shell': 'zsh',
+            'install_instructions': ['Add to ~/.zshrc', 'Restart shell'],
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='zsh')
+            assert exit_code == 0
+
+    def test_execute_with_output_file(self):
+        """Test execute method with output file."""
+        command = GenerateCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'script': 'complete -W "health admin database" foodtruck-cli',
+            'shell': 'bash',
+            'output_file': '/tmp/foodtruck-cli.bash',
+            'install_instructions': ['source /tmp/foodtruck-cli.bash'],
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(
+                shell='bash', output='/tmp/foodtruck-cli.bash'
+            )
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = GenerateCompletionsCommand()
+
+        mock_result = {'success': False, 'error': 'Unsupported shell'}
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='invalid')
+            assert exit_code == 1
+
+
+class TestInstallCompletionsCommand:
+    """Test InstallCompletionsCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test InstallCompletionsCommand initialization."""
+        command = InstallCompletionsCommand()
+        assert command.console is not None
+        assert hasattr(command, 'completions_service')
+
+    def test_execute_auto_shell_success(self):
+        """Test execute method with auto shell detection and success."""
+        command = InstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'zsh',
+            'install_path': '/home/user/.zshrc',
+            'script_installed': True,
+            'reload_command': 'source ~/.zshrc',  # Added missing field
+        }
+
+        with patch.object(command.completions_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute(shell='auto')
+            assert exit_code == 0
+
+    def test_execute_specific_shell_success(self):
+        """Test execute method with specific shell and success."""
+        command = InstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'bash',
+            'install_path': '/home/user/.bashrc',
+            'script_installed': True,
+            'reload_command': 'source ~/.bashrc',  # Added missing field
+        }
+
+        with patch.object(command.completions_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute(shell='bash')
+            assert exit_code == 0
+
+    def test_execute_with_force(self):
+        """Test execute method with force flag."""
+        command = InstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'zsh',
+            'install_path': '/home/user/.zshrc',
+            'script_installed': True,
+            'reload_command': 'source ~/.zshrc',  # Added missing field
+        }
+
+        with patch.object(command.completions_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute(shell='auto', force=True)
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = InstallCompletionsCommand()
+
+        mock_result = {
+            'success': False,
+            'error': 'Failed to install completions',
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestStatusCompletionsCommand:
+    """Test StatusCompletionsCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test StatusCompletionsCommand initialization."""
+        command = StatusCompletionsCommand()
+        assert command.console is not None
+        assert hasattr(command, 'completions_service')
+
+    def test_execute_installed(self):
+        """Test execute method with completions installed."""
+        command = StatusCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'zsh',
+            'installed': True,
+            'install_path': '/home/user/.zshrc',
+            'script_found': True,
+            'completion_dir': '/home/user/.oh-my-zsh/completions',
+            'current_shell': 'zsh',
+            'completion_support': True,
+            'shells': {
+                'bash': {'installed': False, 'path': None},
+                'zsh': {'installed': True, 'path': '/home/user/.zshrc'},
+                'fish': {'installed': False, 'path': None},
+            },
+            'can_test': True,  # Added missing field
+        }
+
+        with patch.object(command.completions_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_not_installed(self):
+        """Test execute method with completions not installed."""
+        command = StatusCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'bash',
+            'installed': False,
+            'install_path': None,
+            'script_found': False,
+            'completion_dir': None,
+            'current_shell': 'bash',
+            'completion_support': True,
+            'shells': {
+                'bash': {'installed': False, 'path': None},
+                'zsh': {'installed': False, 'path': None},
+                'fish': {'installed': False, 'path': None},
+            },
+            'can_test': False,  # Added missing field
+        }
+
+        with patch.object(command.completions_service, 'execute_operation', return_value=mock_result):
+            exit_code = command.execute()
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = StatusCompletionsCommand()
+
+        mock_result = {'success': False, 'error': 'Failed to check status'}
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
+
+
+class TestUninstallCompletionsCommand:
+    """Test UninstallCompletionsCommand following SOLID principles."""
+
+    def test_initialization(self):
+        """Test UninstallCompletionsCommand initialization."""
+        command = UninstallCompletionsCommand()
+        assert command.console is not None
+        assert hasattr(command, 'completions_service')
+
+    def test_execute_auto_shell_success(self):
+        """Test execute method with auto shell detection and success."""
+        command = UninstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'zsh',
+            'uninstalled': True,
+            'removed_files': ['/home/user/.zshrc'],
+            'backup_created': True,
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='auto')
+            assert exit_code == 0
+
+    def test_execute_specific_shell_success(self):
+        """Test execute method with specific shell and success."""
+        command = UninstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'bash',
+            'uninstalled': True,
+            'removed_files': ['/home/user/.bashrc'],
+            'backup_created': True,
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='bash')
+            assert exit_code == 0
+
+    def test_execute_not_installed(self):
+        """Test execute method with completions not installed."""
+        command = UninstallCompletionsCommand()
+
+        mock_result = {
+            'success': True,
+            'shell': 'zsh',
+            'uninstalled': False,
+            'message': 'Completions not found',
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute(shell='auto')
+            assert exit_code == 0
+
+    def test_execute_failure(self):
+        """Test execute method with failure."""
+        command = UninstallCompletionsCommand()
+
+        mock_result = {
+            'success': False,
+            'error': 'Failed to uninstall completions',
+        }
+
+        with patch.object(
+            command.completions_service,
+            'execute_operation',
+            return_value=mock_result,
+        ):
+            exit_code = command.execute()
+            assert exit_code == 1
