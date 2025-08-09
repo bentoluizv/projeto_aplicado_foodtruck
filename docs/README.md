@@ -1,118 +1,77 @@
-# 📚 Documentation Overview
+# 📚 Food Truck Documentation Center
 
-## 🗂️ **Documentation Structure**
+Welcome to the comprehensive documentation hub for the Food Truck Management System. This directory contains all documentation organized by purpose and audience.
 
-This documentation provides comprehensive analysis and improvement roadmaps for the FastAPI application. Each document has a specific purpose without duplication:
+## 📋 Documentation Index
 
-### 🏛️ **Senior Architect Review** ⭐ **START HERE**
-- [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md) - **Professional assessment** with design patterns, SOLID violations, and architectural solutions
+### 🚀 **User & Setup Documentation**
 
-### 🗺️ **Development Roadmap** 
-- [`ROADMAP.md`](./ROADMAP.md) - **Implementation timeline** with effort estimates, priorities, and dependencies
+| Document | Description | Audience |
+|----------|-------------|----------|
+| **[INSTALL.md](INSTALL.md)** | Complete installation guide with uv & Docker setup | Admins, Developers |
+| **[DEPENDENCIES.md](DEPENDENCIES.md)** | Modern dependency management with uv | Developers, DevOps |
+| **[API.md](API.md)** | Complete REST API reference with examples | Developers, Integrators |
 
-### 🏗️ **Architecture Analysis**  
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md) - **High-level issues** and architectural improvement directions
+### 🛠️ **CLI Documentation**
 
-### 📝 **Code Quality Analysis**
-- [`CODE_QUALITY.md`](./CODE_QUALITY.md) - **Detailed fixes** with complete code solutions for all quality issues
+| Document | Description | Audience |
+|----------|-------------|----------|
+| **[CLI.md](CLI.md)** | Complete CLI user guide | All Users |
+| **[CLI_QUICK_REFERENCE.md](CLI_QUICK_REFERENCE.md)** | Command cheat sheet | Daily Users |
+| **[CLI_MANUAL.md](CLI_MANUAL.md)** | Unix-style manual page | System Admins |
+| **[CLI_DEVELOPMENT.md](CLI_DEVELOPMENT.md)** | CLI architecture & development | CLI Developers |
+| **[CLI_INDEX.md](CLI_INDEX.md)** | CLI documentation index | All CLI Users |
 
-### 🧪 **Testing Analysis**
-- [`TESTS.md`](./TESTS.md) - **Comprehensive testing** strategy with unit test examples and coverage plans
+## 📋 Documentation Summary
 
----
+### 🚀 **Setup & Getting Started**
+| Page | Description | Size |
+|------|-------------|------|
+| **[INSTALL.md](INSTALL.md)** | Complete installation guide with uv & Docker setup | ~160 lines |
+| **[DEPENDENCIES.md](DEPENDENCIES.md)** | Modern dependency management with uv auto-setup | ~670 lines |
 
-## 🎯 **Document Purposes (No Duplication)**
+### 🛠️ **CLI Tools**  
+| Page | Description | Size |
+|------|-------------|------|
+| **[CLI.md](CLI.md)** | Complete CLI user guide with auto-setup | ~670 lines |
+| **[CLI_QUICK_REFERENCE.md](CLI_QUICK_REFERENCE.md)** | Command cheat sheet for daily use | ~230 lines |
+| **[CLI_MANUAL.md](CLI_MANUAL.md)** | Unix-style manual page | ~370 lines |
+| **[CLI_DEVELOPMENT.md](CLI_DEVELOPMENT.md)** | CLI architecture & development guide | ~740 lines |
+| **[CLI_INDEX.md](CLI_INDEX.md)** | CLI documentation index | ~160 lines |
 
-| Document | Purpose | Content Type | Target Audience |
-|----------|---------|--------------|----------------|
-| **ARCHITECT_REVIEW.md** | Professional code assessment | Design patterns, SOLID analysis, architectural solutions | Senior developers, architects |
-| **ROADMAP.md** | Implementation planning | Timeline, effort estimates, dependencies | Project managers, team leads |
-| **ARCHITECTURE.md** | High-level analysis | Architecture overview, violations summary | Technical leads, new team members |
-| **CODE_QUALITY.md** | Specific code fixes | Complete code solutions, detailed fixes | Developers implementing changes |
-| **TESTS.md** | Testing strategy | Test examples, coverage plans, unit test setup | QA engineers, developers |
+### 🔌 **API & Development**
+| Page | Description | Size |
+|------|-------------|------|
+| **[API.md](API.md)** | Complete REST API reference with examples | ~100 lines |
 
----
+### 🏗️ **Architecture & Quality**
+| Page | Description | Size |
+|------|-------------|------|
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | System architecture & infrastructure design | ~320 lines |
+| **[CODE_QUALITY.md](CODE_QUALITY.md)** | Design patterns, SOLID principles & code quality | ~180 lines |
+| **[ROADMAP.md](ROADMAP.md)** | Implementation timeline & priorities | Variable |
+| **[TESTS.md](TESTS.md)** | Testing strategy & coverage | Variable |
 
-## 📊 **Project Status Overview**
+## 🔗 External Resources
 
-| Component | Status | Coverage | Priority Focus |
-|-----------|--------|----------|----------------|
-| **FastAPI Core** | ✅ Complete | 94% | 🔴 Architecture & Security |
-| **CLI Tools** | ✅ Complete | 100% | ✅ Well-architected |
-| **Authentication** | ✅ Complete | 95% | 🟡 Security validation |
-| **Database** | ✅ Complete | 90% | 🟡 Service layer |
-| **Testing** | ✅ Complete | 94% | 🟢 Unit tests |
+### 🛠️ **Tools & Frameworks**
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [SQLModel Documentation](https://sqlmodel.tiangolo.com/)
+- [uv Documentation](https://github.com/astral-sh/uv)
+- [Cyclopts CLI Framework](https://github.com/BrianPugh/cyclopts)
 
----
-
-## 🎯 **Current Focus: FastAPI Application Improvements**
-
-The **main project** (FastAPI application) has solid foundations but needs architectural improvements:
-
-### **🚨 ARCHITECT VERDICT: Prototype Quality → Production Ready Required**
-
-### **🔴 Critical Issues (Week 1-2) - ARCHITECT PRIORITY**
-- **🏛️ Design Patterns**: Missing Command, Strategy, Factory patterns
-- **🔧 SOLID Violations**: SRP violations in controllers (God methods)
-- **🚫 Code Smells**: Data class smell, feature envy, N+1 queries
-- **🔒 Security**: CORS vulnerability, weak JWT validation
-
-### **🟡 High Priority (Week 3-4) - ARCHITECTURAL FOUNDATION**  
-- **Service Layer**: Extract business logic from controllers (78-line methods → 20-line)
-- **Domain Models**: Convert anemic models to rich domain objects
-- **Performance**: Fix N+1 query problems, bulk operations
-
-### **🟢 Medium Priority (Week 5-6) - CLEAN CODE**
-- **Magic Numbers**: Extract to business constants (8 violations found)
-- **Parameter Objects**: Reduce method complexity
-- **Unit Testing**: Add business logic tests (0% → 90% coverage)
-
-### **🔵 Low Priority (Week 7+) - POLISH**
-- **Advanced Patterns**: Decorator, Observer for extensibility
-- **Performance**: Load testing, query optimization
-- **Monitoring**: Structured logging, health checks
+### 🎓 **Learning Resources**
+- [Clean Architecture Principles](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
+- [Python Type Hints](https://docs.python.org/3/library/typing.html)
+- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 
 ---
 
-## 🚀 **Quick Navigation**
+<div align="center">
 
-- **🏛️ CRITICAL: Architect Review** → Start with [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md)
-- **🗺️ Implementation Planning** → Continue with [`ROADMAP.md`](./ROADMAP.md)
-- **🏗️ Architecture Details** → See [`ARCHITECTURE.md`](./ARCHITECTURE.md) 
-- **📝 Code Quality Specifics** → Check [`CODE_QUALITY.md`](./CODE_QUALITY.md)
-- **🧪 Testing Strategy** → Review [`TESTS.md`](./TESTS.md)
-- **🚀 Project Setup** → See main [`README.md`](../README.md) in project root
-- **🛠️ CLI Documentation** → Reference [`../projeto_aplicado/cli/tests/README.md`](../projeto_aplicado/cli/tests/README.md)
+## 📖 Comprehensive Documentation for Food Truck Management System
 
----
+[🏠 Main Project](../README.md) • [🐛 Report Issue](https://github.com/bentoluizv/projeto_aplicado_foodtruck/issues) • [💡 Suggest Improvement](https://github.com/bentoluizv/projeto_aplicado_foodtruck/issues)
 
-## 📊 **Development Metrics**
-
-| Component | Current Status | Target | Document |
-|-----------|---------------|---------|----------|
-| **🏛️ Architecture Quality** | **4.5/10 (Poor)** | 9/10 | [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md) |
-| **🔧 SOLID Compliance** | **4/10 (Poor)** | 9/10 | [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md) |
-| **📝 Clean Code** | **5/10 (Needs Work)** | 9/10 | [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md) |
-| **🚫 Code Smells** | **3/10 (Poor)** | 9/10 | [`ARCHITECT_REVIEW.md`](./ARCHITECT_REVIEW.md) |
-| **🔒 Security** | 3 critical issues | 0 issues | [`CODE_QUALITY.md`](./CODE_QUALITY.md) |
-| **🧪 Unit Tests** | 0% coverage | 90% coverage | [`TESTS.md`](./TESTS.md) |
-| **🚀 Performance** | N+1 queries | <1s response | [`ROADMAP.md`](./ROADMAP.md) |
-
-## 📋 **Documentation Maintenance**
-
-### **Current State**
-- ✅ **All analysis documents** - Complete and current
-- ✅ **Specific fixes identified** - Ready for implementation  
-- ✅ **Priority roadmap** - 14-week development plan
-
-### **Update Schedule**
-- **Weekly**: Update progress in ROADMAP.md
-- **Per milestone**: Review and update analysis documents
-- **Quarterly**: Comprehensive documentation review
-
----
-
-**🚚 Food Truck Management System Documentation**  
-*FastAPI • Clean Architecture • 94% Coverage • 175 Tests*
-
-*Focus: Improving the main application architecture and security*
+</div>
