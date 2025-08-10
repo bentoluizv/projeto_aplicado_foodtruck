@@ -1,9 +1,11 @@
 """Abstract base command class for CLI command implementation."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from rich.console import Console
+
+from projeto_aplicado.cli.base.service_factory import ServiceFactory
 
 
 class BaseCommand(ABC):
@@ -22,6 +24,20 @@ class BaseCommand(ABC):
             If not provided, a new Console instance will be created.
         """
         self.console = console or Console()
+        self.service_factory = ServiceFactory()
+
+    def get_service(self, service_type: Type) -> Any:
+        """Get a service instance from the factory.
+
+        Args:
+            service_type: The type of service to get
+
+        Returns:
+            Service instance
+        """
+        method_name = f'get_{service_type.__name__.lower()}'
+        factory_method = getattr(self.service_factory, method_name)
+        return factory_method()
 
     @abstractmethod
     def execute(self, **kwargs: Any) -> int:
@@ -35,7 +51,7 @@ class BaseCommand(ABC):
 
         Returns:
             Exit code indicating command success (0) or failure (non-zero)
-        """
+        """  # noqa: E501
         pass
 
     def print_success(self, message: str) -> None:

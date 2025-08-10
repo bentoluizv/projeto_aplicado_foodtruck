@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import Any, Dict
 
 from projeto_aplicado.cli.base.service import BaseService
+from projeto_aplicado.cli.schemas import (
+    ShellAliasConfig,
+    ShellInstallResult,
+    ShellPathInfo,
+    ShellSetupStatus,
+)
 
 
 class ShellService(BaseService):
@@ -127,11 +133,11 @@ class ShellService(BaseService):
             'cli_exists': cli_path.exists(),
         }
 
-    def _show_path_info(self, **kwargs) -> Dict[str, Any]:
+    def _show_path_info(self, **kwargs) -> ShellPathInfo:
         """Show PATH configuration information.
 
         Returns:
-            Dict containing PATH information
+            ShellPathInfo containing PATH information
         """
         paths = self._get_project_paths()
         current_shell = self._get_current_shell()
@@ -140,21 +146,26 @@ class ShellService(BaseService):
         # Check if CLI is in PATH
         cli_in_path = shutil.which('foodtruck-cli') is not None
 
-        return {
-            **paths,
-            'current_shell': current_shell,
-            'shell_config_file': str(config_file),
-            'cli_in_path': cli_in_path,
-        }
+        return ShellPathInfo(
+            project_root=paths['project_root'],
+            venv_path=paths['venv_path'],
+            venv_bin_path=paths['venv_bin_path'],
+            cli_path=paths['cli_path'],
+            activation_script=paths['activation_script'],
+            cli_exists=paths['cli_exists'],
+            current_shell=current_shell,
+            shell_config_file=str(config_file),
+            cli_in_path=cli_in_path,
+        )
 
-    def _generate_aliases(self, shell: str = 'auto', **kwargs) -> Dict[str, Any]:
+    def _generate_aliases(self, shell: str = 'auto', **kwargs) -> ShellAliasConfig:
         """Generate shell aliases.
 
         Args:
             shell: Shell type
 
         Returns:
-            Dict containing aliases and configuration
+            ShellAliasConfig containing aliases and configuration
         """
         if shell == 'auto':
             shell = self._get_current_shell()
@@ -174,15 +185,15 @@ class ShellService(BaseService):
             'ft-completions': f'{base_cmd} completions',
         }
 
-        return {
-            'shell': shell,
-            'config_file': str(config_file),
-            'aliases': aliases,
-        }
+        return ShellAliasConfig(
+            shell=shell,
+            config_file=str(config_file),
+            aliases=aliases,
+        )
 
     def _auto_install_shell(
         self, shell: str = 'auto', force: bool = False, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> ShellInstallResult:
         """Auto-install shell configuration.
 
         Args:
@@ -190,7 +201,7 @@ class ShellService(BaseService):
             force: Force overwrite existing configuration
 
         Returns:
-            Dict containing installation result
+            ShellInstallResult containing installation result
         """
         if shell == 'auto':
             shell = self._get_current_shell()
@@ -201,10 +212,10 @@ class ShellService(BaseService):
         # With uv run approach, we don't need to check for CLI binary existence
         # Just check if we're in a valid project directory
         if not paths['project_root'] or not Path(paths['project_root']).exists():
-            return {
-                'success': False,
-                'error': f'Project root not found at {paths["project_root"]}',
-            }
+            return ShellInstallResult(
+                success=False,
+                error=f'Project root not found at {paths["project_root"]}',
+            )
 
         # Create backup if file exists
         backup_file = None
@@ -213,14 +224,14 @@ class ShellService(BaseService):
             try:
                 shutil.copy2(config_file, backup_file)
             except Exception as e:
-                return {
-                    'success': False,
-                    'error': f'Failed to create backup: {str(e)}',
-                }
+                return ShellInstallResult(
+                    success=False,
+                    error=f'Failed to create backup: {str(e)}',
+                )
 
         # Generate aliases using uv run approach
         aliases_result = self._generate_aliases(shell)
-        aliases = aliases_result['aliases']
+        aliases = aliases_result.aliases
         
         config_lines = [
             '\n# Food Truck CLI aliases (auto-generated)',
@@ -236,25 +247,25 @@ class ShellService(BaseService):
             with open(config_file, 'a') as f:
                 f.write('\n'.join(config_lines))
 
-            return {
-                'success': True,
-                'shell': shell,
-                'config_file': str(config_file),
-                'backup_file': str(backup_file) if backup_file else None,
-                'backup_created': backup_file is not None,
-            }
+            return ShellInstallResult(
+                success=True,
+                shell=shell,
+                config_file=str(config_file),
+                backup_file=str(backup_file) if backup_file else None,
+                backup_created=backup_file is not None,
+            )
 
         except Exception as e:
-            return {
-                'success': False,
-                'error': f'Failed to write configuration: {str(e)}',
-            }
+            return ShellInstallResult(
+                success=False,
+                error=f'Failed to write configuration: {str(e)}',
+            )
 
-    def _check_shell_setup(self, **kwargs) -> Dict[str, Any]:
+    def _check_shell_setup(self, **kwargs) -> ShellSetupStatus:
         """Check current shell setup.
 
         Returns:
-            Dict containing setup status
+            ShellSetupStatus containing setup status
         """
         current_shell = self._get_current_shell()
         config_file = self._get_shell_config_file()
@@ -280,10 +291,10 @@ class ShellService(BaseService):
             except Exception:
                 pass
 
-        return {
-            'current_shell': current_shell,
-            'config_file': str(config_file),
-            'cli_in_path': cli_in_path,
-            'venv_active': venv_active,
-            'aliases_found': aliases_found,
-        }
+        return ShellSetupStatus(
+            current_shell=current_shell,
+            config_file=str(config_file),
+            cli_in_path=cli_in_path,
+            venv_active=venv_active,
+            aliases_found=aliases_found,
+        )

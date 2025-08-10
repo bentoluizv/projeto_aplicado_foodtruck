@@ -22,7 +22,7 @@ class CompletionsCommand(BaseCommand):
             console: Rich console for output (injected dependency)
         """
         super().__init__(console)
-        self.completions_service = CompletionsService()
+        self.completions_service = self.get_service(CompletionsService)
 
     def execute(self) -> int:
         """Execute completions command (shows help).
@@ -30,23 +30,16 @@ class CompletionsCommand(BaseCommand):
         Returns:
             int: Exit code (0 for success)
         """
-        self.print_header('Shell Completions Commands', '🔧')
-        self.console.print('[blue]Available commands:[/blue]')
-        self.console.print(
-            '  • [cyan]generate[/cyan] - Generate completion script'
-        )
-        self.console.print(
-            '  • [cyan]install[/cyan]  - Install completions for current shell'
-        )
-        self.console.print(
-            '  • [cyan]status[/cyan]   - Check completion installation status'
-        )
-        self.console.print(
-            '  • [cyan]uninstall[/cyan] - Remove installed completions'
-        )
-        self.console.print(
+        msg = (
+            '[bold blue]🔧 Shell Completions Commands[/bold blue]\n'
+            '[blue]Available commands:[/blue]\n'
+            '  • [cyan]generate[/cyan] - Generate completion script\n'
+            '  • [cyan]install[/cyan]  - Install completions for current shell\n'  # noqa: E501
+            '  • [cyan]status[/cyan]   - Check completion installation status\n'  # noqa: E501
+            '  • [cyan]uninstall[/cyan] - Remove installed completions\n'
             '\n[yellow]Use --help with any command for details[/yellow]'
         )
+        self.console.print(msg)
         return 0
 
 
@@ -56,7 +49,7 @@ class GenerateCompletionsCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.completions_service = CompletionsService()
+        self.completions_service = self.get_service(CompletionsService)
 
     def execute(
         self, shell: str = 'bash', output: Optional[str] = None
@@ -75,36 +68,44 @@ class GenerateCompletionsCommand(BaseCommand):
                 'generate', shell=shell, output=output
             )
 
-            if result['success']:
+            if result.success:
                 if output:
-                    self.print_success(
-                        f'✅ Completion script generated: {output}'
-                    )
-                    self.print_info(f'🐚 Shell: {shell}')
+                    msg_parts = [
+                        f'[green]✅ Completion script generated: {output}[/green]',  # noqa: E501
+                        f'[blue]🐚 Shell: {shell}[/blue]',
+                        '',
+                        '[bold blue]Installation Instructions:[/bold blue]',
+                    ]
 
-                    # Show installation instructions
-                    self.console.print()
-                    self.console.print(
-                        '[bold blue]Installation Instructions:[/bold blue]'
-                    )
-                    instructions = result.get('install_instructions', [])
-                    for instruction in instructions:
-                        self.console.print(f'  {instruction}')
+                    # Add instructions
+                    if result.install_instructions:
+                        for instruction in result.install_instructions:
+                            msg_parts.append(f'  {instruction}')
 
-                    self.console.print()
-                    self.print_info(
-                        '💡 Or use [cyan]completions install[/cyan] '
-                        'for automatic installation'
-                    )
+                    msg_parts.extend([
+                        '',
+                        '[blue]💡 Or use [cyan]completions install[/cyan] '
+                        'for automatic installation[/blue]',
+                    ])
+
+                    msg = '\n'.join(msg_parts)
+                    self.console.print(msg)
                 else:
                     # Output to stdout
-                    print(result['script'])
+                    print(result.script)
 
                 return 0
             else:
-                self.print_error('❌ Failed to generate completion script')
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
+                msg_parts = [
+                    '[red]❌ Failed to generate completion script[/red]'
+                ]
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+                msg = '\n'.join(msg_parts)
+                self.console.print(msg)
                 return 1
 
         except Exception as e:
@@ -118,7 +119,7 @@ class InstallCompletionsCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.completions_service = CompletionsService()
+        self.completions_service = self.get_service(CompletionsService)
 
     def execute(self, shell: str = 'auto', force: bool = False) -> int:
         """Install completion script.
@@ -137,30 +138,36 @@ class InstallCompletionsCommand(BaseCommand):
                 'install', shell=shell, force=force
             )
 
-            if result['success']:
-                self.print_success(
-                    f'✅ Completions installed for {result["shell"]}!'
-                )
-                self.print_info(f'📁 Location: {result["install_path"]}')
+            msg_parts = []
+            if result.success:
+                msg_parts.extend([
+                    f'[green]✅ Completions installed for {result.shell}![/green]',  # noqa: E501
+                    f'[blue]📁 Location: {result.install_path}[/blue]',
+                ])
 
-                if result.get('backup_created'):
-                    self.print_info(f'💾 Backup: {result["backup_path"]}')
+                if result.backup_created:
+                    msg_parts.append(
+                        f'[blue]💾 Backup: {result.backup_path}[/blue]'
+                    )
 
-                self.console.print()
-                self.console.print('[bold blue]Next steps:[/bold blue]')
-                self.console.print('1. Restart your shell or run:')
-                self.console.print(
-                    f'   [cyan]{result["reload_command"]}[/cyan]'
-                )
-                self.console.print('2. Test completion:')
-                self.console.print('   [cyan]foodtruck-cli <TAB><TAB>[/cyan]')
-
-                return 0
+                msg_parts.extend([
+                    '',
+                    '[bold blue]Next steps:[/bold blue]',
+                    '1. Restart your shell or run:',
+                    f'   [cyan]{result.reload_command}[/cyan]',
+                    '2. Test completion:',
+                    '   [cyan]foodtruck-cli <TAB><TAB>[/cyan]',
+                ])
             else:
-                self.print_error('❌ Failed to install completions')
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append('[red]❌ Failed to install completions[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )  # noqa: E501
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to install completions: {str(e)}')
@@ -173,7 +180,7 @@ class StatusCompletionsCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.completions_service = CompletionsService()
+        self.completions_service = self.get_service(CompletionsService)
 
     def execute(self) -> int:
         """Check completion installation status.
@@ -186,38 +193,40 @@ class StatusCompletionsCommand(BaseCommand):
         try:
             result = self.completions_service.execute_operation('status')
 
-            # Shell info
-            self.console.print('[bold blue]Shell Information:[/bold blue]')
-            self.print_info(f'Current shell: {result["current_shell"]}')
-            self.print_info(
-                f'Completion support: {result["completion_support"]}'
-            )
-            self.console.print()
+            msg_parts = [
+                '[bold blue]Shell Information:[/bold blue]',
+                f'  Current shell: {result.current_shell}',
+                f'  Completion support: {result.completion_support}',
+                '',
+                '[bold blue]Installation Status:[/bold blue]',
+            ]
 
-            # Installation status
-            self.console.print('[bold blue]Installation Status:[/bold blue]')
-            for shell, status in result['shells'].items():
-                if status['installed']:
-                    self.print_success(
-                        f'✅ {shell}: Installed at {status["path"]}'
+            # Add installation status for each shell
+            for shell, status in result.shells.items():
+                if status.installed:
+                    msg_parts.append(
+                        f'[green]✅ {shell}: Installed at {status.path}[/green]'
                     )
                 else:
-                    self.print_warning(f'⚠️ {shell}: Not installed')
+                    msg_parts.append(
+                        f'[yellow]⚠️ {shell}: Not installed[/yellow]'
+                    )
 
-            self.console.print()
-
-            # Test status
-            if result['can_test']:
-                self.console.print('[bold blue]Testing:[/bold blue]')
-                self.print_info(
-                    '💡 Test completions: '
-                    '[cyan]foodtruck-cli <TAB><TAB>[/cyan]'
-                )
+            # Add test status
+            msg_parts.append('')
+            if result.can_test:
+                msg_parts.extend([
+                    '[bold blue]Testing:[/bold blue]',
+                    '[blue]💡 Test completions: [cyan]foodtruck-cli <TAB><TAB>[/cyan][/blue]',
+                ])
             else:
-                self.print_warning(
-                    '⚠️ Cannot test completions - shell not supported '
-                    'or not installed'
+                msg_parts.append(
+                    '[yellow]⚠️ Cannot test completions - shell not supported '
+                    'or not installed[/yellow]'
                 )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
 
             return 0
 
@@ -232,7 +241,7 @@ class UninstallCompletionsCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.completions_service = CompletionsService()
+        self.completions_service = self.get_service(CompletionsService)
 
     def execute(self, shell: str = 'auto') -> int:
         """Uninstall completion script.
@@ -250,28 +259,40 @@ class UninstallCompletionsCommand(BaseCommand):
                 'uninstall', shell=shell
             )
 
-            if result['success']:
-                removed = result.get('removed', [])
-                if removed:
-                    self.print_success(
-                        f'✅ Completions removed for: {", ".join(removed)}'
+            msg_parts = []
+            if result.success:
+                if result.removed:
+                    msg_parts.append(
+                        f'[green]✅ Completions removed for: {", ".join(result.removed)}[/green]'
                     )
-                    for shell_name in removed:
-                        path = result.get('paths', {}).get(shell_name)
-                        if path:
-                            self.print_info(f'📁 Removed: {path}')
+                    if result.paths:
+                        for shell_name in result.removed:
+                            path = result.paths.get(shell_name)
+                            if path:
+                                msg_parts.append(
+                                    f'[blue]📁 Removed: {path}[/blue]'
+                                )
                 else:
-                    self.print_info('ℹ️ No completions were installed')
+                    msg_parts.append(
+                        '[blue]ℹ️ No completions were installed[/blue]'
+                    )
 
-                self.console.print()
-                self.print_info('💡 Restart your shell to apply changes')
-
-                return 0
+                msg_parts.extend([
+                    '',
+                    '[blue]💡 Restart your shell to apply changes[/blue]',
+                ])
             else:
-                self.print_error('❌ Failed to uninstall completions')
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(
+                    '[red]❌ Failed to uninstall completions[/red]'
+                )
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to uninstall completions: {str(e)}')

@@ -1,12 +1,12 @@
 """Admin commands implementation following SOLID principles."""
 
-from typing import Any
+from typing import Any, Dict
 
 import cyclopts
 from rich.console import Console
 
 from projeto_aplicado.cli.base.command import BaseCommand
-from projeto_aplicado.cli.services.database import DatabaseService
+from projeto_aplicado.cli.schemas import UserListResult, UserOperationResult
 from projeto_aplicado.cli.services.user import UserService
 
 
@@ -17,111 +17,65 @@ class CreateAdminCommand(BaseCommand):
     Follows Dependency Inversion Principle: depends on service abstractions.
     """
 
-    def __init__(self, db_host: str = 'localhost', **kwargs):
+    def __init__(self, **kwargs):
         """Initialize the create admin command.
 
         Args:
-            db_host: Database hostname
             **kwargs: Additional arguments for base class
         """
         super().__init__(**kwargs)
-
-        # Dependency injection
-        self.database_service = DatabaseService(db_host)
-        self.user_service = UserService(self.database_service)
+        self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
         """Execute the create admin command.
 
         Args:
-            **kwargs: Command arguments (username, email, password, full_name, force)
+            **kwargs: Command arguments for user creation
 
         Returns:
             Exit code (0 for success, 1 for failure)
         """
-        # Validate input
-        if not self.user_service.validate_input(**kwargs):
-            self._print_validation_errors(**kwargs)
-            return 1
+        raw_data = {
+            'username': kwargs['username'],
+            'email': kwargs['email'],
+            'password': kwargs['password'],
+            'full_name': kwargs['full_name'],
+        }
 
-        # Get parameters
-        username = kwargs.get('username')
-        email = kwargs.get('email')
-        password = kwargs.get('password')
-        full_name = kwargs.get('full_name')
         force = kwargs.get('force', False)
-
-        # Confirmation prompt (unless force flag is used)
-        if not force and not self._confirm_creation(
-            username, email, full_name
-        ):
+        if not force and not self._confirm_creation(raw_data):
             self.print_warning('Operation cancelled')
             return 0
 
-        try:
-            # Create admin user
-            user = self.user_service.execute_operation(
-                'create',
-                username=username,
-                email=email,
-                password=password,
-                full_name=full_name,
+        result: UserOperationResult = self.user_service.create_admin(raw_data)
+        if result.success:
+            user = result.data
+            msg = (
+                f'[green]Admin user "{user.username}" created successfully![/green]\n'  # noqa: E501
+                f'[dim]User ID: {user.id}[/dim]'
             )
-
-            if user:
-                self.print_success(
-                    f'Admin user "{user.username}" created successfully!'
-                )
-                self.console.print(f'[dim]User ID: {user.id}[/dim]')
-                return 0
-            else:
-                self.print_error(
-                    f'Admin user with email "{email}" already exists.'
-                )
-                return 1
-
-        except Exception as e:
-            self.print_error(f'Error creating admin user: {str(e)}')
+            self.console.print(msg)
+            return 0
+        else:
+            self.print_error(result.error or 'Failed to create admin user')
             return 1
 
-    def _print_validation_errors(self, **kwargs) -> None:
-        """Print validation error messages."""
-        username = kwargs.get('username', '')
-        email = kwargs.get('email', '')
-        password = kwargs.get('password', '')
-        full_name = kwargs.get('full_name', '')
-
-        if not username.strip():
-            self.print_error('Username cannot be empty')
-
-        if not email.strip() or '@' not in email:
-            self.print_error('Invalid email address')
-
-        if len(password) < 6:
-            self.print_error('Password must be at least 6 characters')
-
-        if not full_name.strip():
-            self.print_error('Full name cannot be empty')
-
-    def _confirm_creation(
-        self, username: str, email: str, full_name: str
-    ) -> bool:
+    def _confirm_creation(self, data: Dict) -> bool:
         """Show confirmation prompt for user creation.
 
         Args:
-            username: Username to create
-            email: Email for the user
-            full_name: Full name of the user
+            data: User data dictionary
 
         Returns:
             True if user confirms, False otherwise
         """
-        self.console.print('Creating admin user:')
-        self.console.print(f'  Username: {username}')
-        self.console.print(f'  Email: {email}')
-        self.console.print(f'  Full Name: {full_name}')
-        self.console.print()
-
+        msg = (
+            '[blue]Creating admin user:[/blue]\n'
+            f'  Username: {data["username"]}\n'
+            f'  Email: {data["email"]}\n'
+            f'  Full Name: {data["full_name"]}\n'
+        )
+        self.console.print(msg)
         confirm = self.console.input('[bold]Continue? (y/N): [/bold]')
         return confirm.lower() == 'y'
 
@@ -129,13 +83,10 @@ class CreateAdminCommand(BaseCommand):
 class CheckUserCommand(BaseCommand):
     """Check user command."""
 
-    def __init__(self, db_host: str = 'localhost', **kwargs):
+    def __init__(self, **kwargs):
         """Initialize the check user command."""
         super().__init__(**kwargs)
-
-        # Dependency injection
-        self.database_service = DatabaseService(db_host)
-        self.user_service = UserService(self.database_service)
+        self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
         """Execute the check user command."""
@@ -144,56 +95,65 @@ class CheckUserCommand(BaseCommand):
             self.print_error('Email is required')
             return 1
 
-        try:
-            user = self.user_service.execute_operation('check', email=email)
+        raw_data = {'email': email}
+        result: UserOperationResult = self.user_service.check_user(raw_data)
 
-            if user:
-                self.print_success('User found:')
-                self.console.print(f'  Username: {user.username}')
-                self.console.print(f'  Email: {user.email}')
-                self.console.print(f'  Role: {user.role.value}')
-                self.console.print(f'  Full Name: {user.full_name}')
-                self.console.print(f'  Created: {user.created_at}')
-                return 0
-            else:
-                self.print_warning(f'No user found with email: {email}')
-                return 1
+        if not result.success:
+            self.print_error(result.error or 'Failed to check user')
+            return 1
 
-        except Exception as e:
-            self.print_error(f'Error checking user: {str(e)}')
+        user = result.data
+        if user:
+            msg = (
+                '[green]User found:[/green]\n'
+                f'  Username: {user.username}\n'
+                f'  Email: {user.email}\n'
+                f'  Role: {user.role.value}\n'
+                f'  Full Name: {user.full_name}\n'
+                f'  Created: {user.created_at}'
+            )
+            self.console.print(msg)
+            return 0
+        else:
+            self.print_warning(f'No user found with email: {email}')
             return 1
 
 
 class ListAdminsCommand(BaseCommand):
     """List admin users command."""
 
-    def __init__(self, db_host: str = 'localhost', **kwargs):
-        """Initialize the list admins command."""
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs):
+        """Initialize the list admins command.
 
-        # Dependency injection
-        self.database_service = DatabaseService(db_host)
-        self.user_service = UserService(self.database_service)
+        Args:
+            **kwargs: Additional arguments for base class
+        """
+        super().__init__(**kwargs)
+        self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
         """Execute the list admins command."""
-        try:
-            admins = self.user_service.execute_operation('list')
+        result: UserListResult = self.user_service.list_admins()
 
-            if admins:
-                self.print_success(f'Found {len(admins)} admin user(s):')
-                for admin in admins:
-                    self.console.print(
-                        f'  • {admin.username} ({admin.email}) - {admin.full_name}'
-                    )
-                return 0
-            else:
-                self.print_warning('No admin users found')
-                return 0
-
-        except Exception as e:
-            self.print_error(f'Error listing admin users: {str(e)}')
+        if not result.success:
+            self.print_error(result.error or 'Failed to list admin users')
             return 1
+
+        admins = result.data
+        if admins:
+            admin_list = '\n'.join(
+                f'  • {admin.username} ({admin.email}) - {admin.full_name}'
+                for admin in admins
+            )
+            msg = (
+                f'[green]Found {len(admins)} admin user(s):[/green]\n'
+                f'{admin_list}'
+            )
+            self.console.print(msg)
+            return 0
+        else:
+            self.print_warning('No admin users found')
+            return 0
 
 
 # Create the admin app with sub-commands
@@ -205,7 +165,7 @@ admin_app = cyclopts.App(
 
 # Register admin commands
 @admin_app.default
-def admin_default(db_host: str = 'localhost') -> int:
+def admin_default() -> int:
     """Admin user management commands."""
     console = Console()
     console.print('[bold blue]🔐 Admin User Management[/bold blue]')
@@ -227,9 +187,7 @@ def create(
     email: str,
     password: str,
     full_name: str,
-    *,
     force: bool = False,
-    db_host: str = 'localhost',
 ) -> int:
     """Create an admin user.
 
@@ -239,9 +197,8 @@ def create(
         password: Password for the admin user (minimum 6 characters)
         full_name: Full name of the admin user
         force: Skip confirmation prompt
-        db_host: Database hostname (default: localhost)
     """
-    command = CreateAdminCommand(db_host=db_host)
+    command = CreateAdminCommand()
     return command.execute(
         username=username,
         email=email,
@@ -252,23 +209,21 @@ def create(
 
 
 @admin_app.command
-def check(email: str = '', *, db_host: str = 'localhost') -> int:
+def check(email: str) -> int:
     """Check if an admin user exists.
 
     Args:
         email: Email address to check
-        db_host: Database hostname (default: localhost)
     """
-    command = CheckUserCommand(db_host=db_host)
-    return command.execute(email=email if email else None)
+    command = CheckUserCommand()
+    return command.execute(email=email)
 
 
 @admin_app.command
-def list_admins(*, db_host: str = 'localhost') -> int:
+def list_admins() -> int:
     """List all admin users in the system.
 
-    Args:
-        db_host: Database hostname (default: localhost)
+    Lists all admin users in the system.
     """
-    command = ListAdminsCommand(db_host=db_host)
+    command = ListAdminsCommand()
     return command.execute()

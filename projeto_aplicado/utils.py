@@ -18,13 +18,17 @@ def get_ulid_as_str():
     return str(ULID())
 
 
-def get_db_url(settings: Settings):
+def get_db_url(settings: Settings, cli: bool = False):
     """
     Retorna a URL de conexão com o banco de dados.
 
     :return: str.
     """
-    url = f'postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOSTNAME}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}'
+
+    if cli:
+        url = f'postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOSTNAME_CLI}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}'
+    else:
+        url = f'postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOSTNAME}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}'
 
     return url
 

@@ -1,20 +1,21 @@
 """User service for CLI admin operations following SOLID principles."""
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from sqlmodel import Session, select
+from pydantic import EmailStr, ValidationError
 
-from projeto_aplicado.cli.base.service import BaseService
-from projeto_aplicado.cli.services.database import DatabaseService
+from projeto_aplicado.cli.ext.database import DatabaseService
+from projeto_aplicado.cli.schemas import UserListResult, UserOperationResult
 from projeto_aplicado.resources.user.model import User, UserRole
+from projeto_aplicado.resources.user.repository import UserRepository
 from projeto_aplicado.resources.user.schemas import CreateUserDTO
 
 
-class UserService(BaseService):
+class UserService:
     """User service that handles admin user operations.
 
     Follows Single Responsibility Principle: only handles user operations.
-    Follows Dependency Inversion Principle: depends on DatabaseService abstraction.
+    Follows Dependency Inversion Principle: depends on repository abstraction.
     """
 
     def __init__(self, database_service: DatabaseService):
@@ -24,140 +25,145 @@ class UserService(BaseService):
             database_service: Database service for operations
         """
         self.database_service = database_service
+        self._repository: Optional[UserRepository] = None
 
-    def validate_input(self, **kwargs) -> bool:
-        """Validate user input parameters.
+    @property
+    def repository(self) -> UserRepository:
+        """Get or create the user repository instance."""
+        if not self._repository:
+            session = self.database_service.get_session()
+            self._repository = UserRepository(session)
+        return self._repository
 
-        Args:
-            **kwargs: User parameters to validate
-
-        Returns:
-            True if valid, False otherwise
-        """
-        username = kwargs.get('username', '')
-        email = kwargs.get('email', '')
-        password = kwargs.get('password', '')
-        full_name = kwargs.get('full_name', '')
-
-        # Validate username
-        if not username or not username.strip():
-            return False
-
-        # Validate email
-        if not email or not email.strip() or '@' not in email:
-            return False
-
-        # Validate password
-        if not password or len(password) < 6:
-            return False
-
-        # Validate full name
-        if not full_name or not full_name.strip():
-            return False
-
-        return True
-
-    def execute_operation(self, operation: str, **kwargs):
-        """Execute user operation.
-
-        Args:
-            operation: Operation to perform ('create', 'check', 'list')
-            **kwargs: Operation parameters
-
-        Returns:
-            Operation result
-        """
-        operation_map = {
-            'create': self._create_admin_user,
-            'check': self._check_user,
-            'list': self._list_admin_users,
-            'count': self._count_admin_users,
-        }
-
-        if operation not in operation_map:
-            raise ValueError(f'Unknown operation: {operation}')
-
-        return self.database_service.execute_operation(
-            operation_map[operation], **kwargs
-        )
-
-    def _create_admin_user(self, session: Session, **kwargs) -> Optional[User]:
+    def create_admin(self, raw_data: Dict) -> UserOperationResult:
         """Create an admin user.
 
         Args:
-            session: Database session
-            **kwargs: User creation parameters
+            raw_data: Raw user data dictionary
 
         Returns:
-            Created user or None if already exists
+            UserOperationResult with status and data
         """
-        # Check if user already exists
-        existing_user = session.exec(
-            select(User).where(User.email == kwargs['email'])
-        ).first()
+        try:
+            user = self._create_admin_user(raw_data)
+            return UserOperationResult(success=True, data=user)
+        except ValidationError as e:
+            return UserOperationResult(
+                success=False,
+                error=f'Validation error: {str(e)}',
+            )
+        except Exception as e:
+            return UserOperationResult(
+                success=False,
+                error=f'Operation failed: {str(e)}',
+            )
 
-        if existing_user:
-            return None
+    def check_user(self, raw_data: Dict) -> UserOperationResult:
+        """Check if a user exists.
 
-        # Create the user DTO
-        dto = CreateUserDTO(
-            username=kwargs['username'],
-            email=kwargs['email'],
-            password=kwargs['password'],
-            full_name=kwargs['full_name'],
+        Args:
+            raw_data: Raw data containing email
+
+        Returns:
+            UserOperationResult with status and data
+        """
+        try:
+            user = self._check_user(raw_data)
+            return UserOperationResult(success=True, data=user)
+        except ValidationError as e:
+            return UserOperationResult(
+                success=False,
+                error=f'Validation error: {str(e)}',
+            )
+        except Exception as e:
+            return UserOperationResult(
+                success=False,
+                error=f'Operation failed: {str(e)}',
+            )
+
+    def list_admins(self) -> UserListResult:
+        """List all admin users.
+
+        Returns:
+            UserListResult with status and data
+        """
+        try:
+            users = self._list_admin_users()
+            return UserListResult(success=True, data=users)
+        except Exception as e:
+            return UserListResult(
+                success=False,
+                error=f'Operation failed: {str(e)}',
+            )
+
+    def _create_admin_user(self, raw_data: Dict) -> User:
+        """Create an admin user.
+
+        Args:
+            raw_data: Raw user data dictionary
+
+        Returns:
+            Created user
+
+        Raises:
+            ValidationError: If data validation fails
+            ValueError: If user already exists
+        """
+        # Validate and create DTO
+        create_dto = CreateUserDTO(
+            username=raw_data['username'],
+            email=raw_data['email'],
+            password=raw_data['password'],
+            full_name=raw_data.get('full_name'),
             role=UserRole.ADMIN,
         )
 
+        # Check if user already exists
+        existing_user = self.repository.get_by_email(create_dto.email)
+        if existing_user:
+            raise ValueError(
+                f'User with email {create_dto.email} already exists'
+            )
+
         # Create the user - the DTO automatically hashes the password
         user = User(
-            username=dto.username,
-            email=dto.email,
-            password=dto.password,  # Already hashed by DTO
-            full_name=dto.full_name,
-            role=dto.role,
+            username=create_dto.username,
+            email=create_dto.email,
+            password=create_dto.password,  # Already hashed by DTO
+            full_name=create_dto.full_name,
+            role=UserRole.ADMIN,
         )
 
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+        return self.repository.create(user)
 
-        return user
-
-    def _check_user(self, session: Session, **kwargs) -> Optional[User]:
+    def _check_user(self, raw_data: Dict) -> Optional[User]:
         """Check if a user exists by email.
 
         Args:
-            session: Database session
-            **kwargs: Parameters containing 'email'
+            raw_data: Raw data containing email
 
         Returns:
             User if found, None otherwise
+
+        Raises:
+            ValidationError: If email validation fails
         """
-        email = kwargs['email']
-        return session.exec(select(User).where(User.email == email)).first()
+        email = EmailStr(raw_data['email'])
+        return self.repository.get_by_email(email)
 
-    def _list_admin_users(self, session: Session, **kwargs) -> List[User]:
+    def _list_admin_users(self) -> List[User]:
         """List all admin users.
-
-        Args:
-            session: Database session
-            **kwargs: Additional parameters (unused)
 
         Returns:
             List of admin users
         """
-        return session.exec(
-            select(User).where(User.role == UserRole.ADMIN)
-        ).all()
+        users = self.repository.get_all()
+        return [user for user in users if user.role == UserRole.ADMIN]
 
-    def _count_admin_users(self, session: Session, **kwargs) -> int:
+    def _count_admin_users(self) -> int:
         """Count admin users.
-
-        Args:
-            session: Database session
-            **kwargs: Additional parameters (unused)
 
         Returns:
             Number of admin users
         """
-        return len(self._list_admin_users(session, **kwargs))
+        return len(self._list_admin_users())

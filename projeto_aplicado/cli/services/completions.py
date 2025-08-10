@@ -6,6 +6,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from projeto_aplicado.cli.base.service import BaseService
+from projeto_aplicado.cli.schemas import (
+    CompletionGenerateResult,
+    CompletionInstallResult,
+    CompletionShellStatus,
+    CompletionStatusResult,
+    CompletionUninstallResult,
+)
 
 
 class CompletionsService(BaseService):
@@ -69,7 +76,7 @@ class CompletionsService(BaseService):
         Returns:
             str: Bash completion script content
         """
-        return '''#!/bin/bash
+        return """#!/bin/bash
 
 # foodtruck-cli bash completion script
 # Generated automatically - do not edit manually
@@ -143,7 +150,7 @@ _foodtruck_cli_completion() {
 }
 
 complete -F _foodtruck_cli_completion foodtruck-cli
-'''
+"""
 
     def _get_completion_script_zsh(self) -> str:
         """Generate zsh completion script.
@@ -151,7 +158,7 @@ complete -F _foodtruck_cli_completion foodtruck-cli
         Returns:
             str: Zsh completion script content
         """
-        return '''#compdef foodtruck-cli
+        return """#compdef foodtruck-cli
 
 # foodtruck-cli zsh completion script
 # Generated automatically - do not edit manually
@@ -229,7 +236,7 @@ _foodtruck_cli_commands() {
 }
 
 _foodtruck_cli "$@"
-'''
+"""
 
     def _get_completion_script_fish(self) -> str:
         """Generate fish completion script.
@@ -237,7 +244,7 @@ _foodtruck_cli "$@"
         Returns:
             str: Fish completion script content
         """
-        return '''# foodtruck-cli fish completion script
+        return """# foodtruck-cli fish completion script
 # Generated automatically - do not edit manually
 
 # Main commands
@@ -286,7 +293,7 @@ complete -c foodtruck-cli -f -n "__fish_seen_subcommand_from completions; and __
 # Common options
 complete -c foodtruck-cli -f -l "help" -d "Show help"
 complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
-'''
+"""  # noqa: E501
 
     def _get_shell_completion_paths(self, shell: str) -> Dict[str, str]:
         """Get completion installation paths for shell.
@@ -298,7 +305,7 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
             Dict containing installation paths
         """
         home = Path.home()
-        
+
         paths = {
             'bash': {
                 'user': home / '.bash_completion',
@@ -307,21 +314,29 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
             },
             'zsh': {
                 'user': home / '.zsh' / 'completion' / '_foodtruck-cli',
-                'system': Path('/usr/local/share/zsh/site-functions/_foodtruck-cli'),
+                'system': Path(
+                    '/usr/local/share/zsh/site-functions/_foodtruck-cli'
+                ),
                 'reload': 'source ~/.zshrc',
             },
             'fish': {
-                'user': home / '.config' / 'fish' / 'completions' / 'foodtruck-cli.fish',
-                'system': Path('/usr/share/fish/completions/foodtruck-cli.fish'),
+                'user': home
+                / '.config'
+                / 'fish'
+                / 'completions'
+                / 'foodtruck-cli.fish',
+                'system': Path(
+                    '/usr/share/fish/completions/foodtruck-cli.fish'
+                ),
                 'reload': 'source ~/.config/fish/config.fish',
             },
         }
-        
+
         return paths.get(shell, {})
 
     def _generate_completion_script(
         self, shell: str = 'bash', output: Optional[str] = None, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> CompletionGenerateResult:
         """Generate completion script for shell.
 
         Args:
@@ -329,7 +344,7 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
             output: Output file path
 
         Returns:
-            Dict containing generation result
+            CompletionGenerateResult containing generation result
         """
         generators = {
             'bash': self._get_completion_script_bash,
@@ -338,22 +353,22 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
         }
 
         if shell not in generators:
-            return {
-                'success': False,
-                'error': f'Unsupported shell: {shell}. Supported: {list(generators.keys())}',
-            }
+            return CompletionGenerateResult(
+                success=False,
+                error=f'Unsupported shell: {shell}. Supported: {list(generators.keys())}',
+            )
 
         script = generators[shell]()
-        
+
         if output:
             try:
                 output_path = Path(output)
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 output_path.write_text(script)
-                
+
                 # Make executable
                 os.chmod(output_path, 0o755)
-                
+
                 # Generate installation instructions
                 paths = self._get_shell_completion_paths(shell)
                 instructions = [
@@ -362,29 +377,29 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
                     f'2. Reload shell:',
                     f'   {paths.get("reload", "source ~/.bashrc")}',
                 ]
-                
-                return {
-                    'success': True,
-                    'script': script,
-                    'output_path': str(output_path),
-                    'shell': shell,
-                    'install_instructions': instructions,
-                }
+
+                return CompletionGenerateResult(
+                    success=True,
+                    script=script,
+                    output_file=str(output_path),
+                    shell=shell,
+                    install_instructions=instructions,
+                )
             except Exception as e:
-                return {
-                    'success': False,
-                    'error': f'Failed to write output file: {str(e)}',
-                }
+                return CompletionGenerateResult(
+                    success=False,
+                    error=f'Failed to write output file: {str(e)}',
+                )
         else:
-            return {
-                'success': True,
-                'script': script,
-                'shell': shell,
-            }
+            return CompletionGenerateResult(
+                success=True,
+                script=script,
+                shell=shell,
+            )
 
     def _install_completions(
         self, shell: str = 'auto', force: bool = False, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> CompletionInstallResult:
         """Install completion script.
 
         Args:
@@ -392,23 +407,23 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
             force: Force reinstall
 
         Returns:
-            Dict containing installation result
+            CompletionInstallResult containing installation result
         """
         if shell == 'auto':
             shell = self._get_current_shell()
 
-        if shell not in ['bash', 'zsh', 'fish']:
-            return {
-                'success': False,
-                'error': f'Unsupported shell: {shell}',
-            }
+        if shell not in {'bash', 'zsh', 'fish'}:
+            return CompletionInstallResult(
+                success=False,
+                error=f'Unsupported shell: {shell}',
+            )
 
         paths = self._get_shell_completion_paths(shell)
         if not paths:
-            return {
-                'success': False,
-                'error': f'No completion paths configured for {shell}',
-            }
+            return CompletionInstallResult(
+                success=False,
+                error=f'No completion paths configured for {shell}',
+            )
 
         # Try user path first, fallback to system if needed
         install_path = paths['user']
@@ -416,44 +431,49 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
 
         # Check if already installed
         if install_path.exists() and not force:
-            return {
-                'success': False,
-                'error': f'Completions already installed at {install_path}. Use --force to overwrite.',
-            }
+            return CompletionInstallResult(
+                success=False,
+                error=f'Completions already installed at {install_path}. Use --force to overwrite.',  # noqa: E501
+            )
 
         # Create backup if exists
         backup_path = None
         if install_path.exists():
-            backup_path = install_path.with_suffix(f'{install_path.suffix}.backup')
+            backup_path = install_path.with_suffix(
+                f'{install_path.suffix}.backup'
+            )
             shutil.copy2(install_path, backup_path)
 
         try:
             # Generate and install script
             result = self._generate_completion_script(shell)
-            if not result['success']:
-                return result
+            if not result.success:
+                return CompletionInstallResult(
+                    success=False,
+                    error=result.error,
+                )
 
-            install_path.write_text(result['script'])
+            install_path.write_text(result.script)
             os.chmod(install_path, 0o644)
 
             # Special handling for zsh - update fpath if needed
             if shell == 'zsh':
                 self._setup_zsh_fpath(install_path.parent)
 
-            return {
-                'success': True,
-                'shell': shell,
-                'install_path': str(install_path),
-                'backup_path': str(backup_path) if backup_path else None,
-                'backup_created': backup_path is not None,
-                'reload_command': paths['reload'],
-            }
+            return CompletionInstallResult(
+                success=True,
+                shell=shell,
+                install_path=str(install_path),
+                backup_path=str(backup_path) if backup_path else None,
+                backup_created=backup_path is not None,
+                reload_command=paths['reload'],
+            )
 
         except Exception as e:
-            return {
-                'success': False,
-                'error': f'Failed to install completions: {str(e)}',
-            }
+            return CompletionInstallResult(
+                success=False,
+                error=f'Failed to install completions: {str(e)}',
+            )
 
     def _setup_zsh_fpath(self, completion_dir: Path) -> None:
         """Setup zsh fpath for completion directory.
@@ -467,23 +487,23 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
 
         if zshrc.exists():
             content = zshrc.read_text()
-            
+
             # Add fpath if not present
             if str(completion_dir) not in content:
-                with open(zshrc, 'a') as f:
-                    f.write(f'\n# foodtruck-cli completions\n')
+                with open(zshrc, 'a', encoding='utf-8') as f:
+                    f.write('\n# foodtruck-cli completions\n')
                     f.write(f'{fpath_line}\n')
-                    
+
             # Add compinit if not present
             if 'compinit' not in content:
-                with open(zshrc, 'a') as f:
+                with open(zshrc, 'a', encoding='utf-8') as f:
                     f.write(f'{compinit_line}\n')
 
-    def _check_completions_status(self, **kwargs) -> Dict[str, Any]:
+    def _check_completions_status(self, **kwargs) -> CompletionStatusResult:
         """Check completion installation status.
 
         Returns:
-            Dict containing status information
+            CompletionStatusResult containing status information
         """
         current_shell = self._get_current_shell()
         shells_status = {}
@@ -495,38 +515,41 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
 
             user_path = paths['user']
             system_path = paths.get('system')
-            
+
             installed = user_path.exists()
             install_path = None
-            
+
             if installed:
                 install_path = str(user_path)
             elif system_path and system_path.exists():
                 installed = True
                 install_path = str(system_path)
 
-            shells_status[shell] = {
-                'installed': installed,
-                'path': install_path,
-            }
+            shells_status[shell] = CompletionShellStatus(
+                installed=installed,
+                path=install_path,
+            )
 
-        return {
-            'current_shell': current_shell,
-            'completion_support': current_shell in ['bash', 'zsh', 'fish'],
-            'shells': shells_status,
-            'can_test': current_shell in shells_status and shells_status[current_shell]['installed'],
-        }
+        return CompletionStatusResult(
+            current_shell=current_shell,
+            completion_support='supported'
+            if current_shell in {'bash', 'zsh', 'fish    '}
+            else 'not supported',
+            shells=shells_status,
+            can_test=current_shell in shells_status
+            and shells_status[current_shell].installed,
+        )
 
     def _uninstall_completions(
         self, shell: str = 'auto', **kwargs
-    ) -> Dict[str, Any]:
+    ) -> CompletionUninstallResult:
         """Uninstall completion scripts.
 
         Args:
             shell: Shell type or 'all'
 
         Returns:
-            Dict containing uninstall result
+            CompletionUninstallResult containing uninstall result
         """
         if shell == 'auto':
             shell = self._get_current_shell()
@@ -534,13 +557,13 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
         shells_to_remove = []
         if shell == 'all':
             shells_to_remove = ['bash', 'zsh', 'fish']
-        elif shell in ['bash', 'zsh', 'fish']:
+        elif shell in {'bash', 'zsh', 'fish'}:
             shells_to_remove = [shell]
         else:
-            return {
-                'success': False,
-                'error': f'Unsupported shell: {shell}',
-            }
+            return CompletionUninstallResult(
+                success=False,
+                error=f'Unsupported shell: {shell}',
+            )
 
         removed = []
         paths = {}
@@ -559,8 +582,8 @@ complete -c foodtruck-cli -f -l "force" -d "Force overwrite"
                 except Exception:
                     pass
 
-        return {
-            'success': True,
-            'removed': removed,
-            'paths': paths,
-        }
+        return CompletionUninstallResult(
+            success=True,
+            removed=removed,
+            paths=paths,
+        )

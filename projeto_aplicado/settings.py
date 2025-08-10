@@ -12,6 +12,7 @@ class BaseAppSettings(BaseSettings):
     # Database settings
     DB_ECHO: bool = False
     POSTGRES_HOSTNAME: str = 'postgres'
+    POSTGRES_HOSTNAME_CLI: str = 'localhost'
     POSTGRES_PORT: str = '5432'
     POSTGRES_DB: str = 'foodtruck'
 
