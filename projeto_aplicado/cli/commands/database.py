@@ -6,7 +6,12 @@ import cyclopts
 from rich.console import Console
 
 from projeto_aplicado.cli.base.command import BaseCommand
-from projeto_aplicado.cli.services.database import DatabaseService
+from projeto_aplicado.cli.ext.database import DatabaseService
+from projeto_aplicado.cli.schemas import (
+    DatabaseInfo,
+    MigrationResult,
+    MigrationStatus,
+)
 from projeto_aplicado.cli.services.migration import MigrationService
 
 
@@ -19,18 +24,15 @@ class DatabaseCommand(BaseCommand):
     - Dependency Inversion: Depends on service abstractions
     """
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize database command with dependency injection.
 
         Args:
-            db_host: Database hostname for connections
             console: Rich console for output (injected dependency)
         """
         super().__init__(console)
-        self.database_service = DatabaseService(db_host)
-        self.migration_service = MigrationService(db_host)
+        self.database_service = self.get_service(DatabaseService)
+        self.migration_service = self.get_service(MigrationService)
 
     def execute(self) -> int:
         """Execute database command (shows help).
@@ -38,43 +40,30 @@ class DatabaseCommand(BaseCommand):
         Returns:
             int: Exit code (0 for success)
         """
-        self.print_header('Database Management Commands', '🗄️')
-        self.console.print('[blue]Available commands:[/blue]')
-        self.console.print(
-            '  • [cyan]init[/cyan]      - Initialize database with migrations'
-        )
-        self.console.print(
-            '  • [cyan]status[/cyan]    - Show database and migration status'
-        )
-        self.console.print(
-            '  • [cyan]upgrade[/cyan]   - Upgrade to latest migrations'
-        )
-        self.console.print('  • [cyan]downgrade[/cyan] - Downgrade migrations')
-        self.console.print(
-            '  • [cyan]current[/cyan]   - Show current migration'
-        )
-        self.console.print(
-            '  • [cyan]history[/cyan]   - Show migration history'
-        )
-        self.console.print('  • [cyan]create[/cyan]    - Create new migration')
-        self.console.print(
-            '  • [cyan]reset[/cyan]     - Reset database (destructive)'
-        )
-        self.console.print(
+        msg = (
+            '[bold blue]🗄️ Database Management Commands[/bold blue]\n'
+            '[blue]Available commands:[/blue]\n'
+            '  • [cyan]init[/cyan]      - Initialize database with migrations\n'  # noqa: E501
+            '  • [cyan]status[/cyan]    - Show database and migration status\n'
+            '  • [cyan]upgrade[/cyan]   - Upgrade to latest migrations\n'
+            '  • [cyan]downgrade[/cyan] - Downgrade migrations\n'
+            '  • [cyan]current[/cyan]   - Show current migration\n'
+            '  • [cyan]history[/cyan]   - Show migration history\n'
+            '  • [cyan]create[/cyan]    - Create new migration\n'
+            '  • [cyan]reset[/cyan]     - Reset database (destructive)\n'
             '\n[yellow]Use --help with any command for details[/yellow]'
         )
+        self.console.print(msg)
         return 0
 
 
 class InitDatabaseCommand(BaseCommand):
     """Initialize database command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self) -> int:
         """Initialize database with migrations.
@@ -85,18 +74,25 @@ class InitDatabaseCommand(BaseCommand):
         self.print_header('Database Initialization', '🚀')
 
         try:
-            result = self.migration_service.execute_operation('init')
+            result: MigrationResult = self.migration_service.execute_operation(
+                'init'
+            )
 
-            if result['success']:
-                self.print_success(result['message'])
-                if result.get('details'):
-                    self.print_info(result['details'])
-                return 0
+            msg_parts = []
+            if result.success:
+                msg_parts.append(f'[green]{result.message}[/green]')
+                if result.details:
+                    msg_parts.append(f'[blue]{result.details}[/blue]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to initialize database: {str(e)}')
@@ -106,13 +102,11 @@ class InitDatabaseCommand(BaseCommand):
 class DatabaseStatusCommand(BaseCommand):
     """Database status command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.database_service = DatabaseService(db_host)
-        self.migration_service = MigrationService(db_host)
+        self.database_service = self.get_service(DatabaseService)
+        self.migration_service = self.get_service(MigrationService)
 
     def execute(self) -> int:
         """Show database status.
@@ -124,42 +118,54 @@ class DatabaseStatusCommand(BaseCommand):
 
         try:
             # Get migration status
-            status = self.migration_service.execute_operation('status')
+            status: MigrationStatus = self.migration_service.execute_operation(
+                'status'
+            )
 
-            # Display connection status
-            if status['connection'] == 'OK':
-                self.print_success('Database connection: OK')
-            else:
-                self.print_error('Database connection: FAILED')
+            # Build status message
+            connection_status = (
+                '[green]OK[/green]'
+                if status.connection == 'OK'
+                else '[red]FAILED[/red]'
+            )
+            alembic_status = (
+                '[green]OK[/green]'
+                if status.alembic_configured
+                else '[red]Missing[/red]'
+            )
+            migrations_status = (
+                '[green]Found[/green]'
+                if status.migrations_dir
+                else '[red]Missing[/red]'
+            )
+            current = status.current_migration
+            migration_status = (
+                f'[blue]{current}[/blue]'
+                if current and current != 'Unknown'
+                else '[yellow]None[/yellow]'
+            )
 
-            # Display Alembic configuration
-            if status['alembic_configured']:
-                self.print_success('Alembic configuration: OK')
-            else:
-                self.print_error('Alembic configuration: Missing')
+            msg_parts = [
+                '[bold blue]📊 Database Status[/bold blue]\n',
+                f'Database connection: {connection_status}',
+                f'Alembic configuration: {alembic_status}',
+                f'Migrations directory: {migrations_status}',
+                f'Current migration: {migration_status}',
+            ]
 
-            if status['migrations_dir']:
-                self.print_success('Migrations directory: Found')
-            else:
-                self.print_error('Migrations directory: Missing')
+            # Add database info if connected
+            if status.connection == 'OK':
+                db_info: DatabaseInfo = (
+                    self.database_service.get_database_info()
+                )
+                msg_parts.extend([
+                    '[dim]Database details:[/dim]',
+                    f'  Database: {db_info.database}',
+                    f'  Host: {db_info.host}  Port: {db_info.port}',
+                ])
 
-            # Display current migration
-            current = status.get('current_migration', 'Unknown')
-            if current and current != 'Unknown':
-                self.print_info(f'Current migration: {current}')
-            else:
-                self.print_warning('Current migration: None')
-
-            # Get database info if connection is OK
-            if status['connection'] == 'OK':
-                db_info = self.database_service.get_database_info()
-                if db_info:
-                    self.console.print(
-                        f'  Database: {db_info.get("database", "Unknown")}'
-                    )
-                    self.console.print(
-                        f'  Host: {db_info.get("host", "Unknown")}:{db_info.get("port", "5432")}'
-                    )
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
 
             return 0
 
@@ -171,12 +177,10 @@ class DatabaseStatusCommand(BaseCommand):
 class UpgradeDatabaseCommand(BaseCommand):
     """Database upgrade command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self, revision: str = 'head') -> int:
         """Upgrade database to specified revision.
@@ -190,20 +194,25 @@ class UpgradeDatabaseCommand(BaseCommand):
         self.print_header(f'Database Upgrade to {revision}', '⬆️')
 
         try:
-            result = self.migration_service.execute_operation(
+            result: MigrationResult = self.migration_service.execute_operation(
                 'upgrade', revision=revision
             )
 
-            if result['success']:
-                self.print_success(result['message'])
-                if result.get('details'):
-                    self.print_info(result['details'])
-                return 0
+            msg_parts = []
+            if result.success:
+                msg_parts.append(f'[green]{result.message}[/green]')
+                if result.details:
+                    msg_parts.append(f'[blue]{result.details}[/blue]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to upgrade database: {str(e)}')
@@ -213,12 +222,10 @@ class UpgradeDatabaseCommand(BaseCommand):
 class DowngradeDatabaseCommand(BaseCommand):
     """Database downgrade command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self, revision: str = '-1') -> int:
         """Downgrade database to specified revision.
@@ -232,20 +239,25 @@ class DowngradeDatabaseCommand(BaseCommand):
         self.print_header(f'Database Downgrade to {revision}', '⬇️')
 
         try:
-            result = self.migration_service.execute_operation(
+            result: MigrationResult = self.migration_service.execute_operation(
                 'downgrade', revision=revision
             )
 
-            if result['success']:
-                self.print_success(result['message'])
-                if result.get('details'):
-                    self.print_info(result['details'])
-                return 0
+            msg_parts = []
+            if result.success:
+                msg_parts.append(f'[green]{result.message}[/green]')
+                if result.details:
+                    msg_parts.append(f'[blue]{result.details}[/blue]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to downgrade database: {str(e)}')
@@ -255,12 +267,10 @@ class DowngradeDatabaseCommand(BaseCommand):
 class CurrentMigrationCommand(BaseCommand):
     """Current migration command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self) -> int:
         """Show current migration.
@@ -271,20 +281,28 @@ class CurrentMigrationCommand(BaseCommand):
         self.print_header('Current Migration', '📍')
 
         try:
-            result = self.migration_service.execute_operation('current')
+            result: MigrationResult = self.migration_service.execute_operation(
+                'current'
+            )
 
-            if result['success']:
-                current = result.get('current', 'None')
-                if current and current != 'None':
-                    self.print_success(f'Current migration: {current}')
+            msg_parts = []
+            if result.success:
+                if result.current and result.current != 'None':
+                    msg_parts.append(
+                        f'[green]Current migration: {result.current}[/green]'
+                    )
                 else:
-                    self.print_warning('No migrations applied')
-                return 0
+                    msg_parts.append('[yellow]No migrations applied[/yellow]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to get current migration: {str(e)}')
@@ -294,12 +312,10 @@ class CurrentMigrationCommand(BaseCommand):
 class MigrationHistoryCommand(BaseCommand):
     """Migration history command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self, verbose: bool = False) -> int:
         """Show migration history.
@@ -313,22 +329,28 @@ class MigrationHistoryCommand(BaseCommand):
         self.print_header('Migration History', '📚')
 
         try:
-            result = self.migration_service.execute_operation(
+            result: MigrationResult = self.migration_service.execute_operation(
                 'history', verbose=verbose
             )
 
-            if result['success']:
-                history = result.get('history', 'No history available')
-                if history and history != 'No history available':
-                    self.console.print(history)
+            msg_parts = []
+            if result.success:
+                if result.history and result.history != 'No history available':
+                    msg_parts.append(result.history)
                 else:
-                    self.print_warning('No migration history found')
-                return 0
+                    msg_parts.append(
+                        '[yellow]No migration history found[/yellow]'
+                    )
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to get migration history: {str(e)}')
@@ -338,12 +360,10 @@ class MigrationHistoryCommand(BaseCommand):
 class CreateMigrationCommand(BaseCommand):
     """Create migration command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self, message: str) -> int:
         """Create a new migration.
@@ -361,20 +381,25 @@ class CreateMigrationCommand(BaseCommand):
             return 1
 
         try:
-            result = self.migration_service.execute_operation(
+            result: MigrationResult = self.migration_service.execute_operation(
                 'create', message=message
             )
 
-            if result['success']:
-                self.print_success(result['message'])
-                if result.get('details'):
-                    self.print_info(result['details'])
-                return 0
+            msg_parts = []
+            if result.success:
+                msg_parts.append(f'[green]{result.message}[/green]')
+                if result.details:
+                    msg_parts.append(f'[blue]{result.details}[/blue]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to create migration: {str(e)}')
@@ -384,12 +409,10 @@ class CreateMigrationCommand(BaseCommand):
 class ResetDatabaseCommand(BaseCommand):
     """Reset database command."""
 
-    def __init__(
-        self, db_host: str = 'localhost', console: Optional[Console] = None
-    ):
+    def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.migration_service = MigrationService(db_host)
+        self.migration_service = MigrationService()
 
     def execute(self, force: bool = False) -> int:
         """Reset database (destructive operation).
@@ -408,20 +431,25 @@ class ResetDatabaseCommand(BaseCommand):
             return 1
 
         try:
-            result = self.migration_service.execute_operation(
+            result: MigrationResult = self.migration_service.execute_operation(
                 'reset', force=force
             )
 
-            if result['success']:
-                self.print_success(result['message'])
-                if result.get('details'):
-                    self.print_info(result['details'])
-                return 0
+            msg_parts = []
+            if result.success:
+                msg_parts.append(f'[green]{result.message}[/green]')
+                if result.details:
+                    msg_parts.append(f'[blue]{result.details}[/blue]')
             else:
-                self.print_error(result['message'])
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append(f'[red]{result.message}[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(f'Failed to reset database: {str(e)}')
@@ -437,88 +465,83 @@ database_app = cyclopts.App(
 
 # Register database commands
 @database_app.default
-def database_default(db_host: str = 'localhost') -> int:
+def database_default() -> int:
     """Database management commands."""
-    command = DatabaseCommand(db_host)
+    command = DatabaseCommand()
     return command.execute()
 
 
 @database_app.command
-def init(db_host: str = 'localhost') -> int:
+def init() -> int:
     """Initialize database with migrations."""
-    command = InitDatabaseCommand(db_host)
+    command = InitDatabaseCommand()
     return command.execute()
 
 
 @database_app.command
-def status(db_host: str = 'localhost') -> int:
+def status() -> int:
     """Show database and migration status."""
-    command = DatabaseStatusCommand(db_host)
+    command = DatabaseStatusCommand()
     return command.execute()
 
 
 @database_app.command
-def upgrade(revision: str = 'head', db_host: str = 'localhost') -> int:
+def upgrade(revision: str = 'head') -> int:
     """Upgrade database to specified revision.
 
     Args:
         revision: Target migration revision (default: head)
-        db_host: Database hostname (default: localhost)
     """
-    command = UpgradeDatabaseCommand(db_host)
+    command = UpgradeDatabaseCommand()
     return command.execute(revision)
 
 
 @database_app.command
-def downgrade(revision: str = '-1', db_host: str = 'localhost') -> int:
+def downgrade(revision: str = '-1') -> int:
     """Downgrade database to specified revision.
 
     Args:
         revision: Target migration revision (default: -1 for one step back)
-        db_host: Database hostname (default: localhost)
     """
-    command = DowngradeDatabaseCommand(db_host)
+    command = DowngradeDatabaseCommand()
     return command.execute(revision)
 
 
 @database_app.command
-def current(db_host: str = 'localhost') -> int:
+def current() -> int:
     """Show current migration revision."""
-    command = CurrentMigrationCommand(db_host)
+    command = CurrentMigrationCommand()
     return command.execute()
 
 
 @database_app.command
-def history(verbose: bool = False, db_host: str = 'localhost') -> int:
+def history(verbose: bool = False) -> int:
     """Show migration history.
 
     Args:
         verbose: Include verbose output
-        db_host: Database hostname (default: localhost)
     """
-    command = MigrationHistoryCommand(db_host)
+    command = MigrationHistoryCommand()
     return command.execute(verbose)
 
 
 @database_app.command
-def create(message: str, db_host: str = 'localhost') -> int:
+def create(message: str) -> int:
     """Create a new migration.
 
     Args:
         message: Migration message/description
-        db_host: Database hostname (default: localhost)
     """
-    command = CreateMigrationCommand(db_host)
+    command = CreateMigrationCommand()
     return command.execute(message)
 
 
 @database_app.command
-def reset(force: bool = False, db_host: str = 'localhost') -> int:
+def reset(force: bool = False) -> int:
     """Reset database (destructive operation).
 
     Args:
         force: Force reset without confirmation
-        db_host: Database hostname (default: localhost)
     """
-    command = ResetDatabaseCommand(db_host)
+    command = ResetDatabaseCommand()
     return command.execute(force)

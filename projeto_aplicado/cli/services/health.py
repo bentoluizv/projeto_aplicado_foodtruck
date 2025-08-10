@@ -1,9 +1,10 @@
 """Health check service for CLI operations following SOLID principles."""
 
-from typing import Dict, Tuple
+from typing import List, Tuple
 
 from projeto_aplicado.cli.base.service import BaseService
-from projeto_aplicado.cli.services.database import DatabaseService
+from projeto_aplicado.cli.ext.database import DatabaseService
+from projeto_aplicado.cli.schemas import HealthCheckDetail, HealthCheckResult
 from projeto_aplicado.cli.services.user import UserService
 
 
@@ -37,7 +38,7 @@ class HealthService(BaseService):
         """
         return True
 
-    def execute_operation(self, **kwargs) -> Dict[str, any]:
+    def execute_operation(self, **kwargs) -> HealthCheckResult:
         """Execute health check operation.
 
         Args:
@@ -53,27 +54,39 @@ class HealthService(BaseService):
         ]
 
         results = []
-        details = []
+        details: List[HealthCheckDetail] = []
 
         for check_name, check_func in checks:
             try:
-                result, detail = check_func()
+                result, message = check_func()
                 results.append(result)
-                details.append((check_name, result, detail))
+                details.append(
+                    HealthCheckDetail(
+                        name=check_name,
+                        passed=result,
+                        message=message,
+                    )
+                )
             except Exception as e:
                 results.append(False)
-                details.append((check_name, False, f'UNEXPECTED ERROR ({e})'))
+                details.append(
+                    HealthCheckDetail(
+                        name=check_name,
+                        passed=False,
+                        message=f'UNEXPECTED ERROR ({e})',
+                    )
+                )
 
         passed = sum(results)
         total = len(results)
 
-        return {
-            'passed': passed,
-            'total': total,
-            'success': passed == total,
-            'details': details,
-            'database_info': self.database_service.get_database_info(),
-        }
+        return HealthCheckResult(
+            passed=passed,
+            total=total,
+            success=passed == total,
+            details=details,
+            database_info=self.database_service.get_database_info(),
+        )
 
     def _check_database_connection(self) -> Tuple[bool, str]:
         """Check database connection health.
@@ -108,7 +121,7 @@ class HealthService(BaseService):
             Tuple of (success, message)
         """
         try:
-            db_info = self.database_service.get_database_info()
+            self.database_service.get_database_info()  # Test settings access
             return True, 'Settings loaded: OK'
         except Exception as e:
             return False, f'Settings: FAILED ({e})'

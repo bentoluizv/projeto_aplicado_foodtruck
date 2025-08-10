@@ -5,9 +5,7 @@ from typing import Any
 import cyclopts
 
 from projeto_aplicado.cli.base.command import BaseCommand
-from projeto_aplicado.cli.services.database import DatabaseService
 from projeto_aplicado.cli.services.health import HealthService
-from projeto_aplicado.cli.services.user import UserService
 
 
 class HealthCommand(BaseCommand):
@@ -17,21 +15,14 @@ class HealthCommand(BaseCommand):
     Follows Dependency Inversion Principle: depends on service abstractions.
     """
 
-    def __init__(self, db_host: str = 'localhost', **kwargs):
+    def __init__(self, **kwargs):
         """Initialize the health command.
 
         Args:
-            db_host: Database hostname
             **kwargs: Additional arguments for base class
         """
         super().__init__(**kwargs)
-
-        # Dependency injection - create services
-        self.database_service = DatabaseService(db_host)
-        self.user_service = UserService(self.database_service)
-        self.health_service = HealthService(
-            self.database_service, self.user_service
-        )
+        self.health_service = self.get_service(HealthService)
 
     def execute(self, **kwargs: Any) -> int:
         """Execute the health check command.
@@ -47,34 +38,38 @@ class HealthCommand(BaseCommand):
         # Execute health checks
         health_result = self.health_service.execute_operation(**kwargs)
 
-        # Display results
-        for check_name, success, message in health_result['details']:
-            if success:
-                self.print_success(message)
-            else:
-                self.print_error(message)
+        msg_parts = []
 
-        # Display database info
-        db_info = health_result['database_info']
-        self.console.print(f'[dim]  Database: {db_info["database"]}[/dim]')
-        self.console.print(
-            f'[dim]  Host: {db_info["host"]}:{db_info["port"]}[/dim]'
-        )
+        # Add check results
+        for detail in health_result.details:
+            status = '[green]✓[/green]' if detail.passed else '[red]✗[/red]'
+            msg_parts.append(f'{status} {detail.message}')
 
-        # Summary
-        passed = health_result['passed']
-        total = health_result['total']
+        # Add database info
+        db_info = health_result.database_info
+        msg_parts.extend([
+            '',
+            '[dim]Database details:[/dim]',
+            f'  Database: {db_info["database"]}',
+            f'  Host: {db_info["host"]}:{db_info["port"]}',
+        ])
 
-        if health_result['success']:
-            self.console.print(
+        # Add summary
+        passed = health_result.passed
+        total = health_result.total
+
+        if health_result.success:
+            msg_parts.append(
                 f'\n[bold green]🎉 All {total} health checks passed![/bold green]'
             )
-            return 0
         else:
-            self.console.print(
-                f'\n[bold yellow]⚠ {passed}/{total} health checks passed[/bold yellow]'
+            msg_parts.append(
+                f'\n[bold yellow]⚠ {passed}/{total} health checks passed[/bold yellow]'  # noqa: E501
             )
-            return 1
+
+        msg = '\n'.join(msg_parts)
+        self.console.print(msg)
+        return 0 if health_result.success else 1
 
 
 # Create the health app
@@ -85,14 +80,11 @@ health_app = cyclopts.App(
 
 
 @health_app.default
-def health_default(db_host: str = 'localhost') -> int:
+def health_default() -> int:
     """Check system health status.
-
-    Args:
-        db_host: Database hostname (default: localhost)
 
     Returns:
         int: Exit code (0 for success, 1 for failure)
     """
-    command = HealthCommand(db_host=db_host)
+    command = HealthCommand()
     return command.execute()

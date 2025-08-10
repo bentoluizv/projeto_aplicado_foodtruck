@@ -22,7 +22,7 @@ class SetupCommand(BaseCommand):
             console: Rich console for output (injected dependency)
         """
         super().__init__(console)
-        self.shell_service = ShellService()
+        self.shell_service = self.get_service(ShellService)
 
     def execute(self) -> int:
         """Execute setup command (shows help).
@@ -30,21 +30,16 @@ class SetupCommand(BaseCommand):
         Returns:
             int: Exit code (0 for success)
         """
-        self.print_header('Shell Setup Commands', '⚙️')
-        self.console.print('[blue]Available commands:[/blue]')
-        self.console.print(
-            '  • [cyan]path[/cyan]    - Show PATH configuration for foodtruck-cli'
-        )
-        self.console.print('  • [cyan]alias[/cyan]   - Generate shell aliases')
-        self.console.print(
-            '  • [cyan]install[/cyan] - Auto-configure shell (bash/zsh)'
-        )
-        self.console.print(
-            '  • [cyan]check[/cyan]   - Check current shell configuration'
-        )
-        self.console.print(
+        msg = (
+            '[bold blue]⚙️ Shell Setup Commands[/bold blue]\n'
+            '[blue]Available commands:[/blue]\n'
+            '  • [cyan]path[/cyan]    - Show PATH configuration for foodtruck-cli\n'  # noqa: E501
+            '  • [cyan]alias[/cyan]   - Generate shell aliases\n'
+            '  • [cyan]install[/cyan] - Auto-configure shell (bash/zsh)\n'
+            '  • [cyan]check[/cyan]   - Check current shell configuration\n'
             '\n[yellow]Use --help with any command for details[/yellow]'
         )
+        self.console.print(msg)
         return 0
 
 
@@ -54,7 +49,7 @@ class ShowPathCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.shell_service = ShellService()
+        self.shell_service = self.get_service(ShellService)
 
     def execute(self) -> int:
         """Show PATH configuration instructions.
@@ -67,44 +62,32 @@ class ShowPathCommand(BaseCommand):
         try:
             result = self.shell_service.execute_operation('show_path')
 
-            # Project info
-            self.console.print('[bold blue]Project Information:[/bold blue]')
-            self.print_info(f'Project root: {result["project_root"]}')
-            self.print_info(f'Virtual env: {result["venv_path"]}')
-            self.print_info(f'CLI script: {result["cli_path"]}')
-            self.console.print()
+            msg_parts = [
+                '[bold blue]Project Information:[/bold blue]',
+                f'  Project root: {result.project_root}',
+                f'  Virtual env: {result.venv_path}',
+                f'  CLI script: {result.cli_path}',
+                '',
+                # Current status
+                '[green]✅ foodtruck-cli is accessible in PATH[/green]'
+                if result.cli_in_path
+                else '[yellow]⚠️ foodtruck-cli not found in PATH[/yellow]',
+                '',
+                '[bold blue]Manual Setup Instructions:[/bold blue]',
+                '[yellow]Option 1: Activate virtual environment[/yellow]',
+                f'  source {result.activation_script}',
+                '  foodtruck-cli --help',
+                '',
+                '[yellow]Option 2: Use full path[/yellow]',
+                f'  {result.cli_path} --help',
+                '',
+                '[yellow]Option 3: Add to PATH permanently[/yellow]',
+                f'  echo \'export PATH="{result.venv_bin_path}:$PATH"\' >> {result.shell_config_file}',  # noqa: E501
+                f'  source {result.shell_config_file}',
+            ]
 
-            # Current status
-            if result['cli_in_path']:
-                self.print_success('✅ foodtruck-cli is accessible in PATH')
-            else:
-                self.print_warning('⚠️ foodtruck-cli not found in PATH')
-
-            self.console.print()
-
-            # Instructions
-            self.console.print(
-                '[bold blue]Manual Setup Instructions:[/bold blue]'
-            )
-            self.console.print(
-                '[yellow]Option 1: Activate virtual environment[/yellow]'
-            )
-            self.console.print(f'  source {result["activation_script"]}')
-            self.console.print('  foodtruck-cli --help')
-            self.console.print()
-
-            self.console.print('[yellow]Option 2: Use full path[/yellow]')
-            self.console.print(f'  {result["cli_path"]} --help')
-            self.console.print()
-
-            self.console.print(
-                '[yellow]Option 3: Add to PATH permanently[/yellow]'
-            )
-            shell_config = result['shell_config_file']
-            self.console.print(
-                f'  echo \'export PATH="{result["venv_bin_path"]}:$PATH"\' >> {shell_config}'
-            )
-            self.console.print(f'  source {shell_config}')
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
             self.console.print()
 
             return 0
@@ -120,7 +103,7 @@ class GenerateAliasCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.shell_service = ShellService()
+        self.shell_service = self.get_service(ShellService)
 
     def execute(self, shell: str = 'auto') -> int:
         """Generate shell aliases.
@@ -138,37 +121,38 @@ class GenerateAliasCommand(BaseCommand):
                 'generate_aliases', shell=shell
             )
 
-            self.console.print(
-                f'[bold blue]Generated aliases for {result["shell"]}:[/bold blue]'
-            )
-            self.console.print()
+            msg_parts = [
+                f'[bold blue]Generated aliases for {result.shell}:[/bold blue]',
+                '',
+            ]
 
             # Show aliases
-            for alias, command in result['aliases'].items():
-                self.console.print(
+            for alias, command in result.aliases.items():
+                msg_parts.append(
                     f'[cyan]{alias}[/cyan] = [yellow]{command}[/yellow]'
                 )
 
-            self.console.print()
+            msg_parts.extend([
+                '',
+                '[bold blue]To apply these aliases:[/bold blue]',
+                '[yellow]1. Add to your shell config:[/yellow]',
+                f'   echo "# Food Truck CLI aliases" >> {result.config_file}',
+            ])
 
-            # Show how to apply
-            self.console.print(
-                '[bold blue]To apply these aliases:[/bold blue]'
-            )
-            config_file = result['config_file']
-
-            self.console.print('[yellow]1. Add to your shell config:[/yellow]')
-            self.console.print(
-                f'   echo "# Food Truck CLI aliases" >> {config_file}'
-            )
-            for alias, command in result['aliases'].items():
-                self.console.print(
-                    f'   echo "alias {alias}=\\"{command}\\"" >> {config_file}'
+            # Add alias commands
+            for alias, command in result.aliases.items():
+                msg_parts.append(
+                    f'   echo "alias {alias}=\\"{command}\\"" >> {result.config_file}'  # noqa: E501
                 )
 
-            self.console.print()
-            self.console.print('[yellow]2. Reload your shell:[/yellow]')
-            self.console.print(f'   source {config_file}')
+            msg_parts.extend([
+                '',
+                '[yellow]2. Reload your shell:[/yellow]',
+                f'   source {result.config_file}',
+            ])
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
             self.console.print()
 
             return 0
@@ -184,7 +168,7 @@ class AutoInstallCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.shell_service = ShellService()
+        self.shell_service = self.get_service(ShellService)
 
     def execute(self, shell: str = 'auto', force: bool = False) -> int:
         """Auto-configure shell.
@@ -203,30 +187,34 @@ class AutoInstallCommand(BaseCommand):
                 'auto_install', shell=shell, force=force
             )
 
-            if result['success']:
-                self.print_success(
-                    f'✅ Configured {result["shell"]} successfully!'
-                )
-                self.print_info(f'📁 Modified: {result["config_file"]}')
+            msg_parts = []
+            if result.success:
+                msg_parts.extend([
+                    f'[green]✅ Configured {result.shell} successfully![/green]',  # noqa: E501
+                    f'[blue]📁 Modified: {result.config_file}[/blue]',
+                ])
 
-                if result.get('backup_created'):
-                    self.print_info(f'💾 Backup: {result["backup_file"]}')
+                if result.backup_created:
+                    msg_parts.append(
+                        f'[blue]💾 Backup: {result.backup_file}[/blue]'
+                    )
 
-                self.console.print()
-                self.console.print('[bold blue]Next steps:[/bold blue]')
-                self.console.print(
-                    f'1. Reload shell: [cyan]source {result["config_file"]}[/cyan]'
-                )
-                self.console.print(
-                    '2. Test command: [cyan]foodtruck-cli --help[/cyan]'
-                )
-
-                return 0
+                msg_parts.extend([
+                    '',
+                    '[bold blue]Next steps:[/bold blue]',
+                    f'1. Reload shell: [cyan]source {result.config_file}[/cyan]',  # noqa: E501
+                    '2. Test command: [cyan]foodtruck-cli --help[/cyan]',
+                ])
             else:
-                self.print_error('❌ Failed to configure shell')
-                if result.get('error'):
-                    self.print_warning(f'Details: {result["error"]}')
-                return 1
+                msg_parts.append('[red]❌ Failed to configure shell[/red]')
+                if result.error:
+                    msg_parts.append(
+                        f'[yellow]Details: {result.error}[/yellow]'
+                    )
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
+            return 0 if result.success else 1
 
         except Exception as e:
             self.print_error(
@@ -241,7 +229,7 @@ class CheckSetupCommand(BaseCommand):
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
         super().__init__(console)
-        self.shell_service = ShellService()
+        self.shell_service = self.get_service(ShellService)
 
     def execute(self) -> int:
         """Check current shell configuration.
@@ -254,46 +242,46 @@ class CheckSetupCommand(BaseCommand):
         try:
             result = self.shell_service.execute_operation('check_setup')
 
-            # Shell info
-            self.console.print('[bold blue]Shell Information:[/bold blue]')
-            self.print_info(f'Current shell: {result["current_shell"]}')
-            self.print_info(f'Config file: {result["config_file"]}')
-            self.console.print()
-
-            # CLI accessibility
-            self.console.print('[bold blue]CLI Accessibility:[/bold blue]')
-            if result['cli_in_path']:
-                self.print_success('✅ foodtruck-cli accessible via PATH')
-            else:
-                self.print_warning('⚠️ foodtruck-cli not in PATH')
-
-            if result['venv_active']:
-                self.print_success('✅ Virtual environment is active')
-            else:
-                self.print_warning('⚠️ Virtual environment not active')
+            msg_parts = [
+                '[bold blue]Shell Information:[/bold blue]',
+                f'  Current shell: {result.current_shell}',
+                f'  Config file: {result.config_file}',
+                '',
+                '[bold blue]CLI Accessibility:[/bold blue]',
+                '[green]✅ foodtruck-cli accessible via PATH[/green]'
+                if result.cli_in_path
+                else '[yellow]⚠️ foodtruck-cli not in PATH[/yellow]',
+                '[green]✅ Virtual environment is active[/green]'
+                if result.venv_active
+                else '[yellow]⚠️ Virtual environment not active[/yellow]',
+            ]
 
             # Aliases
-            aliases = result.get('aliases_found', [])
+            aliases = result.aliases_found
             if aliases:
-                self.console.print()
-                self.console.print('[bold blue]Found Aliases:[/bold blue]')
+                msg_parts.extend(['', '[bold blue]Found Aliases:[/bold blue]'])
                 for alias in aliases:
-                    self.print_success(f'✅ {alias}')
+                    msg_parts.append(f'[green]✅ {alias}[/green]')
             else:
-                self.console.print()
-                self.print_warning('⚠️ No food truck aliases found')
-
-            self.console.print()
+                msg_parts.extend([
+                    '',
+                    '[yellow]⚠️ No food truck aliases found[/yellow]',
+                ])
 
             # Recommendations
-            if not result['cli_in_path'] and not result['venv_active']:
-                self.print_info(
-                    '💡 Run [cyan]setup install[/cyan] to auto-configure your shell'
-                )
+            if not result.cli_in_path and not result.venv_active:
+                msg_parts.extend([
+                    '',
+                    '[blue]💡 Run [cyan]setup install[/cyan] to auto-configure your shell[/blue]',  # noqa: E501
+                ])
             elif not aliases:
-                self.print_info(
-                    '💡 Run [cyan]setup alias[/cyan] to create convenient aliases'
-                )
+                msg_parts.extend([
+                    '',
+                    '[blue]💡 Run [cyan]setup alias[/cyan] to create convenient aliases[/blue]',  # noqa: E501
+                ])
+
+            msg = '\n'.join(msg_parts)
+            self.console.print(msg)
 
             return 0
 
