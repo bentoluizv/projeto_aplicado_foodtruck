@@ -9,29 +9,25 @@ from projeto_aplicado.cli.services.health import HealthService
 
 
 class HealthCommand(BaseCommand):
-    """Health check command.
+    """Check system health and status.
 
-    Follows Single Responsibility Principle: only handles health check display.
-    Follows Dependency Inversion Principle: depends on service abstractions.
+    Performs comprehensive health checks including database connectivity,
+    admin user availability, and configuration validation.
     """
 
     def __init__(self, **kwargs):
-        """Initialize the health command.
-
-        Args:
-            **kwargs: Additional arguments for base class
-        """
+        """Initialize the health command."""
         super().__init__(**kwargs)
         self.health_service = self.get_service(HealthService)
 
     def execute(self, **kwargs: Any) -> int:
-        """Execute the health check command.
+        """Run system health checks.
 
-        Args:
-            **kwargs: Command arguments
+        Checks database connection, admin users, and system configuration.
+        Displays detailed status for each component.
 
         Returns:
-            Exit code (0 for success, 1 for failure)
+            0 if all checks pass, 1 if any checks fail
         """
         self.print_header('System Health Check', '🏥')
 
@@ -81,10 +77,9 @@ health_app = cyclopts.App(
 
 @health_app.default
 def health_default() -> int:
-    """Check system health status.
+    """Check system health and display status.
 
-    Returns:
-        int: Exit code (0 for success, 1 for failure)
+    Runs comprehensive health checks and shows results.
     """
     command = HealthCommand()
     return command.execute()

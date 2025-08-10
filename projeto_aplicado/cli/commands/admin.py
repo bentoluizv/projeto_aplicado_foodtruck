@@ -11,29 +11,25 @@ from projeto_aplicado.cli.services.user import UserService
 
 
 class CreateAdminCommand(BaseCommand):
-    """Create admin user command.
+    """Create a new admin user.
 
-    Follows Single Responsibility Principle: only handles admin creation.
-    Follows Dependency Inversion Principle: depends on service abstractions.
+    Creates an admin user with full access to the system.
+    Requires username, email, password, and full name.
     """
 
     def __init__(self, **kwargs):
-        """Initialize the create admin command.
-
-        Args:
-            **kwargs: Additional arguments for base class
-        """
+        """Initialize the create admin command."""
         super().__init__(**kwargs)
         self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
         """Execute the create admin command.
 
-        Args:
-            **kwargs: Command arguments for user creation
+        Creates a new admin user with the provided information.
+        Shows a confirmation prompt unless --force is used.
 
         Returns:
-            Exit code (0 for success, 1 for failure)
+            0 if successful, 1 if failed
         """
         raw_data = {
             'username': kwargs['username'],
@@ -61,13 +57,13 @@ class CreateAdminCommand(BaseCommand):
             return 1
 
     def _confirm_creation(self, data: Dict) -> bool:
-        """Show confirmation prompt for user creation.
+        """Show confirmation prompt before creating the admin user.
 
         Args:
-            data: User data dictionary
+            data: User data to be confirmed
 
         Returns:
-            True if user confirms, False otherwise
+            True if user confirms, False if cancelled
         """
         msg = (
             '[blue]Creating admin user:[/blue]\n'
@@ -81,7 +77,11 @@ class CreateAdminCommand(BaseCommand):
 
 
 class CheckUserCommand(BaseCommand):
-    """Check user command."""
+    """Check if a user exists and display their information.
+
+    Looks up a user by email address and shows their details
+    including username, role, and creation date.
+    """
 
     def __init__(self, **kwargs):
         """Initialize the check user command."""
@@ -89,7 +89,14 @@ class CheckUserCommand(BaseCommand):
         self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
-        """Execute the check user command."""
+        """Look up and display user information.
+
+        Searches for a user by email address and displays
+        their profile information if found.
+
+        Returns:
+            0 if user found, 1 if not found or error
+        """
         email = kwargs.get('email')
         if not email:
             self.print_error('Email is required')
@@ -120,19 +127,26 @@ class CheckUserCommand(BaseCommand):
 
 
 class ListAdminsCommand(BaseCommand):
-    """List admin users command."""
+    """List all admin users in the system.
+
+    Displays a list of all users with admin privileges,
+    showing their username, email, and full name.
+    """
 
     def __init__(self, **kwargs):
-        """Initialize the list admins command.
-
-        Args:
-            **kwargs: Additional arguments for base class
-        """
+        """Initialize the list admins command."""
         super().__init__(**kwargs)
         self.user_service = self.get_service(UserService)
 
     def execute(self, **kwargs: Any) -> int:
-        """Execute the list admins command."""
+        """List all admin users.
+
+        Retrieves and displays all users with admin role.
+        Shows count and details for each admin user.
+
+        Returns:
+            0 if successful, 1 if error occurred
+        """
         result: UserListResult = self.user_service.list_admins()
 
         if not result.success:
@@ -166,7 +180,10 @@ admin_app = cyclopts.App(
 # Register admin commands
 @admin_app.default
 def admin_default() -> int:
-    """Admin user management commands."""
+    """Manage admin users - create, check, and list administrators.
+
+    Use subcommands to perform specific admin user operations.
+    """
     console = Console()
     console.print('[bold blue]🔐 Admin User Management[/bold blue]')
     console.print()
