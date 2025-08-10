@@ -16,29 +16,27 @@ from projeto_aplicado.cli.services.migration import MigrationService
 
 
 class DatabaseCommand(BaseCommand):
-    """Database operations command with clean architecture.
+    """Manage database operations and migrations.
 
-    Implements database management following SOLID principles:
-    - Single Responsibility: Only handles database command coordination
-    - Open/Closed: Easy to extend with new database operations
-    - Dependency Inversion: Depends on service abstractions
+    Provides commands for database initialization, status checking,
+    migration management, and maintenance operations.
     """
 
     def __init__(self, console: Optional[Console] = None):
-        """Initialize database command with dependency injection.
+        """Initialize database command.
 
         Args:
-            console: Rich console for output (injected dependency)
+            console: Console for output formatting
         """
         super().__init__(console)
         self.database_service = self.get_service(DatabaseService)
         self.migration_service = self.get_service(MigrationService)
 
     def execute(self) -> int:
-        """Execute database command (shows help).
+        """Show database management help and available commands.
 
         Returns:
-            int: Exit code (0 for success)
+            0 (always successful)
         """
         msg = (
             '[bold blue]🗄️ Database Management Commands[/bold blue]\n'
@@ -58,7 +56,11 @@ class DatabaseCommand(BaseCommand):
 
 
 class InitDatabaseCommand(BaseCommand):
-    """Initialize database command."""
+    """Initialize the database with tables and migrations.
+
+    Sets up the database schema and applies initial migrations.
+    Use this for first-time database setup.
+    """
 
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
@@ -100,7 +102,11 @@ class InitDatabaseCommand(BaseCommand):
 
 
 class DatabaseStatusCommand(BaseCommand):
-    """Database status command."""
+    """Check database connection and migration status.
+
+    Shows current database state, connection status,
+    and migration information.
+    """
 
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
@@ -466,7 +472,10 @@ database_app = cyclopts.App(
 # Register database commands
 @database_app.default
 def database_default() -> int:
-    """Database management commands."""
+    """Manage database operations - init, status, migrations, and maintenance.
+
+    Use subcommands to perform specific database operations.
+    """
     command = DatabaseCommand()
     return command.execute()
 

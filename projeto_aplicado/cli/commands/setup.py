@@ -10,9 +10,10 @@ from projeto_aplicado.cli.services.shell import ShellService
 
 
 class SetupCommand(BaseCommand):
-    """Shell setup command.
+    """Configure shell environment for foodtruck-cli.
 
-    Helps users configure their shell to use foodtruck-cli directly.
+    Provides tools to set up PATH, aliases, and shell integration
+    for easier access to foodtruck-cli commands.
     """
 
     def __init__(self, console: Optional[Console] = None):
@@ -300,7 +301,10 @@ setup_app = cyclopts.App(
 # Register setup commands
 @setup_app.default
 def setup_default() -> int:
-    """Shell setup and configuration commands."""
+    """Configure shell environment for easier CLI access.
+
+    Use subcommands to set up PATH, aliases, and shell integration.
+    """
     command = SetupCommand()
     return command.execute()
 

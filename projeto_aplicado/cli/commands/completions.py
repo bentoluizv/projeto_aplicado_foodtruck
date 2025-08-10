@@ -10,9 +10,10 @@ from projeto_aplicado.cli.services.completions import CompletionsService
 
 
 class CompletionsCommand(BaseCommand):
-    """Shell completions command.
+    """Manage shell completions for foodtruck-cli.
 
-    Generates and manages shell completion scripts for foodtruck-cli.
+    Generate, install, and manage tab completion scripts
+    for bash, zsh, and fish shells.
     """
 
     def __init__(self, console: Optional[Console] = None):
@@ -44,7 +45,11 @@ class CompletionsCommand(BaseCommand):
 
 
 class GenerateCompletionsCommand(BaseCommand):
-    """Generate completions command."""
+    """Generate shell completion scripts.
+
+    Creates tab completion scripts for supported shells.
+    Can output to stdout or save to a file.
+    """
 
     def __init__(self, console: Optional[Console] = None):
         """Initialize with dependency injection."""
@@ -309,7 +314,10 @@ completions_app = cyclopts.App(
 # Register completions commands
 @completions_app.default
 def completions_default() -> int:
-    """Shell completion management commands."""
+    """Manage shell tab completions - generate, install, and maintain.
+
+    Use subcommands to work with completion scripts for your shell.
+    """
     command = CompletionsCommand()
     return command.execute()
 
