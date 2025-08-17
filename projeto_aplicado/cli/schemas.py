@@ -61,6 +61,16 @@ class HealthCheckDetail(BaseModel):
     message: str = Field(description='Check result message')
 
 
+class DatabaseInfo(BaseModel):
+    """Model for database information."""
+
+    database: str = Field(description='Database name')
+    host: str = Field(description='Database host')
+    container: str = Field(description='Container name')
+    port: str = Field(description='Database port')
+    status: str = Field(description='Connection status')
+
+
 class HealthCheckResult(BaseModel):
     """Model for health check results."""
 
@@ -70,17 +80,7 @@ class HealthCheckResult(BaseModel):
     details: List[HealthCheckDetail] = Field(
         description='Individual check results'
     )
-    database_info: dict = Field(description='Database connection information')
-
-
-class DatabaseInfo(BaseModel):
-    """Model for database information."""
-
-    database: str = Field(description='Database name')
-    host: str = Field(description='Database host')
-    container: str = Field(description='Container name')
-    port: str = Field(description='Database port')
-    status: str = Field(description='Connection status')
+    database_info: DatabaseInfo = Field(description='Database connection information')
 
 
 class UserOperationResult(BaseModel):

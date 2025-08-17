@@ -46,8 +46,8 @@ class HealthCommand(BaseCommand):
         msg_parts.extend([
             '',
             '[dim]Database details:[/dim]',
-            f'  Database: {db_info["database"]}',
-            f'  Host: {db_info["host"]}:{db_info["port"]}',
+            f'  Database: {db_info.database}',
+            f'  Host: {db_info.host}:{db_info.port}',
         ])
 
         # Add summary

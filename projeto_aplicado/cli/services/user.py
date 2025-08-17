@@ -31,8 +31,8 @@ class UserService:
     def repository(self) -> UserRepository:
         """Get or create the user repository instance."""
         if not self._repository:
-            session = self.database_service.get_session()
-            self._repository = UserRepository(session)
+            with self.database_service.get_session() as session:
+                self._repository = UserRepository(session)
         return self._repository
 
     def create_admin(self, raw_data: Dict) -> UserOperationResult:
@@ -148,8 +148,12 @@ class UserService:
         Raises:
             ValidationError: If email validation fails
         """
-        email = EmailStr(raw_data['email'])
-        return self.repository.get_by_email(email)
+        try:
+            with self.database_service.get_session() as session:
+                repository = UserRepository(session)
+                return repository.get_by_email(raw_data['email'])
+        except Exception:
+            return None
 
     def _list_admin_users(self) -> List[User]:
         """List all admin users.
@@ -166,4 +170,11 @@ class UserService:
         Returns:
             Number of admin users
         """
-        return len(self._list_admin_users())
+        try:
+            with self.database_service.get_session() as session:
+                repository = UserRepository(session)
+                users = repository.get_all()
+                admin_users = [user for user in users if user.role == UserRole.ADMIN]
+                return len(admin_users)
+        except Exception:
+            return 0

@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from projeto_aplicado.cli.commands.health import HealthCommand
-from projeto_aplicado.cli.schemas import HealthCheckDetail, HealthCheckResult
+from projeto_aplicado.cli.schemas import DatabaseInfo, HealthCheckDetail, HealthCheckResult
 
 
 class TestHealthCommand:
@@ -32,12 +32,14 @@ class TestHealthCommand:
             ),
         ]
 
-        # Mock database info (as dict, as used in health command)
-        mock_db_info = {
-            'database': 'foodtruck',
-            'host': 'localhost',
-            'port': '5432',
-        }
+        # Mock database info as DatabaseInfo object
+        mock_db_info = DatabaseInfo(
+            database='foodtruck',
+            host='localhost',
+            container='localhost',
+            port='5432',
+            status='connected',
+        )
 
         mock_result = HealthCheckResult(
             passed=3,
@@ -82,11 +84,13 @@ class TestHealthCommand:
             ),
         ]
 
-        mock_db_info = {
-            'database': 'foodtruck',
-            'host': 'localhost',
-            'port': '5432',
-        }
+        mock_db_info = DatabaseInfo(
+            database='foodtruck',
+            host='localhost',
+            container='localhost',
+            port='5432',
+            status='connected',
+        )
 
         mock_result = HealthCheckResult(
             passed=2,
@@ -128,11 +132,13 @@ class TestHealthCommand:
             ),
         ]
 
-        mock_db_info = {
-            'database': 'unknown',
-            'host': 'localhost',
-            'port': 'unknown',
-        }
+        mock_db_info = DatabaseInfo(
+            database='unknown',
+            host='localhost',
+            container='localhost',
+            port='unknown',
+            status='disconnected',
+        )
 
         mock_result = HealthCheckResult(
             passed=0,
@@ -173,11 +179,13 @@ class TestHealthCommand:
             total=1,
             success=True,
             details=[],
-            database_info={
-                'database': 'test',
-                'host': 'localhost',
-                'port': '5432',
-            },
+            database_info=DatabaseInfo(
+                database='test',
+                host='localhost',
+                container='localhost',
+                port='5432',
+                status='connected',
+            ),
         )
 
         with (

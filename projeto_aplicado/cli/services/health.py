@@ -106,7 +106,7 @@ class HealthService(BaseService):
             Tuple of (success, message)
         """
         try:
-            admin_count = self.user_service.execute_operation('count')
+            admin_count = self.user_service._count_admin_users()
             if admin_count > 0:
                 return True, f'Admin users: {admin_count} found'
             else:
