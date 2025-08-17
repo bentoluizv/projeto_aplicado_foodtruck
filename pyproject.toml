@@ -9,24 +9,17 @@ dependencies = [
     "fastapi[standard]>=0.115.12,<0.116.0",
     "uvicorn[standard]>=0.34.2,<0.35.0",
     "pydantic-settings>=2.9.1,<2.10.0",
-    
     # Database
     "sqlmodel>=0.0.24,<0.0.25",
     "sqlalchemy[asyncio]>=2.0.41,<2.1.0",
     "alembic>=1.16.1,<1.17.0",
     "asyncpg>=0.30.0,<0.31.0",
     "psycopg2-binary>=2.9.10,<2.10.0",
-    
     # Authentication & Security
     "pyjwt>=2.10.1,<2.11.0",
     "passlib[argon2]>=1.7.4,<1.8.0",
     "pwdlib[argon2]>=0.2.1,<0.3.0",
     "email-validator>=2.2.0,<2.3.0",
-    
-    # CLI Framework
-    "cyclopts>=3.22.5",
-    "argcomplete>=3.0.0,<4.0.0",
-    
     # Utilities
     "python-ulid>=3.0.0,<4.0.0",
     "redis>=6.1.0,<7.0.0",
@@ -56,7 +49,6 @@ test = [
 [tool.setuptools.packages.find]
 include = ["projeto_aplicado*"]
 
-
 [tool.ruff]
 line-length = 79
 exclude = ["app/database/migrations"]
@@ -76,13 +68,6 @@ addopts = '-p no:warnings'
 asyncio_default_fixture_loop_scope = 'function'
 testpaths = ["tests", "projeto_aplicado/cli/tests"]
 
-[project.scripts]
-# New clean architecture CLI
-foodtruck-cli = "projeto_aplicado.cli.app:app"
-# Legacy scripts (deprecated - use foodtruck-cli admin/db instead)
-foodtruck-admin = "projeto_aplicado.scripts.create_admin_cyclopts:app"
-foodtruck-db = "projeto_aplicado.scripts.init_db_cyclopts:app"
-
 [tool.taskipy.tasks]
 lint = 'ruff check . && ruff check . --diff'
 format = 'ruff check . --fix && ruff format .'
@@ -90,26 +75,3 @@ dev = 'fastapi dev projeto_aplicado/app.py'
 test = 'pytest -s -x --cov=projeto_aplicado'
 run = 'fastapi run projeto_aplicado/app.py'
 export = 'uv pip compile pyproject.toml --output-file requirements.txt'
-# Database migration commands (via CLI)
-migrate-create = 'python -m projeto_aplicado.cli.app database create'
-migrate-upgrade = 'python -m projeto_aplicado.cli.app database upgrade'
-migrate-downgrade = 'python -m projeto_aplicado.cli.app database downgrade'
-migrate-current = 'python -m projeto_aplicado.cli.app database current'
-migrate-history = 'python -m projeto_aplicado.cli.app database history'
-
-# Clean Architecture CLI commands
-cli = 'python -m projeto_aplicado.cli.app'
-cli-health = 'python -m projeto_aplicado.cli.app health'
-cli-admin = 'python -m projeto_aplicado.cli.app admin'
-cli-database = 'python -m projeto_aplicado.cli.app database'
-cli-setup = 'python -m projeto_aplicado.cli.app setup'
-
-# Setup and initialization commands
-cli-init = 'python -m projeto_aplicado.cli.app admin create admin admin@foodtruck.com admin123 "System Administrator" --force'
-cli-db-init = 'python -m projeto_aplicado.cli.app database init'
-cli-db-status = 'python -m projeto_aplicado.cli.app database status'
-cli-setup-path = 'python -m projeto_aplicado.cli.app setup path'
-cli-setup-install = 'python -m projeto_aplicado.cli.app setup install'
-
-# Legacy commands (deprecated - use cli-* equivalents)
-create-admin = 'python -m projeto_aplicado.cli.app admin create'
